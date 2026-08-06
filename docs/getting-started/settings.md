@@ -36,21 +36,30 @@ Control the visual arrangement of the graph.
 
 Customize how tags are colored in the graph.
 
-### Random mode (default)
+### Tag color palette
 
-Each tag gets a unique color generated from a seed value. Change the seed to get a different color palette.
+Every tag is assigned a color from the selected palette, derived from the tag
+name, so the same tag always gets the same color.
 
-| Setting    | Default | Description                            |
-| ---------- | ------- | -------------------------------------- |
-| Color seed | 42      | Seed value for random color generation |
+| Setting           | Default | Options                                  | Description                       |
+| ----------------- | ------- | ---------------------------------------- | --------------------------------- |
+| Tag color palette | Rainbow | Rainbow, Ocean, Forest, Sunset, Mono     | The color theme applied to tags   |
 
-### Static mode
+A preview below the dropdown shows sample tags in the selected palette.
 
-All tags share the same color.
+### Individual tag colors
 
-| Setting | Default | Description                   |
-| ------- | ------- | ----------------------------- |
-| Color   | #3b82f6 | The color applied to all tags |
+Any tag can be pinned to a specific color instead of following the palette.
+The list shows every tag used by your tasks; use the search box to narrow it
+down, then pick a color from the dropdown next to a tag.
+
+| Setting    | Default     | Options                                                                          | Description                          |
+| ---------- | ----------- | -------------------------------------------------------------------------------- | ------------------------------------ |
+| Tag color  | Theme color | Theme color, Red, Orange, Yellow, Green, Teal, Blue, Indigo, Purple, Pink, Gray  | The color applied to that single tag |
+
+Tags left on **Theme color** keep following the palette, so changing the
+palette only recolors the tags you have not pinned. **Reset all** clears every
+manual assignment at once.
 
 ## Simple Task Relations
 

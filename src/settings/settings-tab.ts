@@ -1,6 +1,14 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import TasksMapPlugin from "../main";
-import { TagColorPalette, getTagColorClass } from "../lib/tag-color-manager";
+import {
+  TagColorName,
+  TagColorPalette,
+  TAG_COLOR_DEFAULT,
+  TAG_COLOR_NAMES,
+  getTagColorClass,
+  setTagColorOverride,
+} from "../lib/tag-color-manager";
+import { getAllTasks } from "../lib/utils";
 import { t } from "../i18n";
 import { SUPPORTED_LANGUAGES } from "../i18n";
 
@@ -27,6 +35,91 @@ export class TasksMapSettingTab extends PluginSettingTab {
       previewDiv.createSpan({
         cls: `tasks-map-tag ${getTagColorClass(tag, palette)}`,
         text: tag,
+      });
+    });
+  }
+
+  /**
+   * Every tag currently used by a task, plus any tag that still has a manual
+   * color assigned (so an override can be cleared after the tag disappears).
+   */
+  private getKnownTags(): string[] {
+    const tags = new Set<string>();
+    try {
+      getAllTasks(this.app).forEach((task) => {
+        task.tags.forEach((tag) => tags.add(tag));
+      });
+    } catch {
+      // Dataview may not be ready yet; overrides below still render
+    }
+    Object.keys(this.plugin.settings.tagColorOverrides).forEach((tag) =>
+      tags.add(tag)
+    );
+    return Array.from(tags).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+  }
+
+  /**
+   * Renders one row per tag: a live chip preview plus a color dropdown that
+   * defaults to the palette color.
+   */
+  private createTagColorRows(
+    container: HTMLElement,
+    tags: string[],
+    query: string
+  ): void {
+    container.empty();
+
+    const normalizedQuery = query.trim().toLowerCase();
+    const visibleTags = normalizedQuery
+      ? tags.filter((tag) => tag.toLowerCase().includes(normalizedQuery))
+      : tags;
+
+    if (visibleTags.length === 0) {
+      container.createDiv({
+        cls: "tasks-map-tag-color-empty",
+        text:
+          tags.length === 0
+            ? t("settings.no_tags_found")
+            : t("settings.no_tags_match"),
+      });
+      return;
+    }
+
+    visibleTags.forEach((tag) => {
+      const setting = new Setting(container);
+      const chip = setting.nameEl.createSpan({
+        cls: `tasks-map-tag ${getTagColorClass(
+          tag,
+          this.plugin.settings.tagColorPalette,
+          this.plugin.settings.tagColorOverrides
+        )}`,
+        text: tag,
+      });
+
+      setting.addDropdown((dropdown) => {
+        dropdown.addOption(TAG_COLOR_DEFAULT, t("settings.tag_color_theme"));
+        TAG_COLOR_NAMES.forEach((color) => {
+          dropdown.addOption(color, t(`settings.tag_color_${color}`));
+        });
+        dropdown
+          .setValue(
+            this.plugin.settings.tagColorOverrides[tag] ?? TAG_COLOR_DEFAULT
+          )
+          .onChange(async (value) => {
+            this.plugin.settings.tagColorOverrides = setTagColorOverride(
+              this.plugin.settings.tagColorOverrides,
+              tag,
+              value as TagColorName | typeof TAG_COLOR_DEFAULT
+            );
+            await this.plugin.saveSettings();
+            chip.className = `tasks-map-tag ${getTagColorClass(
+              tag,
+              this.plugin.settings.tagColorPalette,
+              this.plugin.settings.tagColorOverrides
+            )}`;
+          });
       });
     });
   }
@@ -164,6 +257,7 @@ export class TasksMapSettingTab extends PluginSettingTab {
               ["priority", "bug", "feature", "docs", "blocked"],
               value as TagColorPalette
             );
+            this.createTagColorRows(tagColorList, knownTags, tagColorQuery);
           });
       });
 
@@ -173,6 +267,37 @@ export class TasksMapSettingTab extends PluginSettingTab {
       ["priority", "bug", "feature", "docs", "blocked"],
       this.plugin.settings.tagColorPalette
     );
+
+    const knownTags = this.getKnownTags();
+    let tagColorQuery = "";
+
+    const tagColorsSetting = new Setting(containerEl)
+      .setName(t("settings.tag_colors"))
+      .setDesc(t("settings.tag_colors_desc"))
+      .addSearch((search) => {
+        search
+          .setPlaceholder(t("settings.tag_colors_search_placeholder"))
+          .onChange((value) => {
+            tagColorQuery = value;
+            this.createTagColorRows(tagColorList, knownTags, tagColorQuery);
+          });
+      });
+
+    tagColorsSetting.addButton((button) => {
+      button
+        .setButtonText(t("settings.tag_colors_reset"))
+        .setTooltip(t("settings.tag_colors_reset_desc"))
+        .onClick(async () => {
+          this.plugin.settings.tagColorOverrides = {};
+          await this.plugin.saveSettings();
+          this.createTagColorRows(tagColorList, knownTags, tagColorQuery);
+        });
+    });
+
+    const tagColorList = containerEl.createDiv({
+      cls: "tasks-map-tag-color-list",
+    });
+    this.createTagColorRows(tagColorList, knownTags, tagColorQuery);
 
     new Setting(containerEl)
       .setHeading()

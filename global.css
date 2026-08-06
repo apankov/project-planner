@@ -418,6 +418,18 @@ If your plugin does not need CSS, delete this file.
 .tasks-map-tag--mono-6,
 .tasks-map-tag--mono-7 { background-color: #2674b5; }
 
+/* Manual per-tag colors (override the palette) */
+.tasks-map-tag--custom-red { background-color: #e05c5c; }
+.tasks-map-tag--custom-orange { background-color: #e07c3a; }
+.tasks-map-tag--custom-yellow { background-color: #c9a827; }
+.tasks-map-tag--custom-green { background-color: #4caf62; }
+.tasks-map-tag--custom-teal { background-color: #3ab8b8; }
+.tasks-map-tag--custom-blue { background-color: #2674b5; }
+.tasks-map-tag--custom-indigo { background-color: #4b5bbf; }
+.tasks-map-tag--custom-purple { background-color: #7c5cbf; }
+.tasks-map-tag--custom-pink { background-color: #d45fa0; }
+.tasks-map-tag--custom-gray { background-color: #6e7681; }
+
 .tasks-map-graph-container.tasks-map--hide-tags .tasks-map-tag-list,
 .tasks-map-graph-container.tasks-map--hide-tags .tasks-map-task-node-footer {
   display: none;
@@ -2119,4 +2131,21 @@ If your plugin does not need CSS, delete this file.
   gap: 8px;
   margin-top: 10px;
   flex-wrap: wrap;
+}
+
+.tasks-map-tag-color-list {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.tasks-map-tag-color-list .setting-item {
+  padding: 6px 0;
+  border-top: none;
+}
+
+.tasks-map-tag-color-empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 8px 0;
 }

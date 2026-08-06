@@ -357,6 +357,7 @@ export default function TaskMapGraphView({
       handleDeleteTask,
       groupByProject,
       settings.tagColorPalette,
+      settings.tagColorOverrides,
       handleTaskEdited,
       handleTaskCreated
     );

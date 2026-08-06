@@ -81,6 +81,7 @@ interface TaskNodeData {
   showTags?: boolean;
   debugVisualization?: boolean;
   tagColorPalette?: import("src/lib/tag-color-manager").TagColorPalette;
+  tagColorOverrides?: import("src/lib/tag-color-manager").TagColorOverrides;
   groupByProject?: boolean;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
@@ -97,6 +98,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     showTags = true,
     debugVisualization = false,
     tagColorPalette = "rainbow",
+    tagColorOverrides,
     groupByProject = false,
     onDeleteTask,
     onTaskCreated,
@@ -302,6 +304,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
                   key={tag}
                   tag={tag}
                   palette={tagColorPalette}
+                  colorOverrides={tagColorOverrides}
                   onRemove={(tag) => void handleTagRemove(tag)}
                 />
               ))}

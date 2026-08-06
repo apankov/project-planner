@@ -1,14 +1,24 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { TagColorPalette, getTagColorClass } from "../lib/tag-color-manager";
+import {
+  TagColorPalette,
+  TagColorOverrides,
+  getTagColorClass,
+} from "../lib/tag-color-manager";
 
 interface TagProps {
   tag: string;
   palette?: TagColorPalette;
+  colorOverrides?: TagColorOverrides;
   onRemove?: (tag: string) => void; // eslint-disable-line no-unused-vars -- prop callback parameter convention
 }
 
-export function Tag({ tag, palette = "rainbow", onRemove }: TagProps) {
+export function Tag({
+  tag,
+  palette = "rainbow",
+  colorOverrides,
+  onRemove,
+}: TagProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleRemoveClick = (e: React.MouseEvent) => {
@@ -18,7 +28,7 @@ export function Tag({ tag, palette = "rainbow", onRemove }: TagProps) {
 
   return (
     <span
-      className={`tasks-map-tag ${getTagColorClass(tag, palette)} ${onRemove ? "tasks-map-tag--removable" : ""}`}
+      className={`tasks-map-tag ${getTagColorClass(tag, palette, colorOverrides)} ${onRemove ? "tasks-map-tag--removable" : ""}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

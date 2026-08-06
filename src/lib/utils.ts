@@ -15,7 +15,7 @@ import { NODEHEIGHT, NODEWIDTH } from "src/components/task-node";
 import { TaskFactory } from "./task-factory";
 import { Position, Node, Edge } from "reactflow";
 import { t } from "../i18n";
-import { TagColorPalette } from "./tag-color-manager";
+import { TagColorPalette, TagColorOverrides } from "./tag-color-manager";
 
 export const statusSymbols = {
   todo: "[ ]",
@@ -1723,6 +1723,7 @@ export function createNodesFromTasks(
   onDeleteTask?: (taskId: string) => void,
   groupByProject: boolean = true,
   tagColorPalette: TagColorPalette = "rainbow",
+  tagColorOverrides: TagColorOverrides = {},
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void,
   onTaskCreated?: (_newTask: BaseTask) => void
 ): TaskNode[] {
@@ -1741,6 +1742,7 @@ export function createNodesFromTasks(
       debugVisualization,
       groupByProject,
       tagColorPalette,
+      tagColorOverrides,
       onDeleteTask,
       onTaskEdited,
       onTaskCreated,

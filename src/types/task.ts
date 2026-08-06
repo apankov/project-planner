@@ -1,6 +1,6 @@
 import { Node, Edge } from "reactflow";
 import { BaseTask } from "./base-task";
-import { TagColorPalette } from "../lib/tag-color-manager";
+import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 
 export type TaskStatus = "todo" | "in_progress" | "canceled" | "done";
 export type TaskType = "dataview" | "note";
@@ -22,6 +22,7 @@ export interface TaskNodeData {
   debugVisualization?: boolean;
   groupByProject?: boolean;
   tagColorPalette?: TagColorPalette;
+  tagColorOverrides?: TagColorOverrides;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention

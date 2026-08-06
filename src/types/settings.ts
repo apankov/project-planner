@@ -1,6 +1,6 @@
 import { Language } from "../i18n";
 import { FilterState } from "./filter-state";
-import { TagColorPalette } from "../lib/tag-color-manager";
+import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 
 export interface FilterPreset {
   id: string;
@@ -22,6 +22,8 @@ export interface TasksMapSettings {
 
   // Tag color settings
   tagColorPalette: TagColorPalette;
+  // Manual per-tag colors; tags absent here follow the palette
+  tagColorOverrides: TagColorOverrides;
 
   // Language setting
   language: Language;
@@ -44,6 +46,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
 
   // Tag color defaults
   tagColorPalette: "rainbow",
+  tagColorOverrides: {},
 
   // Language default
   language: "en",
