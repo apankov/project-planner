@@ -10,7 +10,12 @@ import {
 } from "obsidian";
 import { TaskStatus, TaskNode, TaskEdge, RawTask } from "src/types/task";
 import { AppWithPlugins } from "src/types/obsidian-internals";
-import { BaseTask, TaskInsertPosition } from "src/types/base-task";
+import {
+  BaseTask,
+  TaskInsertPosition,
+  TaskDateUpdate,
+} from "src/types/base-task";
+import { getFrontmatterDateProperties } from "./task-dates";
 import { NODEHEIGHT, NODEWIDTH } from "src/components/task-node";
 import { TaskFactory } from "./task-factory";
 import { Position, Node, Edge } from "reactflow";
@@ -351,63 +356,21 @@ export async function editTaskWithTasksModal(
   }
 }
 
-export type TaskDateType =
-  "due" | "scheduled" | "start" | "created" | "done" | "canceled";
+// Date parsing lives in `task-dates` so the task classes can use it without an
+// import cycle; re-exported here because callers already import it from utils.
+export type { TaskDateType, TaskDateProperty } from "./task-dates";
+export { getTaskDateProperties, findTaskDate } from "./task-dates";
 
-export interface TaskDateProperty {
-  type: TaskDateType;
-  date: string;
-}
-
-const TASK_DATE_DEFINITIONS: Array<{
-  type: TaskDateType;
-  emoji: string;
-  fields: string[];
-}> = [
-  { type: "due", emoji: "📅", fields: ["due"] },
-  { type: "scheduled", emoji: "⏳", fields: ["scheduled"] },
-  { type: "start", emoji: "🛫", fields: ["start"] },
-  { type: "created", emoji: "➕", fields: ["created"] },
-  { type: "done", emoji: "✅", fields: ["completion", "done"] },
-  {
-    type: "canceled",
-    emoji: "❌",
-    fields: ["canceled", "cancelled"],
-  },
-];
-
-export function getTaskDateProperties(taskText: string): TaskDateProperty[] {
-  const datePattern = "(\\d{4}-\\d{2}-\\d{2})";
-
-  return TASK_DATE_DEFINITIONS.flatMap(({ type, emoji, fields }) => {
-    const emojiMatch = taskText.match(
-      new RegExp(`${emoji}\\s*${datePattern}`, "u")
-    );
-    if (emojiMatch) {
-      return [{ type, date: emojiMatch[1] }];
-    }
-
-    for (const field of fields) {
-      const dataviewMatch = taskText.match(
-        new RegExp(
-          `(?:\\[\\[?|\\()${field}::\\s*${datePattern}(?:\\]\\]?|\\))`,
-          "i"
-        )
-      );
-      if (dataviewMatch) {
-        return [{ type, date: dataviewMatch[1] }];
-      }
-
-      const textMatch = taskText.match(
-        new RegExp(`(?:^|\\s)${field}:\\s*${datePattern}(?=\\s|$)`, "i")
-      );
-      if (textMatch) {
-        return [{ type, date: textMatch[1] }];
-      }
-    }
-
-    return [];
-  });
+/**
+ * Writes start/due dates to a task and returns the refreshed task. Both task
+ * types implement the write; this wrapper mirrors the other vault helpers.
+ */
+export async function setTaskDatesInVault(
+  task: BaseTask,
+  dates: TaskDateUpdate,
+  app: App
+): Promise<BaseTask | null> {
+  return task.setDates(dates, app);
 }
 
 export async function deleteTaskFromVault(
@@ -1573,6 +1536,9 @@ function parseTaskNote(
     if (typeof frontmatter.starred === "boolean") {
       task.starred = frontmatter.starred;
     }
+
+    // Note tasks keep their dates in frontmatter rather than in the task text
+    task.dates = getFrontmatterDateProperties(frontmatter);
 
     // Collect all incoming links from various sources
     const allIncomingLinks: string[] = [];

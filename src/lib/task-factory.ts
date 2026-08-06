@@ -1,5 +1,6 @@
 import { TaskStatus, RawTask } from "src/types/task";
 import { BaseTask } from "src/types/base-task";
+import { getTaskDateProperties } from "./task-dates";
 import { DataviewTask } from "src/types/dataview-task";
 import { NoteTask } from "src/types/note-task";
 
@@ -46,6 +47,7 @@ export class TaskFactory {
       link: rawTask.link.path,
       incomingLinks: this.parseIncomingLinks(text),
       starred: this.parseStarred(text),
+      dates: getTaskDateProperties(text),
     };
 
     // Return the appropriate subclass based on type

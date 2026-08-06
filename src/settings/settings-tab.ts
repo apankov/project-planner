@@ -89,6 +89,7 @@ export class TasksMapSettingTab extends PluginSettingTab {
 
     visibleTags.forEach((tag) => {
       const setting = new Setting(container);
+      setting.settingEl.addClass("tasks-map-tag-color-row");
       const chip = setting.nameEl.createSpan({
         cls: `tasks-map-tag ${getTagColorClass(
           tag,

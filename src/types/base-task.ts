@@ -1,7 +1,18 @@
 import { App, Vault } from "obsidian";
 import { TaskStatus } from "./task";
+import { TaskDateProperty } from "../lib/task-dates";
 
 export type TaskInsertPosition = "before" | "after";
+
+/**
+ * Dates to write to a task. A `null` value clears that date; an absent key
+ * leaves it untouched.
+ */
+export interface TaskDateUpdate {
+  start?: string | null;
+  due?: string | null;
+  scheduled?: string | null;
+}
 
 /**
  * Abstract base class for tasks.
@@ -19,6 +30,8 @@ export abstract class BaseTask {
   incomingLinks: string[];
   starred: boolean;
   projects: string[];
+  /** Dates carried by the task, from the task line or from frontmatter. */
+  dates: TaskDateProperty[];
 
   constructor(data: {
     id: string;
@@ -31,6 +44,7 @@ export abstract class BaseTask {
     incomingLinks: string[];
     starred: boolean;
     projects?: string[];
+    dates?: TaskDateProperty[];
   }) {
     this.id = data.id;
     this.summary = data.summary;
@@ -42,6 +56,7 @@ export abstract class BaseTask {
     this.incomingLinks = data.incomingLinks;
     this.starred = data.starred;
     this.projects = data.projects ?? [];
+    this.dates = data.dates ?? [];
   }
 
   /**
@@ -84,6 +99,15 @@ export abstract class BaseTask {
   abstract removeTag(_tagToRemove: string, _app: App): Promise<void>;
 
   /**
+   * Write start/due/scheduled dates to the task, returning the updated task
+   * so the caller can refresh its copy without a full reload.
+   */
+  abstract setDates(
+    _dates: TaskDateUpdate,
+    _app: App
+  ): Promise<BaseTask | null>;
+
+  /**
    * Add link metadata to this task (for creating dependencies)
    */
   abstract addLinkMetadata(
@@ -113,6 +137,7 @@ export abstract class BaseTask {
       incomingLinks: this.incomingLinks,
       starred: this.starred,
       projects: this.projects,
+      dates: this.dates,
     };
   }
 }

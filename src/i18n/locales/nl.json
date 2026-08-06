@@ -5,10 +5,12 @@
   },
   "commands": {
     "open_map_view": "Kaartweergave openen",
-    "insert_filter_as_code_block": "Huidig filter invoegen als ingesloten Taken Kaart"
+    "insert_filter_as_code_block": "Huidig filter invoegen als ingesloten Taken Kaart",
+    "open_gantt_view": "Gantt-weergave openen"
   },
   "ribbon": {
-    "open_tasks_map": "Taken kaartweergave openen"
+    "open_tasks_map": "Taken kaartweergave openen",
+    "open_tasks_gantt": "Takengantt openen"
   },
   "view": {
     "title": "Taken kaart",
@@ -18,6 +20,31 @@
     "visit_community_plugins": "Ga naar het gedeelte Community Plugins in Instellingen om Dataview te installeren of in te schakelen.",
     "plugin_not_found": "Taken Kaart kan niet worden geladen",
     "plugin_not_found_description": "De instantie van de Taken Kaart-plugin kon niet worden gevonden. Probeer de weergave te sluiten en opnieuw te openen."
+  },
+  "gantt": {
+    "view_title": "Takengantt",
+    "column_task": "Taak",
+    "loading": "Taken laden...",
+    "reloaded": "Taken herladen",
+    "reload": "Taken herladen",
+    "today": "Vandaag",
+    "jump_to_today": "Scroll de tijdlijn naar vandaag",
+    "scale_days": "Dagen",
+    "scale_weeks": "Weken",
+    "scale_months": "Maanden",
+    "search_placeholder": "Taken zoeken",
+    "hide_completed": "Voltooide verbergen",
+    "task_count": "{{n}} taken",
+    "empty": "Geen taken gevonden in je kluis",
+    "empty_filtered": "Geen taken komen overeen met de zoekopdracht",
+    "bar_tooltip": "{{start}} tot {{end}} — sleep om te verplaatsen, sleep een rand om te verkleinen of vergroten",
+    "bar_inferred_tooltip": "Voorstel {{start}} tot {{end}} — nog niet opgeslagen; sleep om in te plannen",
+    "inferred_hint": "{{n}} taken hebben voorgestelde datums (gestippeld). Sleep er een, of gebruik Voorgestelde datums toepassen, om ze naar je notities te schrijven.",
+    "apply_inferred": "{{n}} voorgestelde datums toepassen",
+    "apply_inferred_desc": "Schrijf elke voorgestelde datum naar de notitie",
+    "applied_inferred": "{{n}} taken ingepland",
+    "applied_inferred_partial": "{{n}} taken ingepland, {{failed}} konden niet worden geschreven",
+    "write_failed": "Kon de datums van \"{{task}}\" niet bijwerken"
   },
   "settings": {
     "display_options": "Weergaveopties",
@@ -119,7 +146,7 @@
   "search": {
     "placeholder": "Taken zoeken...",
     "clear": "Zoekopdracht wissen",
-    "results_count": "{{count}} resultaat/resultaten gevonden",
+    "results_count": "{{n}} resultaat/resultaten gevonden",
     "no_results": "Geen resultaten gevonden",
     "show_dependencies": "Toon afhankelijkheden",
     "show_dependents": "Toon afhankelijken"
@@ -155,7 +182,7 @@
   },
   "notices": {
     "project_assigned": "Toegevoegd aan project: {{projectName}}",
-    "project_assigned_multiple": "{{count}} taken toegevoegd aan project: {{projectName}}"
+    "project_assigned_multiple": "{{n}} taken toegevoegd aan project: {{projectName}}"
   },
   "presets": {
     "panel_title": "Opgeslagen filters",

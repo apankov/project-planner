@@ -2139,7 +2139,7 @@ If your plugin does not need CSS, delete this file.
   margin-bottom: 12px;
 }
 
-.tasks-map-tag-color-list .setting-item {
+.tasks-map-tag-color-row {
   padding: 6px 0;
   border-top: none;
 }
@@ -2148,4 +2148,389 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-faint);
   font-size: 13px;
   padding: 8px 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Gantt view
+   Bar geometry comes from the --bar-offset / --bar-span custom properties set
+   from React, so dragging updates two variables instead of re-rendering a row.
+--------------------------------------------------------------------------- */
+
+.tasks-map-gantt-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tasks-map-gantt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.tasks-map-gantt-toolbar__group {
+  display: inline-flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  overflow: hidden;
+}
+
+.tasks-map-gantt-toolbar__scale {
+  background: var(--background-primary);
+  color: var(--text-muted);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tasks-map-gantt-toolbar__scale--active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tasks-map-gantt-toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tasks-map-gantt-toolbar__button--accent {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tasks-map-gantt-toolbar__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tasks-map-gantt-toolbar__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  color: var(--text-faint);
+}
+
+.tasks-map-gantt-toolbar__search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  font-size: 12px;
+  width: 150px;
+  color: var(--text-normal);
+}
+
+.tasks-map-gantt-toolbar__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tasks-map-gantt-toolbar__count {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.tasks-map-gantt-toolbar__spacer {
+  flex: 1 1 auto;
+}
+
+.tasks-map-gantt-empty,
+.tasks-map-gantt-hint {
+  padding: 12px;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.tasks-map-gantt-hint {
+  border-top: 1px solid var(--background-modifier-border);
+  flex: 0 0 auto;
+}
+
+.tasks-map-gantt {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The single scroll container: vertical scrolling moves labels and bars
+   together, and the label column stays pinned while scrolling sideways. */
+.tasks-map-gantt__scroll {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: auto;
+}
+
+.tasks-map-gantt__labels {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  flex: 0 0 260px;
+  width: 260px;
+  border-right: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+}
+
+.tasks-map-gantt__labels-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--background-primary);
+  /* Matches the two header rows plus the timeline header's bottom border */
+  height: calc(var(--gantt-row-height) * 2 + 1px);
+  display: flex;
+  align-items: flex-end;
+  padding: 0 8px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--background-modifier-border);
+  box-sizing: border-box;
+}
+
+.tasks-map-gantt__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--gantt-row-height);
+  padding: 0 6px 0 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.tasks-map-gantt__label--selected {
+  background: var(--background-modifier-hover);
+}
+
+.tasks-map-gantt__label-text {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.tasks-map-gantt__label-tags {
+  display: inline-flex;
+  flex: 0 0 auto;
+  max-width: 90px;
+  overflow: hidden;
+}
+
+.tasks-map-gantt__status {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.tasks-map-gantt__status--todo { background: var(--color-blue, #2674b5); }
+.tasks-map-gantt__status--in_progress { background: var(--color-orange, #e07c3a); }
+.tasks-map-gantt__status--done { background: var(--color-green, #4caf62); }
+.tasks-map-gantt__status--canceled { background: var(--text-faint); }
+
+.tasks-map-gantt__timeline {
+  position: relative;
+  flex: 0 0 auto;
+  width: calc(var(--gantt-total-days) * var(--gantt-day-width));
+  min-width: calc(100% - 260px);
+}
+
+.tasks-map-gantt__header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--background-primary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tasks-map-gantt__months,
+.tasks-map-gantt__ticks {
+  position: relative;
+  height: var(--gantt-row-height);
+}
+
+.tasks-map-gantt__month,
+.tasks-map-gantt__tick,
+.tasks-map-gantt__weekend {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--bar-offset) * var(--gantt-day-width));
+  width: calc(var(--bar-span) * var(--gantt-day-width));
+  box-sizing: border-box;
+}
+
+.tasks-map-gantt__month {
+  border-left: 1px solid var(--background-modifier-border);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.tasks-map-gantt__month-label {
+  padding-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tasks-map-gantt__tick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-faint);
+  border-left: 1px solid var(--background-modifier-border-hover);
+}
+
+.tasks-map-gantt__tick--major {
+  border-left-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.tasks-map-gantt__tick--weekend {
+  background: var(--background-secondary);
+}
+
+.tasks-map-gantt__body {
+  position: relative;
+}
+
+.tasks-map-gantt__weekend {
+  height: 100%;
+  background: var(--background-secondary);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.tasks-map-gantt__today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gantt-today-offset) * var(--gantt-day-width));
+  width: 2px;
+  background: var(--color-red, #e05c5c);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tasks-map-gantt__arrows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tasks-map-gantt__arrow {
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+
+.tasks-map-gantt__arrowhead {
+  fill: var(--text-faint);
+  opacity: 0.7;
+}
+
+.tasks-map-gantt__row {
+  position: relative;
+  height: var(--gantt-row-height);
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.tasks-map-gantt__row--selected {
+  background: var(--background-modifier-hover);
+}
+
+.tasks-map-gantt-bar {
+  position: absolute;
+  top: 4px;
+  height: calc(var(--gantt-row-height) - 12px);
+  left: calc(var(--bar-offset) * var(--gantt-day-width));
+  width: calc(var(--bar-span) * var(--gantt-day-width));
+  min-width: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  background: var(--color-blue, #2674b5);
+  color: white;
+  font-size: 11px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  z-index: 2;
+}
+
+.tasks-map-gantt-bar--in_progress { background: var(--color-orange, #e07c3a); }
+.tasks-map-gantt-bar--done { background: var(--color-green, #4caf62); }
+.tasks-map-gantt-bar--canceled { background: var(--text-faint); }
+
+.tasks-map-gantt-bar--inferred {
+  background: transparent;
+  border: 1px dashed var(--text-muted);
+  color: var(--text-muted);
+}
+
+.tasks-map-gantt-bar--dragging {
+  cursor: grabbing;
+  opacity: 0.85;
+  box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.tasks-map-gantt-bar--selected {
+  box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.tasks-map-gantt-bar--saving {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.tasks-map-gantt-bar__label {
+  flex: 1 1 auto;
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tasks-map-gantt-bar__handle {
+  flex: 0 0 auto;
+  width: 6px;
+  align-self: stretch;
+  cursor: ew-resize;
+  border-radius: 4px;
+}
+
+.tasks-map-gantt-bar__handle:hover {
+  background: rgba(255, 255, 255, 0.35);
 }

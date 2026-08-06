@@ -5,10 +5,12 @@
   },
   "commands": {
     "open_map_view": "Open map view",
-    "insert_filter_as_code_block": "Insert current filter as embedded Tasks Map"
+    "insert_filter_as_code_block": "Insert current filter as embedded Tasks Map",
+    "open_gantt_view": "Open Gantt view"
   },
   "ribbon": {
-    "open_tasks_map": "Open tasks map view"
+    "open_tasks_map": "Open tasks map view",
+    "open_tasks_gantt": "Open Tasks Gantt"
   },
   "view": {
     "title": "Tasks map",
@@ -18,6 +20,31 @@
     "visit_community_plugins": "Visit the Community Plugins section in Settings to install or enable Dataview.",
     "plugin_not_found": "Unable to load Tasks Map",
     "plugin_not_found_description": "The Tasks Map plugin instance could not be resolved. Try closing and reopening the view."
+  },
+  "gantt": {
+    "view_title": "Tasks Gantt",
+    "column_task": "Task",
+    "loading": "Loading tasks...",
+    "reloaded": "Tasks reloaded",
+    "reload": "Reload tasks",
+    "today": "Today",
+    "jump_to_today": "Scroll the timeline to today",
+    "scale_days": "Days",
+    "scale_weeks": "Weeks",
+    "scale_months": "Months",
+    "search_placeholder": "Search tasks",
+    "hide_completed": "Hide completed",
+    "task_count": "{{n}} tasks",
+    "empty": "No tasks found in your vault",
+    "empty_filtered": "No tasks match the current search",
+    "bar_tooltip": "{{start}} to {{end}} — drag to move, drag an edge to resize",
+    "bar_inferred_tooltip": "Suggested {{start}} to {{end}} — not saved yet; drag to schedule",
+    "inferred_hint": "{{n}} tasks have suggested dates (dashed). Drag one, or use Apply suggested dates, to write them to your notes.",
+    "apply_inferred": "Apply {{n}} suggested dates",
+    "apply_inferred_desc": "Write every suggested date to its note",
+    "applied_inferred": "Scheduled {{n}} tasks",
+    "applied_inferred_partial": "Scheduled {{n}} tasks, {{failed}} could not be written",
+    "write_failed": "Could not update dates for \"{{task}}\""
   },
   "settings": {
     "display_options": "Display Options",
@@ -119,7 +146,7 @@
   "search": {
     "placeholder": "Search tasks...",
     "clear": "Clear search",
-    "results_count": "{{count}} result(s) found",
+    "results_count": "{{n}} result(s) found",
     "no_results": "No results found",
     "show_dependencies": "Show dependencies",
     "show_dependents": "Show dependents"
@@ -155,7 +182,7 @@
   },
   "notices": {
     "project_assigned": "Added to project: {{projectName}}",
-    "project_assigned_multiple": "Added {{count}} tasks to project: {{projectName}}"
+    "project_assigned_multiple": "Added {{n}} tasks to project: {{projectName}}"
   },
   "presets": {
     "panel_title": "Saved Filters",

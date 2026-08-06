@@ -9,6 +9,9 @@ import {
 import { createRoot } from "react-dom/client";
 
 import TaskMapGraphItemView, { VIEW_TYPE } from "./views/TaskMapGraphItemView";
+import TasksMapGanttItemView, {
+  GANTT_VIEW_TYPE,
+} from "./views/TasksMapGanttItemView";
 import TaskMapGraphEmbedView, {
   TaskMapEmbedError,
   filterStateFromSource,
@@ -70,6 +73,11 @@ export default class TasksMapPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new TaskMapGraphItemView(leaf)
     );
 
+    this.registerView(
+      GANTT_VIEW_TYPE,
+      (leaf: WorkspaceLeaf) => new TasksMapGanttItemView(leaf)
+    );
+
     this.addSettingTab(new TasksMapSettingTab(this.app, this));
 
     this.addCommand({
@@ -77,6 +85,14 @@ export default class TasksMapPlugin extends Plugin {
       name: t("commands.open_map_view"),
       callback: () => {
         void this.activateViewInMainArea();
+      },
+    });
+
+    this.addCommand({
+      id: "open-tasks-map-gantt-view",
+      name: t("commands.open_gantt_view"),
+      callback: () => {
+        void this.activateGanttViewInMainArea();
       },
     });
 
@@ -90,6 +106,10 @@ export default class TasksMapPlugin extends Plugin {
 
     this.addRibbonIcon("map", t("ribbon.open_tasks_map"), () => {
       void this.activateViewInMainArea();
+    });
+
+    this.addRibbonIcon("gantt-chart", t("ribbon.open_tasks_gantt"), () => {
+      void this.activateGanttViewInMainArea();
     });
 
     // Register the tasks-map fenced code block processor
@@ -225,6 +245,12 @@ export default class TasksMapPlugin extends Plugin {
   async activateViewInMainArea() {
     const leaf = this.app.workspace.getLeaf(true); // true = main area
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
+    void this.app.workspace.revealLeaf(leaf);
+  }
+
+  async activateGanttViewInMainArea() {
+    const leaf = this.app.workspace.getLeaf(true); // true = main area
+    await leaf.setViewState({ type: GANTT_VIEW_TYPE, active: true });
     void this.app.workspace.revealLeaf(leaf);
   }
 

@@ -1,7 +1,12 @@
 import { App, Vault, parseYaml, stringifyYaml } from "obsidian";
 import { BaseTask } from "./base-task";
 import { TaskStatus } from "./task";
-import { TaskInsertPosition } from "./base-task";
+import { TaskInsertPosition, TaskDateUpdate } from "./base-task";
+import {
+  TaskDateProperty,
+  TaskDateType,
+  frontmatterKeyForDate,
+} from "../lib/task-dates";
 
 interface DependencyEntry {
   uid: string;
@@ -88,6 +93,77 @@ export class NoteTask extends BaseTask {
     const newFilePath = `${folderPath}/${newFileName}`;
 
     await vault.create(newFilePath, `# ${this.text}\n\n${this.text}`);
+  }
+
+  async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {
+    if (!this.link) return null;
+    const vault = app?.vault;
+    if (!vault) return null;
+    const file = vault.getFileByPath(this.link);
+    if (!file) return null;
+
+    const entries = Object.entries(dates).filter(
+      ([, date]) => date !== undefined
+    ) as Array<[TaskDateType, string | null]>;
+    if (entries.length === 0) return null;
+
+    let wrote = false;
+
+    await vault.process(file, (fileContent) => {
+      const lines = fileContent.split(/\r?\n/);
+      const { frontmatterStart, frontmatterEnd } = this.findFrontmatter(lines);
+
+      if (frontmatterStart === -1 || frontmatterEnd === -1) {
+        return fileContent;
+      }
+
+      const frontmatterYaml = lines
+        .slice(frontmatterStart + 1, frontmatterEnd)
+        .join("\n");
+      const bodyContent = lines.slice(frontmatterEnd + 1).join("\n");
+      const frontmatterData = parseYaml(frontmatterYaml) || {};
+
+      for (const [type, date] of entries) {
+        const key = frontmatterKeyForDate(type);
+        if (date === null) {
+          delete frontmatterData[key];
+        } else {
+          frontmatterData[key] = date;
+        }
+      }
+
+      wrote = true;
+      return `---\n${stringifyYaml(frontmatterData)}---\n${bodyContent}`;
+    });
+
+    if (!wrote) return null;
+
+    return this.withDates(entries);
+  }
+
+  /** A copy of this task carrying the updated dates. */
+  private withDates(entries: Array<[TaskDateType, string | null]>): NoteTask {
+    const nextDates: TaskDateProperty[] = this.dates.filter(
+      (entry) => !entries.some(([type]) => type === entry.type)
+    );
+
+    for (const [type, date] of entries) {
+      if (date !== null) nextDates.push({ type, date });
+    }
+
+    return new NoteTask({
+      id: this.id,
+      summary: this.summary,
+      text: this.text,
+      tags: this.tags,
+      status: this.status,
+      priority: this.priority,
+      link: this.link,
+      incomingLinks: this.incomingLinks,
+      starred: this.starred,
+      projects: this.projects,
+      dates: nextDates,
+    });
   }
 
   async delete(app: App): Promise<void> {
