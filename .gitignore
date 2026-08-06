@@ -17,6 +17,9 @@ styles.css
 
 # obsidian
 data.json
+
+# Local deploy target for `npm run deploy` (personal vault path)
+.obsidian-plugin-dir
 test/fixture/TaskNotes/Views/
 
 # Exclude macOS Finder (System Explorer) View States

@@ -102,6 +102,24 @@ npm run build
 
 Enable the plugin in Obsidian under Settings → Community plugins.
 
+### Automating the copy
+
+`npm run deploy` copies `main.js`, `manifest.json`, and `styles.css` into a
+vault plugin folder for you, and `npm run build:deploy` does both steps at once.
+
+Point it at your vault by creating a `.obsidian-plugin-dir` file in the
+repository root (git-ignored) whose first non-comment line is the target path:
+
+```text
+C:\Users\you\MyVault\.obsidian\plugins\tasks-map
+```
+
+Alternatively set the `OBSIDIAN_PLUGIN_DIR` environment variable, which takes
+precedence over the file. The plugin's `data.json` in the target folder is never
+touched, so your local settings survive a deploy. Obsidian keeps the previous
+`main.js` in memory, so reload it (Ctrl+P → *Reload app without saving*) after
+deploying.
+
 ## API Reference
 
 See [Obsidian API Docs](https://github.com/obsidianmd/obsidian-api).
