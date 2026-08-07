@@ -33,6 +33,32 @@ date:
 - **Apply suggested dates** in the toolbar — writes every dashed bar at once,
   reporting how many notes were updated.
 
+## Row order
+
+The chart never rearranges itself. Rows keep the order you put them in, and
+new tasks are appended rather than slotted in by date.
+
+| Control          | What it does                                              |
+| ---------------- | --------------------------------------------------------- |
+| Drag the grip    | Moves a row; the order is saved                            |
+| Sort by date     | Rearranges once, earliest first                            |
+| Undo             | Steps back through previous orders, including after a drag |
+| Group by         | Splits rows by tag, status, note, or project               |
+
+A task with several tags is filed under one of them only — drawing it in every
+matching group would duplicate the bar.
+
+## Adding and linking tasks
+
+| Control                    | What it does                                                |
+| -------------------------- | ------------------------------------------------------------ |
+| **Add task** in the toolbar | Adds a task at the end of the list                          |
+| **+** on a row             | Writes a task directly below that one, in the same note      |
+| **Link** on a row          | Starts a dependency — click the task it should block, Escape to cancel |
+
+Links are written with the same `⛔` / `🆔` metadata the map uses, so anything
+you connect here shows up in the map too.
+
 ## Editing the timeline
 
 | Action                     | Result                                          |
@@ -40,7 +66,7 @@ date:
 | Drag a bar sideways        | Moves start and due together, keeping its length |
 | Drag the left edge         | Changes the start date                          |
 | Drag the right edge        | Changes the due date                            |
-| Click a task name          | Selects the row                                 |
+| Click a task name          | Selects the row and lights up its dependency chain |
 | Click the arrow button     | Opens the note the task lives in                |
 
 Dragging snaps to whole days. A bar can never be shorter than one day.
@@ -55,6 +81,10 @@ Arrows join each blocker to the task it blocks, using the same `⛔` / `🆔`
 relationships as the map. Arrows are only drawn between tasks that are both
 visible, so filtering hides the arrows to tasks that dropped out.
 
+Clicking a task highlights its whole chain — everything it waits on and
+everything waiting on it — and fades the rest. Click it again, or click
+another task, to move the highlight. The map does the same thing.
+
 ## Toolbar
 
 | Control              | Purpose                                                     |
@@ -65,6 +95,10 @@ visible, so filtering hides the arrows to tasks that dropped out.
 | Hide completed       | Removes done and canceled tasks from the chart              |
 | Apply suggested dates | Writes every dashed bar to its note                        |
 | Reload               | Re-reads tasks from the vault                               |
+| Task column divider  | Drag to widen the column for long task names                |
+
+Task names render `[[wikilinks]]` as real links, so a task whose text is a
+link opens that note when clicked.
 
 The red vertical line marks today, and weekends are shaded at the day zoom
 level.
