@@ -145,7 +145,12 @@
     "debug_visualization": "Debug visualization",
     "debug_visualization_desc": "Show additional debug information in the graph view",
     "language": "Language",
-    "language_desc": "Select the language for the plugin interface"
+    "language_desc": "Select the language for the plugin interface",
+    "task_creation": "Task Creation",
+    "companion_notes": "Create a note for each new task",
+    "companion_notes_desc": "New tasks are written as a link to their own note, so there is always somewhere to keep the detail. Existing tasks are left alone.",
+    "companion_note_folder": "Note folder",
+    "companion_note_folder_desc": "Where task notes are created"
   },
   "filters": {
     "status": "Status",

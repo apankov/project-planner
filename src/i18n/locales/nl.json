@@ -145,7 +145,12 @@
     "debug_visualization": "Debug visualisatie",
     "debug_visualization_desc": "Toon aanvullende debug-informatie in de grafiekweergave",
     "language": "Taal",
-    "language_desc": "Selecteer de taal voor de plugin-interface"
+    "language_desc": "Selecteer de taal voor de plugin-interface",
+    "task_creation": "Taken aanmaken",
+    "companion_notes": "Maak een notitie voor elke nieuwe taak",
+    "companion_notes_desc": "Nieuwe taken worden als link naar hun eigen notitie geschreven, zodat er altijd een plek is voor details. Bestaande taken blijven ongewijzigd.",
+    "companion_note_folder": "Notitiemap",
+    "companion_note_folder_desc": "Waar taaknotities worden aangemaakt"
   },
   "filters": {
     "status": "Status",

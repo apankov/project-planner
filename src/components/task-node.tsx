@@ -82,6 +82,7 @@ interface TaskNodeData {
   debugVisualization?: boolean;
   tagColorPalette?: import("src/lib/tag-color-manager").TagColorPalette;
   tagColorOverrides?: import("src/lib/tag-color-manager").TagColorOverrides;
+  companionNoteOptions?: import("src/lib/companion-note").CompanionNoteOptions;
   connected?: boolean;
   dimmed?: boolean;
   groupByProject?: boolean;
@@ -101,6 +102,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     debugVisualization = false,
     tagColorPalette = "rainbow",
     tagColorOverrides,
+    companionNoteOptions = { enabled: false, folder: "Tasks" },
     connected = false,
     dimmed = false,
     groupByProject = false,
@@ -296,6 +298,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
           <TaskMenu
             task={task}
             app={app}
+            companionNoteOptions={companionNoteOptions}
             onTaskDeleted={() => onDeleteTask?.(task.id)}
             onTaskCreated={onTaskCreated}
             onTaskEdited={onTaskEdited}

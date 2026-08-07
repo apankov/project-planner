@@ -28,6 +28,10 @@ import { Position, Node, Edge } from "reactflow";
 import { t } from "../i18n";
 import { TagColorPalette, TagColorOverrides } from "./tag-color-manager";
 import { EdgeStyleOverrides, getEdgeStyle } from "./edge-style-manager";
+import {
+  CompanionNoteOptions,
+  DEFAULT_COMPANION_FOLDER,
+} from "./companion-note";
 
 export const statusSymbols = {
   todo: "[ ]",
@@ -1742,7 +1746,11 @@ export function createNodesFromTasks(
   tagColorOverrides: TagColorOverrides = {},
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void,
   onTaskCreated?: (_newTask: BaseTask) => void,
-  highlight: ConnectionHighlight = EMPTY_HIGHLIGHT
+  highlight: ConnectionHighlight = EMPTY_HIGHLIGHT,
+  companionNoteOptions: CompanionNoteOptions = {
+    enabled: false,
+    folder: DEFAULT_COMPANION_FOLDER,
+  }
 ): TaskNode[] {
   const highlighting = isHighlightActive(highlight);
   const isVertical = layoutDirection === "Vertical";
@@ -1761,6 +1769,7 @@ export function createNodesFromTasks(
       groupByProject,
       tagColorPalette,
       tagColorOverrides,
+      companionNoteOptions,
       connected: highlighting && highlight.taskIds.has(task.id),
       dimmed: highlighting && !highlight.taskIds.has(task.id),
       onDeleteTask,

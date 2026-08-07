@@ -32,6 +32,7 @@ import {
   appendTaskLineToFile,
 } from "src/lib/utils";
 import { promptForTaskLine } from "src/components/task-line-modal";
+import { withCompanionNote } from "src/lib/companion-note";
 import { BaseTask } from "src/types/task";
 import { NoteTask } from "src/types/note-task";
 import GuiOverlay from "src/components/gui-overlay";
@@ -810,6 +811,30 @@ export default function TaskMapGraphView({
    * at (or the note that already holds the most tasks) and dropping the node
    * where they right-clicked.
    */
+  /**
+   * Adds the companion note for a new task, returning the task line to
+   * write. A note failure never blocks the task itself.
+   */
+  const attachCompanionNote = useCallback(
+    async (taskLine: string, summary: string): Promise<string> => {
+      try {
+        return await withCompanionNote(
+          app,
+          {
+            enabled: settings.createCompanionNotes,
+            folder: settings.companionNoteFolder,
+          },
+          taskLine,
+          summary
+        );
+      } catch (error) {
+        console.error("Could not create companion note", error);
+        return taskLine;
+      }
+    },
+    [app, settings.companionNoteFolder, settings.createCompanionNotes]
+  );
+
   const createStandaloneTask = useCallback(
     async (screenPosition: { x: number; y: number }) => {
       const targetFile = resolveDefaultTaskFile(app, tasks);
@@ -818,14 +843,17 @@ export default function TaskMapGraphView({
         return;
       }
 
-      const taskLine = await askForTaskLine();
-      if (!taskLine) return;
+      const rawTaskLine = await askForTaskLine();
+      if (!rawTaskLine) return;
 
-      const newTask = parseTaskLine(taskLine, targetFile.path);
-      if (!newTask) {
+      const draft = parseTaskLine(rawTaskLine, targetFile.path);
+      if (!draft) {
         new Notice(t("task_create.could_not_read"));
         return;
       }
+
+      const taskLine = await attachCompanionNote(rawTaskLine, draft.summary);
+      const newTask = parseTaskLine(taskLine, targetFile.path) ?? draft;
 
       try {
         await appendTaskLineToFile(targetFile, taskLine, app);
@@ -873,14 +901,17 @@ export default function TaskMapGraphView({
         return;
       }
 
-      const taskLine = await askForTaskLine();
-      if (!taskLine) return;
+      const rawTaskLine = await askForTaskLine();
+      if (!rawTaskLine) return;
 
-      const newTask = parseTaskLine(taskLine, anchorTask.link);
-      if (!newTask || newTask.type !== anchorTask.type) {
+      const draft = parseTaskLine(rawTaskLine, anchorTask.link);
+      if (!draft || draft.type !== anchorTask.type) {
         new Notice(t("task_create.could_not_read"));
         return;
       }
+
+      const taskLine = await attachCompanionNote(rawTaskLine, draft.summary);
+      const newTask = parseTaskLine(taskLine, anchorTask.link) ?? draft;
 
       try {
         await addTaskLineToVault(anchorTask, taskLine, app, position);
@@ -951,7 +982,7 @@ export default function TaskMapGraphView({
         }
       }
     },
-    [app, createUpdatedTask, settings.linkingStyle, vault]
+    [app, attachCompanionNote, createUpdatedTask, settings.linkingStyle, vault]
   );
 
   const onPaneContextMenu = useCallback(

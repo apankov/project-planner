@@ -9,6 +9,7 @@ import {
   setTagColorOverride,
 } from "../lib/tag-color-manager";
 import { getAllTasks } from "../lib/utils";
+import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 import { t } from "../i18n";
 import { SUPPORTED_LANGUAGES } from "../i18n";
 
@@ -299,6 +300,34 @@ export class TasksMapSettingTab extends PluginSettingTab {
       cls: "tasks-map-tag-color-list",
     });
     this.createTagColorRows(tagColorList, knownTags, tagColorQuery);
+
+    new Setting(containerEl).setHeading().setName(t("settings.task_creation"));
+
+    new Setting(containerEl)
+      .setName(t("settings.companion_notes"))
+      .setDesc(t("settings.companion_notes_desc"))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.createCompanionNotes)
+          .onChange(async (value) => {
+            this.plugin.settings.createCompanionNotes = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.companion_note_folder"))
+      .setDesc(t("settings.companion_note_folder_desc"))
+      .addText((text) =>
+        text
+          .setPlaceholder(DEFAULT_COMPANION_FOLDER)
+          .setValue(this.plugin.settings.companionNoteFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.companionNoteFolder =
+              value.trim() || DEFAULT_COMPANION_FOLDER;
+            await this.plugin.saveSettings();
+          })
+      );
 
     new Setting(containerEl)
       .setHeading()

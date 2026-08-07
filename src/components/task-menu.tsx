@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MoreVertical, Trash2 } from "lucide-react";
-import { App } from "obsidian";
+import { App, Notice } from "obsidian";
 import { BaseTask } from "src/types/task";
 import { CirclePlus, SquarePen } from "lucide-react";
 import {
@@ -10,10 +10,14 @@ import {
   getTasksApi,
   parseTaskLine,
 } from "../lib/utils";
+import { CompanionNoteOptions, withCompanionNote } from "../lib/companion-note";
+import { promptForTaskLine } from "./task-line-modal";
+import { t } from "../i18n";
 
 interface TaskMenuProps {
   task: BaseTask;
   app: App;
+  companionNoteOptions: CompanionNoteOptions;
   onTaskDeleted?: () => void;
   onTaskCreated?: (_newTask: BaseTask) => void;
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;
@@ -22,6 +26,7 @@ interface TaskMenuProps {
 const TaskMenu = ({
   task,
   app,
+  companionNoteOptions,
   onTaskDeleted,
   onTaskCreated,
   onTaskEdited,
@@ -66,25 +71,40 @@ const TaskMenu = ({
     setIsOpen(false);
 
     const tasksApi = getTasksApi(app);
-    if (!tasksApi) {
-      console.error("Tasks plugin not found or API not available");
+    const rawTaskLine = await promptForTaskLine(
+      app,
+      tasksApi ? () => tasksApi.createTaskLineModal() : null
+    );
+    if (!rawTaskLine) return;
+
+    const draft = parseTaskLine(rawTaskLine, task.link);
+    if (!draft) {
+      new Notice(t("task_create.could_not_read"));
       return;
     }
 
-    const taskLine = await tasksApi.createTaskLineModal();
-    if (!taskLine?.trim()) {
+    let taskLine = rawTaskLine;
+    try {
+      taskLine = await withCompanionNote(
+        app,
+        companionNoteOptions,
+        rawTaskLine,
+        draft.summary
+      );
+    } catch (error) {
+      console.error("Could not create companion note", error);
+    }
+
+    try {
+      await addTaskLineToVault(task, taskLine, app);
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      new Notice(t("task_create.failed"));
       return;
     }
 
-    // Do whatever you want with the returned value.
-    // It's just a string containing the Markdown for the task.
-    // console.log(taskLine);
-    await addTaskLineToVault(task, taskLine, app);
-
-    const newTask = parseTaskLine(taskLine, task.link);
-    if (newTask) {
-      onTaskCreated?.(newTask);
-    }
+    const newTask = parseTaskLine(taskLine, task.link) ?? draft;
+    onTaskCreated?.(newTask);
   };
 
   const handleEdit = async (e: React.MouseEvent) => {

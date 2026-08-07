@@ -145,7 +145,12 @@
     "debug_visualization": "调试可视化",
     "debug_visualization_desc": "在图形视图中显示附加调试信息",
     "language": "语言",
-    "language_desc": "选择插件界面的语言"
+    "language_desc": "选择插件界面的语言",
+    "task_creation": "任务创建",
+    "companion_notes": "为每个新任务创建笔记",
+    "companion_notes_desc": "新任务将写成指向其专属笔记的链接，方便随时记录细节。现有任务不受影响。",
+    "companion_note_folder": "笔记文件夹",
+    "companion_note_folder_desc": "任务笔记的创建位置"
   },
   "filters": {
     "status": "状态",

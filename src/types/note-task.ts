@@ -13,6 +13,24 @@ interface DependencyEntry {
   reltype: string;
 }
 
+/** Strips the checkbox, tags and emoji metadata off a task line. */
+function summariseTaskLine(taskLine: string): string {
+  return taskLine
+    .replace(/^\s*[-*+]\s+\[[ x/-]\]\s*/, "")
+    .replace(/(?:^|\s)#\S+/g, "")
+    .replace(/[\p{Extended_Pictographic}]+\s*\S*/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function toSafeFileName(title: string): string {
+  return title
+    .replace(/[\\/:*?"<>|[\]#^]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
 /**
  * Note-based task that stores metadata in frontmatter
  */
@@ -88,11 +106,23 @@ export class NoteTask extends BaseTask {
       return;
     }
 
-    const timestamp = Date.now();
-    const newFileName = `Task-${timestamp}.md`;
-    const newFilePath = `${folderPath}/${newFileName}`;
+    // The note's title is the new task's text, and the frontmatter is what
+    // makes the plugin see it as a task at all. This previously wrote a
+    // timestamp-named file containing the *anchor's* text with no
+    // frontmatter, which the task reader then skipped forever.
+    const title = summariseTaskLine(newTaskLine) || this.text;
+    const fileName = toSafeFileName(title) || `Task-${Date.now()}`;
+    const newFilePath = `${folderPath}/${fileName}.md`;
 
-    await vault.create(newFilePath, `# ${this.text}\n\n${this.text}`);
+    if (vault.getFileByPath(newFilePath)) {
+      console.warn(`A note already exists at ${newFilePath}`);
+      return;
+    }
+
+    await vault.create(
+      newFilePath,
+      `---\ntags:\n  - task\nstatus: open\n---\n\n# ${title}\n\n`
+    );
   }
 
   async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {

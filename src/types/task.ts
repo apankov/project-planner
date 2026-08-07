@@ -2,6 +2,7 @@ import { Node, Edge } from "reactflow";
 import { BaseTask } from "./base-task";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverride } from "../lib/edge-style-manager";
+import { CompanionNoteOptions } from "../lib/companion-note";
 
 export type TaskStatus = "todo" | "in_progress" | "canceled" | "done";
 export type TaskType = "dataview" | "note";
@@ -24,6 +25,7 @@ export interface TaskNodeData {
   groupByProject?: boolean;
   tagColorPalette?: TagColorPalette;
   tagColorOverrides?: TagColorOverrides;
+  companionNoteOptions?: CompanionNoteOptions;
   /** On the chain of the selected task. */
   connected?: boolean;
   /** Off the chain while some other task is selected. */

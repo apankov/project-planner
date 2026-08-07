@@ -2,6 +2,7 @@ import { Language } from "../i18n";
 import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverrides } from "../lib/edge-style-manager";
+import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 
 export interface FilterPreset {
   id: string;
@@ -34,6 +35,10 @@ export interface TasksMapSettings {
   // Per-connection line styles, keyed "sourceId->targetId"
   edgeStyleOverrides: EdgeStyleOverrides;
 
+  // Create a note for every new task and link the task to it
+  createCompanionNotes: boolean;
+  companionNoteFolder: string;
+
   // Language setting
   language: Language;
 
@@ -61,6 +66,9 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttTaskOrder: [],
 
   edgeStyleOverrides: {},
+
+  createCompanionNotes: true,
+  companionNoteFolder: DEFAULT_COMPANION_FOLDER,
 
   // Language default
   language: "en",
