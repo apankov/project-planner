@@ -31,6 +31,8 @@ export interface TasksMapSettings {
   ganttLabelWidth: number;
   // Manual Gantt row order, as task IDs
   ganttTaskOrder: string[];
+  // Measure Gantt durations in working days and keep bars off weekends
+  ganttSkipWeekends: boolean;
 
   // Per-connection line styles, keyed "sourceId->targetId"
   edgeStyleOverrides: EdgeStyleOverrides;
@@ -64,6 +66,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
 
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
+  ganttSkipWeekends: false,
 
   edgeStyleOverrides: {},
 

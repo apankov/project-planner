@@ -74,7 +74,9 @@
     "link_created": "{{from}} now blocks {{to}}",
     "link_failed": "Could not link those tasks",
     "linking_hint": "Linking from \"{{task}}\" — click the task it should block.",
-    "linking_cancel": "Cancel"
+    "linking_cancel": "Cancel",
+    "skip_weekends": "Working days",
+    "skip_weekends_desc": "Measure durations in working days and keep bars off weekends: a task starting Friday that takes 4 days ends the following Wednesday"
   },
   "task_create": {
     "add_task_here": "Add task here",

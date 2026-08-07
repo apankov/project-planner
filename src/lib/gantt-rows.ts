@@ -25,6 +25,7 @@ export interface GanttDependency {
 export interface BuildRowsOptions {
   today?: string;
   defaultDurationDays?: number;
+  skipWeekends?: boolean;
 }
 
 /**

@@ -97,3 +97,57 @@ export function startOfMonth(iso: string): string {
 export function isFirstOfMonth(iso: string): boolean {
   return iso.endsWith("-01");
 }
+
+/** The next Monday-to-Friday day on or after `iso`. */
+export function nextWorkingDay(iso: string): string {
+  let current = iso;
+  for (let guard = 0; guard < 7 && isWeekend(current); guard++) {
+    current = addDays(current, 1);
+  }
+  return current;
+}
+
+/** The last Monday-to-Friday day on or before `iso`. */
+export function previousWorkingDay(iso: string): string {
+  let current = iso;
+  for (let guard = 0; guard < 7 && isWeekend(current); guard++) {
+    current = addDays(current, -1);
+  }
+  return current;
+}
+
+/**
+ * Moves `days` working days from `iso`, skipping weekends.
+ *
+ * Counting is inclusive of the destination but not the origin, so four
+ * working days from a Friday is the following Wednesday.
+ */
+export function addWorkingDays(iso: string, days: number): string {
+  if (toEpochDay(iso) === null) return iso;
+  if (days === 0) return iso;
+
+  const step = days > 0 ? 1 : -1;
+  let remaining = Math.abs(days);
+  let current = iso;
+
+  while (remaining > 0) {
+    current = addDays(current, step);
+    if (!isWeekend(current)) remaining -= 1;
+  }
+
+  return current;
+}
+
+/** Working days from `start` to `end`, counting both ends. */
+export function workingDayCount(startIso: string, endIso: string): number {
+  const start = toEpochDay(startIso);
+  const end = toEpochDay(endIso);
+  if (start === null || end === null || end < start) return 1;
+
+  let count = 0;
+  for (let day = start; day <= end; day++) {
+    if (!isWeekend(fromEpochDay(day))) count += 1;
+  }
+
+  return Math.max(1, count);
+}

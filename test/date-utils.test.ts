@@ -1,5 +1,9 @@
 import {
   addDays,
+  addWorkingDays,
+  nextWorkingDay,
+  previousWorkingDay,
+  workingDayCount,
   diffDays,
   dayOfWeek,
   fromEpochDay,
@@ -119,5 +123,50 @@ describe("calendar helpers", () => {
     expect(startOfMonth("2026-08-27")).toBe("2026-08-01");
     expect(isFirstOfMonth("2026-08-01")).toBe(true);
     expect(isFirstOfMonth("2026-08-02")).toBe(false);
+  });
+});
+
+describe("working days", () => {
+  // 2026-08-07 is a Friday; 08-08/09 the weekend; 08-10 the Monday
+  it("counts four working days from a Friday to the next Wednesday", () => {
+    expect(addWorkingDays("2026-08-07", 3)).toBe("2026-08-12");
+  });
+
+  it("skips the weekend when stepping one day from a Friday", () => {
+    expect(addWorkingDays("2026-08-07", 1)).toBe("2026-08-10");
+  });
+
+  it("steps backwards over a weekend", () => {
+    expect(addWorkingDays("2026-08-10", -1)).toBe("2026-08-07");
+  });
+
+  it("is a no-op for zero days", () => {
+    expect(addWorkingDays("2026-08-08", 0)).toBe("2026-08-08");
+  });
+
+  it("moves a weekend date forward to the Monday", () => {
+    expect(nextWorkingDay("2026-08-08")).toBe("2026-08-10");
+    expect(nextWorkingDay("2026-08-09")).toBe("2026-08-10");
+  });
+
+  it("leaves a weekday where it is", () => {
+    expect(nextWorkingDay("2026-08-07")).toBe("2026-08-07");
+  });
+
+  it("moves a weekend date back to the Friday", () => {
+    expect(previousWorkingDay("2026-08-09")).toBe("2026-08-07");
+  });
+
+  it("counts working days inclusively, ignoring the weekend", () => {
+    expect(workingDayCount("2026-08-07", "2026-08-12")).toBe(4);
+    expect(workingDayCount("2026-08-10", "2026-08-14")).toBe(5);
+  });
+
+  it("counts a single weekday as one", () => {
+    expect(workingDayCount("2026-08-07", "2026-08-07")).toBe(1);
+  });
+
+  it("never reports less than one working day", () => {
+    expect(workingDayCount("2026-08-08", "2026-08-09")).toBe(1);
   });
 });

@@ -181,6 +181,12 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists the Gantt's working-days toggle. */
+  async setGanttSkipWeekends(skip: boolean): Promise<void> {
+    this.settings.ganttSkipWeekends = skip;
+    await this.saveSettings();
+  }
+
   /** Persists per-connection line styles. */
   async setEdgeStyleOverrides(overrides: EdgeStyleOverrides): Promise<void> {
     this.settings.edgeStyleOverrides = overrides;

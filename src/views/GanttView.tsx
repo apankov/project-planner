@@ -132,8 +132,12 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   }, [tasks, searchQuery, hideCompleted]);
 
   const scheduledRows = useMemo(
-    () => buildGanttRows(visibleTasks, { today }),
-    [visibleTasks, today]
+    () =>
+      buildGanttRows(visibleTasks, {
+        today,
+        skipWeekends: settings.ganttSkipWeekends,
+      }),
+    [visibleTasks, today, settings.ganttSkipWeekends]
   );
 
   // The chart never re-sorts on its own: rows follow the saved order, and new
@@ -228,10 +232,16 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       const row = rows.find((candidate) => candidate.task.id === taskId);
       if (!row) return;
 
+      const skipWeekends = settings.ganttSkipWeekends;
       const next =
         mode === "move"
-          ? shiftBar(row.bar, days)
-          : resizeBar(row.bar, mode === "resize-start" ? "start" : "end", days);
+          ? shiftBar(row.bar, days, skipWeekends)
+          : resizeBar(
+              row.bar,
+              mode === "resize-start" ? "start" : "end",
+              days,
+              skipWeekends
+            );
 
       markSaving(taskId, true);
       try {
@@ -245,7 +255,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         markSaving(taskId, false);
       }
     },
-    [markSaving, rows, writeRowDates]
+    [markSaving, rows, settings.ganttSkipWeekends, writeRowDates]
   );
 
   const handleLabelWidthChange = useCallback(
@@ -521,6 +531,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         onSearch={setSearchQuery}
         hideCompleted={hideCompleted}
         onHideCompletedChange={setHideCompleted}
+        skipWeekends={settings.ganttSkipWeekends}
+        onSkipWeekendsChange={(skip) => void plugin.setGanttSkipWeekends(skip)}
         taskCount={rows.length}
         groupBy={groupBy}
         onGroupByChange={setGroupBy}

@@ -28,6 +28,8 @@ interface GanttToolbarProps {
   onSearch: (_query: string) => void;
   hideCompleted: boolean;
   onHideCompletedChange: (_hide: boolean) => void;
+  skipWeekends: boolean;
+  onSkipWeekendsChange: (_skip: boolean) => void;
   taskCount: number;
   groupBy: GanttGroupBy;
   onGroupByChange: (_groupBy: GanttGroupBy) => void;
@@ -49,6 +51,8 @@ export function GanttToolbar({
   onSearch,
   hideCompleted,
   onHideCompletedChange,
+  skipWeekends,
+  onSkipWeekendsChange,
   taskCount,
   groupBy,
   onGroupByChange,
@@ -146,6 +150,18 @@ export function GanttToolbar({
           onChange={(event) => onHideCompletedChange(event.target.checked)}
         />
         <span>{t("gantt.hide_completed")}</span>
+      </label>
+
+      <label
+        className="tasks-map-gantt-toolbar__toggle"
+        title={t("gantt.skip_weekends_desc")}
+      >
+        <input
+          type="checkbox"
+          checked={skipWeekends}
+          onChange={(event) => onSkipWeekendsChange(event.target.checked)}
+        />
+        <span>{t("gantt.skip_weekends")}</span>
       </label>
 
       <span className="tasks-map-gantt-toolbar__count">

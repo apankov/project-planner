@@ -305,3 +305,103 @@ describe("resizeBar", () => {
     ).toEqual({ start: "2026-08-10", end: "2026-08-10" });
   });
 });
+
+describe("working-day scheduling", () => {
+  // 2026-08-07 is a Friday, 08-10 the Monday after
+  it("ends a four-day task that starts on Friday on the Wednesday", () => {
+    const bars = scheduleTasks([makeInput("a", { start: "2026-08-07" })], {
+      today: TODAY,
+      defaultDurationDays: 4,
+      skipWeekends: true,
+    });
+
+    expect(bars.get("a")).toMatchObject({
+      start: "2026-08-07",
+      end: "2026-08-12",
+    });
+  });
+
+  it("keeps calendar days when the toggle is off", () => {
+    const bars = scheduleTasks([makeInput("a", { start: "2026-08-07" })], {
+      today: TODAY,
+      defaultDurationDays: 4,
+    });
+
+    expect(bars.get("a")?.end).toBe("2026-08-10");
+  });
+
+  it("starts a blocked task on the Monday when its blocker ends Friday", () => {
+    const bars = scheduleTasks(
+      [
+        makeInput("a", { start: "2026-08-05", due: "2026-08-07" }),
+        makeInput("b", { incomingLinks: ["a"] }),
+      ],
+      { today: TODAY, skipWeekends: true }
+    );
+
+    expect(bars.get("b")?.start).toBe("2026-08-10");
+  });
+
+  it("anchors an undated task to the next working day", () => {
+    // 2026-08-08 is a Saturday
+    const bars = scheduleTasks([makeInput("a")], {
+      today: "2026-08-08",
+      skipWeekends: true,
+    });
+
+    expect(bars.get("a")?.start).toBe("2026-08-10");
+  });
+});
+
+describe("shiftBar with working days", () => {
+  it("slides a bar dropped on a Saturday to the Monday", () => {
+    const moved = shiftBar({ start: "2026-08-07", end: "2026-08-07" }, 1, true);
+    expect(moved).toEqual({ start: "2026-08-10", end: "2026-08-10" });
+  });
+
+  it("keeps the working length when crossing a weekend", () => {
+    // Thu-Fri, two working days, dragged one day on
+    const moved = shiftBar({ start: "2026-08-06", end: "2026-08-07" }, 1, true);
+    expect(moved).toEqual({ start: "2026-08-07", end: "2026-08-10" });
+  });
+
+  it("is unchanged when weekends are not skipped", () => {
+    expect(shiftBar({ start: "2026-08-07", end: "2026-08-07" }, 1)).toEqual({
+      start: "2026-08-08",
+      end: "2026-08-08",
+    });
+  });
+});
+
+describe("resizeBar with working days", () => {
+  it("lands an end dragged into the weekend on the Monday", () => {
+    // Friday stretched by two days reaches Sunday, so it ends on the Monday
+    const resized = resizeBar(
+      { start: "2026-08-07", end: "2026-08-07" },
+      "end",
+      2,
+      true
+    );
+    expect(resized).toEqual({ start: "2026-08-07", end: "2026-08-10" });
+  });
+
+  it("leaves an end that already falls on a weekday", () => {
+    const resized = resizeBar(
+      { start: "2026-08-10", end: "2026-08-10" },
+      "end",
+      2,
+      true
+    );
+    expect(resized).toEqual({ start: "2026-08-10", end: "2026-08-12" });
+  });
+
+  it("moves a start dragged onto a weekend to the Monday", () => {
+    const resized = resizeBar(
+      { start: "2026-08-06", end: "2026-08-14" },
+      "start",
+      2,
+      true
+    );
+    expect(resized).toEqual({ start: "2026-08-10", end: "2026-08-14" });
+  });
+});

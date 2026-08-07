@@ -1,4 +1,13 @@
-import { addDays, diffDays, toEpochDay, todayIso } from "./date-utils";
+import {
+  addDays,
+  addWorkingDays,
+  diffDays,
+  isWeekend,
+  nextWorkingDay,
+  toEpochDay,
+  todayIso,
+  workingDayCount,
+} from "./date-utils";
 
 /**
  * Turning tasks into timeline bars.
@@ -38,6 +47,36 @@ export interface ScheduleOptions {
   /** Anchor for tasks with neither dates nor dated blockers. */
   today?: string;
   defaultDurationDays?: number;
+  /** Measure durations in working days and keep bars off weekends. */
+  skipWeekends?: boolean;
+}
+
+/**
+ * Adds a length to a start date, in working days or calendar days.
+ * `length` counts the start day itself, so a length of 1 ends the same day.
+ */
+export function addDuration(
+  start: string,
+  length: number,
+  skipWeekends: boolean
+): string {
+  const steps = Math.max(0, length - 1);
+  return skipWeekends ? addWorkingDays(start, steps) : addDays(start, steps);
+}
+
+/** The length of a bar, in working days or calendar days. */
+export function barLength(
+  start: string,
+  end: string,
+  skipWeekends: boolean
+): number {
+  if (skipWeekends) return workingDayCount(start, end);
+  return Math.max(1, diffDays(start, end) + 1);
+}
+
+/** Moves a date off a weekend, forwards, when weekends are being skipped. */
+function alignStart(start: string, skipWeekends: boolean): string {
+  return skipWeekends && isWeekend(start) ? nextWorkingDay(start) : start;
 }
 
 /** A bar is a proposal only when neither endpoint came from the task itself. */
@@ -65,6 +104,7 @@ export function scheduleTasks(
     1,
     options.defaultDurationDays ?? DEFAULT_DURATION_DAYS
   );
+  const skipWeekends = options.skipWeekends ?? false;
 
   const byId = new Map<string, GanttTaskInput>();
   tasks.forEach((task) => byId.set(task.id, task));
@@ -85,7 +125,7 @@ export function scheduleTasks(
       if (!blocker || resolving.has(blockerId)) continue;
 
       const blockerBar = resolve(blocker);
-      const candidate = addDays(blockerBar.end, 1);
+      const candidate = alignStart(addDays(blockerBar.end, 1), skipWeekends);
       if (!earliestStart || diffDays(earliestStart, candidate) > 0) {
         earliestStart = candidate;
       }
@@ -98,8 +138,9 @@ export function scheduleTasks(
       explicitStart,
       explicitEnd,
       earliestStart,
-      fallbackStart: today,
+      fallbackStart: alignStart(today, skipWeekends),
       duration,
+      skipWeekends,
       id: task.id,
     });
 
@@ -120,6 +161,7 @@ function layOutBar({
   earliestStart,
   fallbackStart,
   duration,
+  skipWeekends,
 }: {
   id: string;
   explicitStart: string | null;
@@ -127,6 +169,7 @@ function layOutBar({
   earliestStart: string | null;
   fallbackStart: string;
   duration: number;
+  skipWeekends: boolean;
 }): ScheduledBar {
   // Both dates given: honour them, collapsing an end that precedes the start
   if (explicitStart && explicitEnd) {
@@ -146,7 +189,7 @@ function layOutBar({
     return {
       id,
       start: explicitStart,
-      end: addDays(explicitStart, duration - 1),
+      end: addDuration(explicitStart, duration, skipWeekends),
       startInferred: false,
       endInferred: true,
     };
@@ -173,7 +216,7 @@ function layOutBar({
   return {
     id,
     start,
-    end: addDays(start, duration - 1),
+    end: addDuration(start, duration, skipWeekends),
     startInferred: true,
     endInferred: true,
   };
@@ -206,34 +249,55 @@ export function getTimelineRange(
   return { start: addDays(min, -pad), end: addDays(max, pad) };
 }
 
-/** Moves a bar by whole days, keeping its length. */
+/**
+ * Moves a bar by whole days, keeping its length.
+ *
+ * With weekends skipped the bar keeps its length in *working* days, and a
+ * start that lands on a weekend slides forward to the Monday — so dragging
+ * never parks work on a Saturday or silently changes how long it takes.
+ */
 export function shiftBar(
   bar: { start: string; end: string },
-  days: number
+  days: number,
+  skipWeekends = false
 ): { start: string; end: string } {
-  if (days === 0) return { start: bar.start, end: bar.end };
-  return { start: addDays(bar.start, days), end: addDays(bar.end, days) };
+  if (days === 0 && !skipWeekends) return { start: bar.start, end: bar.end };
+
+  if (!skipWeekends) {
+    return { start: addDays(bar.start, days), end: addDays(bar.end, days) };
+  }
+
+  const length = barLength(bar.start, bar.end, true);
+  const start = alignStart(addDays(bar.start, days), true);
+  return { start, end: addDuration(start, length, true) };
 }
 
 /** Drags one edge, never letting a bar collapse below a single day. */
 export function resizeBar(
   bar: { start: string; end: string },
   edge: "start" | "end",
-  days: number
+  days: number,
+  skipWeekends = false
 ): { start: string; end: string } {
   if (days === 0) return { start: bar.start, end: bar.end };
 
   if (edge === "start") {
-    const start = addDays(bar.start, days);
+    const moved = addDays(bar.start, days);
+    const start = diffDays(moved, bar.end) < 0 ? bar.end : moved;
+    const aligned = alignStart(start, skipWeekends);
     return {
-      start: diffDays(start, bar.end) < 0 ? bar.end : start,
+      start: diffDays(aligned, bar.end) < 0 ? bar.end : aligned,
       end: bar.end,
     };
   }
 
-  const end = addDays(bar.end, days);
-  return {
-    start: bar.start,
-    end: diffDays(bar.start, end) < 0 ? bar.start : end,
-  };
+  const moved = addDays(bar.end, days);
+  if (diffDays(bar.start, moved) < 0) {
+    return { start: bar.start, end: bar.start };
+  }
+
+  // The pointer can land on a weekend; the bar should end on the working day
+  // it was dragged towards, never inside the weekend itself
+  const end = skipWeekends && isWeekend(moved) ? nextWorkingDay(moved) : moved;
+  return { start: bar.start, end };
 }
