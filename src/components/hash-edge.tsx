@@ -83,11 +83,15 @@ export default function HashEdge({
       />
       <path
         id={id}
-        className={
-          selected
-            ? "react-flow__edge-path tasks-map-hash-edge-path tasks-map-hash-edge-path--selected"
-            : "react-flow__edge-path tasks-map-hash-edge-path"
-        }
+        className={[
+          "react-flow__edge-path",
+          "tasks-map-hash-edge-path",
+          selected ? "tasks-map-hash-edge-path--selected" : "",
+          data?.connected ? "tasks-map-hash-edge-path--connected" : "",
+          data?.dimmed ? "tasks-map-hash-edge-path--dimmed" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         d={edgePath}
       />
       {data?.debugVisualization && (

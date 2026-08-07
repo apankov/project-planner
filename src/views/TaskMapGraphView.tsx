@@ -8,6 +8,7 @@ import ReactFlow, {
   type NodeDragHandler,
   type SelectionDragHandler,
   type EdgeMouseHandler,
+  type NodeMouseHandler,
   type OnConnect,
   type OnConnectStart,
 } from "reactflow";
@@ -36,6 +37,7 @@ import StatusCountsOverlay from "src/components/status-counts-overlay";
 import TaskNode from "src/components/task-node";
 import ProjectGroupNode from "src/components/project-group-node";
 import { getFilteredNodeIds } from "src/lib/filter-tasks";
+import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { TaskMinimap } from "src/components/task-minimap";
 import HashEdge from "src/components/hash-edge";
 import { DeleteEdgeButton } from "src/components/delete-edge-button";
@@ -87,6 +89,10 @@ export default function TaskMapGraphView({
     Set<string>
   >(new Set());
   const [selectedEdge, setSelectedEdge] = React.useState<string | null>(null);
+  // Task whose dependency chain is lit up; cleared by clicking the canvas
+  const [highlightedTaskId, setHighlightedTaskId] = React.useState<
+    string | null
+  >(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const reactFlowInstance = useReactFlow();
   const skipFitViewRef = React.useRef(false);
@@ -347,6 +353,13 @@ export default function TaskMapGraphView({
     );
   }, [tasks, allUnlinkedTasks, droppedTaskIds, hideUnlinkedTasks]);
 
+  // Recomputed on every rebuild so the highlight survives re-layouts, filter
+  // changes and task edits, which all replace the node and edge arrays
+  const connectionHighlight = useMemo(
+    () => getConnectionHighlight(highlightedTaskId, graphTasks),
+    [highlightedTaskId, graphTasks]
+  );
+
   useEffect(() => {
     let newNodes = createNodesFromTasks(
       graphTasks,
@@ -359,14 +372,16 @@ export default function TaskMapGraphView({
       settings.tagColorPalette,
       settings.tagColorOverrides,
       handleTaskEdited,
-      handleTaskCreated
+      handleTaskCreated,
+      connectionHighlight
     );
     let newEdges = createEdgesFromTasks(
       graphTasks,
       settings.layoutDirection,
       settings.debugVisualization,
       settings.edgeStyle,
-      settings.smoothStepRadius
+      settings.smoothStepRadius,
+      connectionHighlight
     );
 
     const filteredNodeIds = getFilteredNodeIds(graphTasks, filterState);
@@ -428,6 +443,7 @@ export default function TaskMapGraphView({
     newlyCreatedTaskIds,
     droppedTaskIds,
     groupByProject,
+    connectionHighlight,
   ]);
 
   const nodeTypes = useMemo(
@@ -450,13 +466,16 @@ export default function TaskMapGraphView({
     [setSelectedEdge]
   );
 
-  const onNodeClick = useCallback(() => {
+  const onNodeClick = useCallback<NodeMouseHandler>((event, node) => {
     setSelectedEdge(null);
-  }, [setSelectedEdge]);
+    // Clicking the lit task again clears the highlight
+    setHighlightedTaskId((previous) => (previous === node.id ? null : node.id));
+  }, []);
 
   const onPaneClick = useCallback(() => {
     setSelectedEdge(null);
-  }, [setSelectedEdge]);
+    setHighlightedTaskId(null);
+  }, []);
 
   const getSelectedEdgeTasks = useCallback(() => {
     if (!selectedEdge) return null;

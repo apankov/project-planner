@@ -18,6 +18,11 @@ import {
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
 import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
 import { GanttGroup } from "src/lib/gantt-order";
+import {
+  ConnectionHighlight,
+  connectionKey,
+  isHighlightActive,
+} from "src/lib/connection-highlight";
 import { GanttBar, BarDragResult } from "./gantt-bar";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
@@ -86,6 +91,7 @@ interface GanttChartProps {
   colorOverrides: TagColorOverrides;
   showTags: boolean;
   selectedTaskId: string | null;
+  highlight: ConnectionHighlight;
   savingTaskIds: Set<string>;
   onSelect: (_taskId: string) => void;
   onCommit: (_result: BarDragResult) => void;
@@ -231,6 +237,7 @@ export function GanttChart({
   colorOverrides,
   showTags,
   selectedTaskId,
+  highlight,
   savingTaskIds,
   onSelect,
   onCommit,
@@ -431,10 +438,20 @@ export function GanttChart({
         lineIndexById,
         dependencies,
         timelineStart,
-        scale.dayWidth
+        scale.dayWidth,
+        highlight
       ),
-    [rowByTaskId, lineIndexById, dependencies, timelineStart, scale.dayWidth]
+    [
+      rowByTaskId,
+      lineIndexById,
+      dependencies,
+      timelineStart,
+      scale.dayWidth,
+      highlight,
+    ]
   );
+
+  const highlighting = isHighlightActive(highlight);
 
   const rowClassName = (row: GanttRow, base: string) =>
     [
@@ -443,6 +460,12 @@ export function GanttChart({
       draggingId === row.task.id ? `${base}--dragging` : "",
       dropTarget?.id === row.task.id
         ? `${base}--drop-${dropTarget.placement}`
+        : "",
+      highlighting && highlight.taskIds.has(row.task.id)
+        ? `${base}--connected`
+        : "",
+      highlighting && !highlight.taskIds.has(row.task.id)
+        ? `${base}--dimmed`
         : "",
     ]
       .filter(Boolean)
@@ -559,7 +582,7 @@ export function GanttChart({
                 <path
                   key={path.key}
                   d={path.d}
-                  className="tasks-map-gantt__arrow"
+                  className={`tasks-map-gantt__arrow ${path.className}`}
                   markerEnd="url(#tasks-map-gantt-arrowhead)"
                 />
               ))}
@@ -616,6 +639,7 @@ export function GanttChart({
 interface ArrowPath {
   key: string;
   d: string;
+  className: string;
 }
 
 /**
@@ -627,8 +651,10 @@ function buildArrowPaths(
   lineIndexById: Map<string, number>,
   dependencies: GanttDependency[],
   timelineStart: string,
-  dayWidth: number
+  dayWidth: number,
+  highlight: ConnectionHighlight
 ): ArrowPath[] {
+  const highlighting = isHighlightActive(highlight);
   return dependencies.flatMap((dependency) => {
     const from = rowByTaskId.get(dependency.fromId);
     const to = rowByTaskId.get(dependency.toId);
@@ -648,6 +674,13 @@ function buildArrowPaths(
 
     const d = `M ${fromX} ${fromY} H ${midX} V ${toY} H ${toX}`;
 
-    return [{ key: `${dependency.fromId}->${dependency.toId}`, d }];
+    const key = connectionKey(dependency.fromId, dependency.toId);
+    const className = !highlighting
+      ? ""
+      : highlight.edgeKeys.has(key)
+        ? "tasks-map-gantt__arrow--connected"
+        : "tasks-map-gantt__arrow--dimmed";
+
+    return [{ key, d, className }];
   });
 }

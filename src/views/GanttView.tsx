@@ -33,6 +33,7 @@ import {
   ROW_HEIGHT,
   RowReorder,
 } from "src/components/gantt-chart";
+import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { TasksMapSettings } from "src/types/settings";
@@ -140,6 +141,13 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const dependencies = useMemo(() => getDependencies(rows), [rows]);
+
+  // Selecting a row lights up everything it depends on and everything waiting
+  // on it, using the same chain the map draws
+  const highlight = useMemo(
+    () => getConnectionHighlight(selectedTaskId, visibleTasks),
+    [selectedTaskId, visibleTasks]
+  );
   const inferredRows = useMemo(() => getInferredRows(rows), [rows]);
 
   const timeline = useMemo(
@@ -224,6 +232,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     },
     [plugin]
   );
+
+  const handleSelect = useCallback((taskId: string) => {
+    setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
+  }, []);
 
   const commitOrder = useCallback(
     (nextOrder: string[]) => {
@@ -335,8 +347,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           colorOverrides={settings.tagColorOverrides}
           showTags={settings.showTags}
           selectedTaskId={selectedTaskId}
+          highlight={highlight}
           savingTaskIds={savingTaskIds}
-          onSelect={setSelectedTaskId}
+          onSelect={handleSelect}
           onCommit={(result) => void handleCommit(result)}
           onReorder={handleReorder}
           scrollRef={scrollRef}

@@ -1182,6 +1182,26 @@ If your plugin does not need CSS, delete this file.
   stroke-width: 2;
 }
 
+/* Dependency-chain highlight: clicking a task lights up everything it waits
+   on and everything waiting on it, and fades the rest. */
+.tasks-map-hash-edge-path--connected {
+  stroke: var(--interactive-accent);
+  stroke-width: 2.5;
+}
+
+.tasks-map-hash-edge-path--dimmed {
+  opacity: 0.15;
+}
+
+.tasks-map-task-node-root--dimmed {
+  opacity: 0.35;
+}
+
+.tasks-map-task-node-root--connected {
+  box-shadow: 0 0 0 2px var(--interactive-accent);
+  border-radius: var(--radius-m, 8px);
+}
+
 .react-flow__edge:hover
   .tasks-map-hash-edge-path:not(.tasks-map-hash-edge-path--selected) {
   stroke: var(--interactive-accent);
@@ -2397,6 +2417,25 @@ If your plugin does not need CSS, delete this file.
 .tasks-map-gantt__label--selected,
 .tasks-map-gantt__row--selected {
   background: var(--background-modifier-hover);
+}
+
+.tasks-map-gantt__label--dimmed,
+.tasks-map-gantt__row--dimmed {
+  opacity: 0.35;
+}
+
+.tasks-map-gantt__label--connected {
+  background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+}
+
+.tasks-map-gantt__arrow--connected {
+  stroke: var(--interactive-accent);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.tasks-map-gantt__arrow--dimmed {
+  opacity: 0.15;
 }
 
 .tasks-map-gantt__grip {

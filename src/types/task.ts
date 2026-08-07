@@ -23,6 +23,10 @@ export interface TaskNodeData {
   groupByProject?: boolean;
   tagColorPalette?: TagColorPalette;
   tagColorOverrides?: TagColorOverrides;
+  /** On the chain of the selected task. */
+  connected?: boolean;
+  /** Off the chain while some other task is selected. */
+  dimmed?: boolean;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
@@ -36,6 +40,8 @@ export interface TaskEdgeData {
   debugVisualization?: boolean;
   edgeStyle?: "Bezier" | "Straight" | "SmoothStep";
   smoothStepRadius?: number;
+  connected?: boolean;
+  dimmed?: boolean;
 }
 
 export type TaskNode = Node<TaskNodeData, "task">;

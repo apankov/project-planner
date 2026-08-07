@@ -82,6 +82,8 @@ interface TaskNodeData {
   debugVisualization?: boolean;
   tagColorPalette?: import("src/lib/tag-color-manager").TagColorPalette;
   tagColorOverrides?: import("src/lib/tag-color-manager").TagColorOverrides;
+  connected?: boolean;
+  dimmed?: boolean;
   groupByProject?: boolean;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
@@ -99,6 +101,8 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     debugVisualization = false,
     tagColorPalette = "rainbow",
     tagColorOverrides,
+    connected = false,
+    dimmed = false,
     groupByProject = false,
     onDeleteTask,
     onTaskCreated,
@@ -240,7 +244,13 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
 
   return (
     <div
-      className="tasks-map-task-node-root"
+      className={[
+        "tasks-map-task-node-root",
+        connected ? "tasks-map-task-node-root--connected" : "",
+        dimmed ? "tasks-map-task-node-root--dimmed" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       onDoubleClick={(event) => void handleDoubleClick(event)}
     >
       {selected && taskDates.length > 0 && (

@@ -16,6 +16,12 @@ import {
   TaskDateUpdate,
 } from "src/types/base-task";
 import { getFrontmatterDateProperties } from "./task-dates";
+import {
+  ConnectionHighlight,
+  EMPTY_HIGHLIGHT,
+  connectionKey,
+  isHighlightActive,
+} from "./connection-highlight";
 import { NODEHEIGHT, NODEWIDTH } from "src/components/task-node";
 import { TaskFactory } from "./task-factory";
 import { Position, Node, Edge } from "reactflow";
@@ -1691,8 +1697,10 @@ export function createNodesFromTasks(
   tagColorPalette: TagColorPalette = "rainbow",
   tagColorOverrides: TagColorOverrides = {},
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void,
-  onTaskCreated?: (_newTask: BaseTask) => void
+  onTaskCreated?: (_newTask: BaseTask) => void,
+  highlight: ConnectionHighlight = EMPTY_HIGHLIGHT
 ): TaskNode[] {
+  const highlighting = isHighlightActive(highlight);
   const isVertical = layoutDirection === "Vertical";
   const sourcePosition = isVertical ? Position.Bottom : Position.Right;
   const targetPosition = isVertical ? Position.Top : Position.Left;
@@ -1709,6 +1717,8 @@ export function createNodesFromTasks(
       groupByProject,
       tagColorPalette,
       tagColorOverrides,
+      connected: highlighting && highlight.taskIds.has(task.id),
+      dimmed: highlighting && !highlight.taskIds.has(task.id),
       onDeleteTask,
       onTaskEdited,
       onTaskCreated,
@@ -1725,9 +1735,11 @@ export function createEdgesFromTasks(
   layoutDirection: "Horizontal" | "Vertical" = "Horizontal",
   debugVisualization: boolean = false,
   edgeStyle: "Bezier" | "Straight" | "SmoothStep" = "Bezier",
-  smoothStepRadius: number = 10
+  smoothStepRadius: number = 10,
+  highlight: ConnectionHighlight = EMPTY_HIGHLIGHT
 ): TaskEdge[] {
   const edges: TaskEdge[] = [];
+  const highlighting = isHighlightActive(highlight);
 
   // Create edges based on task dependencies
   // Works for both dataview tasks (ID-based) and note tasks (file path-based)
@@ -1745,6 +1757,12 @@ export function createEdgesFromTasks(
           debugVisualization,
           edgeStyle,
           smoothStepRadius,
+          connected:
+            highlighting &&
+            highlight.edgeKeys.has(connectionKey(parentTaskId, task.id)),
+          dimmed:
+            highlighting &&
+            !highlight.edgeKeys.has(connectionKey(parentTaskId, task.id)),
         },
       });
     });
