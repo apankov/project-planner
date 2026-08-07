@@ -243,6 +243,49 @@ export function getTasksApi(app: App): TasksApiV1 | null {
   return tasksPlugin.apiV1 as TasksApiV1;
 }
 
+/**
+ * The note a brand-new, unanchored task should be written to: the note the
+ * user is looking at if it is markdown, otherwise whichever note already
+ * holds the most tasks.
+ */
+export function resolveDefaultTaskFile(
+  app: App,
+  tasks: BaseTask[]
+): TFile | null {
+  const activeFile = app.workspace.getActiveFile();
+  if (activeFile && activeFile.extension === "md") return activeFile;
+
+  const counts = new Map<string, number>();
+  for (const task of tasks) {
+    if (task.type !== "dataview" || !task.link) continue;
+    counts.set(task.link, (counts.get(task.link) ?? 0) + 1);
+  }
+
+  let bestPath: string | null = null;
+  let bestCount = 0;
+  for (const [path, count] of counts) {
+    if (count > bestCount) {
+      bestPath = path;
+      bestCount = count;
+    }
+  }
+
+  return bestPath ? app.vault.getFileByPath(bestPath) : null;
+}
+
+/** Appends a task line to the end of a note. */
+export async function appendTaskLineToFile(
+  file: TFile,
+  taskLine: string,
+  app: App
+): Promise<void> {
+  await app.vault.process(file, (content) => {
+    const separator =
+      content.length === 0 || content.endsWith("\n") ? "" : "\n";
+    return `${content}${separator}${taskLine}\n`;
+  });
+}
+
 export function parseTaskLine(
   taskLine: string,
   linkPath: string

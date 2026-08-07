@@ -12,7 +12,7 @@ import ReactFlow, {
   type OnConnect,
   type OnConnectStart,
 } from "reactflow";
-import { Notice, Events } from "obsidian";
+import { Notice, Events, Menu } from "obsidian";
 import { AppWithPlugins } from "src/types/obsidian-internals";
 import { useApp } from "src/hooks/hooks";
 import {
@@ -28,7 +28,10 @@ import {
   deleteTaskFromVault,
   getTasksApi,
   parseTaskLine,
+  resolveDefaultTaskFile,
+  appendTaskLineToFile,
 } from "src/lib/utils";
+import { promptForTaskLine } from "src/components/task-line-modal";
 import { BaseTask } from "src/types/task";
 import { NoteTask } from "src/types/note-task";
 import GuiOverlay from "src/components/gui-overlay";
@@ -789,6 +792,77 @@ export default function TaskMapGraphView({
     ]
   );
 
+  /**
+   * Asks for a task line, using the Tasks plugin's modal when it is installed
+   * and a plain prompt when it is not. Creation used to fail silently without
+   * that plugin.
+   */
+  const askForTaskLine = useCallback(async (): Promise<string | null> => {
+    const tasksApi = getTasksApi(app);
+    return promptForTaskLine(
+      app,
+      tasksApi ? () => tasksApi.createTaskLineModal() : null
+    );
+  }, [app]);
+
+  /**
+   * Creates a task with no anchor, writing it to the note the user is looking
+   * at (or the note that already holds the most tasks) and dropping the node
+   * where they right-clicked.
+   */
+  const createStandaloneTask = useCallback(
+    async (screenPosition: { x: number; y: number }) => {
+      const targetFile = resolveDefaultTaskFile(app, tasks);
+      if (!targetFile) {
+        new Notice(t("task_create.no_target_note"));
+        return;
+      }
+
+      const taskLine = await askForTaskLine();
+      if (!taskLine) return;
+
+      const newTask = parseTaskLine(taskLine, targetFile.path);
+      if (!newTask) {
+        new Notice(t("task_create.could_not_read"));
+        return;
+      }
+
+      try {
+        await appendTaskLineToFile(targetFile, taskLine, app);
+        await addSignToTaskInFile(
+          vault,
+          newTask,
+          "id",
+          newTask.id,
+          settings.linkingStyle
+        );
+
+        const position = reactFlowInstance.screenToFlowPosition({
+          x: screenPosition.x,
+          y: screenPosition.y,
+        });
+        droppedNodePositions.current.set(newTask.id, position);
+
+        skipFitViewRef.current = true;
+        setDroppedTaskIds((previous) => new Set(previous).add(newTask.id));
+        setNewlyCreatedTaskIds((previous) => new Set(previous).add(newTask.id));
+        setTasks((previous) => [...previous, newTask]);
+        new Notice(t("task_create.created", { note: targetFile.basename }));
+      } catch (error) {
+        console.error("Failed to create task:", error);
+        new Notice(t("task_create.failed"));
+      }
+    },
+    [
+      app,
+      askForTaskLine,
+      reactFlowInstance,
+      settings.linkingStyle,
+      tasks,
+      vault,
+    ]
+  );
+
   const createConnectedTask = useCallback(
     async (
       anchorTask: BaseTask,
@@ -799,19 +873,12 @@ export default function TaskMapGraphView({
         return;
       }
 
-      const tasksApi = getTasksApi(app);
-      if (!tasksApi) {
-        console.error("Tasks plugin not found or API not available");
-        return;
-      }
-
-      const taskLine = await tasksApi.createTaskLineModal();
-      if (!taskLine?.trim()) {
-        return;
-      }
+      const taskLine = await askForTaskLine();
+      if (!taskLine) return;
 
       const newTask = parseTaskLine(taskLine, anchorTask.link);
       if (!newTask || newTask.type !== anchorTask.type) {
+        new Notice(t("task_create.could_not_read"));
         return;
       }
 
@@ -875,6 +942,7 @@ export default function TaskMapGraphView({
         });
       } catch (error) {
         console.error("Failed to create connected task:", error);
+        new Notice(t("task_create.failed"));
 
         try {
           await deleteTaskFromVault(newTask, app);
@@ -884,6 +952,59 @@ export default function TaskMapGraphView({
       }
     },
     [app, createUpdatedTask, settings.linkingStyle, vault]
+  );
+
+  const onPaneContextMenu = useCallback(
+    (event: React.MouseEvent | MouseEvent) => {
+      event.preventDefault();
+      const position = { x: event.clientX, y: event.clientY };
+
+      const menu = new Menu();
+      menu.addItem((item) =>
+        item
+          .setTitle(t("task_create.add_task_here"))
+          .setIcon("plus")
+          .onClick(() => void createStandaloneTask(position))
+      );
+      menu.showAtMouseEvent(event as MouseEvent);
+    },
+    [createStandaloneTask]
+  );
+
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: { id: string }) => {
+      event.preventDefault();
+      const anchorTask = tasks.find((task) => task.id === node.id);
+      if (!anchorTask) return;
+
+      const menu = new Menu();
+      menu.addItem((item) =>
+        item
+          .setTitle(t("task_create.add_task_after"))
+          .setIcon("plus")
+          .onClick(() => void createConnectedTask(anchorTask, "after", "after"))
+      );
+      menu.addItem((item) =>
+        item
+          .setTitle(t("task_create.add_task_before"))
+          .setIcon("plus")
+          .onClick(
+            () => void createConnectedTask(anchorTask, "before", "before")
+          )
+      );
+      menu.addSeparator();
+      menu.addItem((item) =>
+        item
+          .setTitle(t("task_create.add_task_here"))
+          .setIcon("file-plus")
+          .onClick(
+            () =>
+              void createStandaloneTask({ x: event.clientX, y: event.clientY })
+          )
+      );
+      menu.showAtMouseEvent(event.nativeEvent);
+    },
+    [createConnectedTask, createStandaloneTask, tasks]
   );
 
   const onConnectStart = useCallback<OnConnectStart>((_event, params) => {
@@ -1274,6 +1395,8 @@ export default function TaskMapGraphView({
           onEdgeClick={onEdgeClick}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
+          onPaneContextMenu={onPaneContextMenu}
+          onNodeContextMenu={onNodeContextMenu}
           onNodeDrag={onNodeDrag}
           onNodeDragStop={(e, node, nodes) =>
             void onNodeDragStop(e, node, nodes)

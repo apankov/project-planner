@@ -66,6 +66,20 @@
     "group_no_project": "No project",
     "reorder_hint": "Drag to reorder"
   },
+  "task_create": {
+    "add_task_here": "Add task here",
+    "add_task_after": "Add task after this",
+    "add_task_before": "Add task before this",
+    "modal_title": "New task",
+    "modal_field": "Task",
+    "modal_placeholder": "What needs doing?",
+    "modal_submit": "Add task",
+    "modal_cancel": "Cancel",
+    "no_target_note": "Open a note first, or add a task to one, so Tasks Map knows where to write",
+    "could_not_read": "That task could not be read back — nothing was changed",
+    "failed": "Could not create the task",
+    "created": "Task added to {{note}}"
+  },
   "settings": {
     "display_options": "Display Options",
     "show_task_priorities": "Show task priorities",
