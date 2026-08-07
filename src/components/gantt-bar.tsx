@@ -24,7 +24,6 @@ interface GanttBarProps {
   timelineStart: string;
   dayWidth: number;
   onCommit: (_result: BarDragResult) => void;
-  onSelect: (_taskId: string, _additive?: boolean) => void;
   /** Dragging a bar up or down reorders it, like dragging its row. */
   onVerticalPreview: (_clientY: number | null) => void;
   onVerticalDrop: (_taskId: string, _clientY: number) => void;
@@ -48,7 +47,6 @@ export function GanttBar({
   timelineStart,
   dayWidth,
   onCommit,
-  onSelect,
   onVerticalPreview,
   onVerticalDrop,
   selected,
@@ -109,8 +107,6 @@ export function GanttBar({
       event.preventDefault();
       event.stopPropagation();
 
-      onSelect(task.id, event.ctrlKey || event.metaKey);
-
       dragRef.current = {
         mode,
         startX: event.clientX,
@@ -122,7 +118,7 @@ export function GanttBar({
       setDragging(true);
       barRef.current?.setPointerCapture(event.pointerId);
     },
-    [onSelect, saving, task.id]
+    [saving]
   );
 
   const handlePointerMove = useCallback(

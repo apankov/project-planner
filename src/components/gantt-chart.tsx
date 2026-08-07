@@ -282,13 +282,6 @@ export function GanttChart({
 
   const lines = useMemo(() => buildLines(groups), [groups]);
 
-  // Bars select on pointer-down, which happens at the start of every drag —
-  // toggling there would clear the selection the drag was meant to keep.
-  const selectWithoutToggle = useCallback(
-    (taskId: string, additive?: boolean) => onSelect(taskId, false, additive),
-    [onSelect]
-  );
-
   /** Which row the pointer is over, and which side of it. */
   const resolveDropTarget = useCallback(
     (clientY: number): { id: string; placement: RowPlacement } | null => {
@@ -747,7 +740,6 @@ export function GanttChart({
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
-                    onSelect={selectWithoutToggle}
                     onVerticalPreview={handleVerticalPreview}
                     onVerticalDrop={handleVerticalDrop}
                     selected={selectedTaskIds.has(line.row.task.id)}
