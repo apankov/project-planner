@@ -6,7 +6,8 @@
   "commands": {
     "open_map_view": "打开地图视图",
     "insert_filter_as_code_block": "将当前筛选器插入为嵌入式任务地图",
-    "open_gantt_view": "打开甘特图视图"
+    "open_gantt_view": "打开甘特图视图",
+    "retrofit_companion_notes": "为现有任务创建笔记"
   },
   "ribbon": {
     "open_tasks_map": "打开任务地图视图",
@@ -91,6 +92,14 @@
     "could_not_read": "无法读取该任务 — 未做任何更改",
     "failed": "无法创建任务",
     "created": "任务已添加到 {{note}}"
+  },
+  "retrofit": {
+    "title": "为现有任务创建笔记",
+    "body": "这将在“{{folder}}”中创建最多 {{n}} 篇笔记，并把相应任务行改写为指向它们的链接。已经是链接的任务不会改动。",
+    "confirm": "创建笔记",
+    "nothing_to_do": "所有任务都已链接到笔记",
+    "done": "已将 {{n}} 个任务链接到其笔记",
+    "done_partial": "已链接 {{n}} 个任务；{{skipped}} 个无法更新"
   },
   "settings": {
     "display_options": "显示选项",

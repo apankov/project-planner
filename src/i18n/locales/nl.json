@@ -6,7 +6,8 @@
   "commands": {
     "open_map_view": "Kaartweergave openen",
     "insert_filter_as_code_block": "Huidig filter invoegen als ingesloten Taken Kaart",
-    "open_gantt_view": "Gantt-weergave openen"
+    "open_gantt_view": "Gantt-weergave openen",
+    "retrofit_companion_notes": "Notities maken voor bestaande taken"
   },
   "ribbon": {
     "open_tasks_map": "Taken kaartweergave openen",
@@ -91,6 +92,14 @@
     "could_not_read": "Die taak kon niet worden teruggelezen — er is niets gewijzigd",
     "failed": "Kon de taak niet aanmaken",
     "created": "Taak toegevoegd aan {{note}}"
+  },
+  "retrofit": {
+    "title": "Notities maken voor bestaande taken",
+    "body": "Dit maakt maximaal {{n}} notities in \"{{folder}}\" en herschrijft die taakregels als links ernaartoe. Taken die al links zijn blijven ongewijzigd.",
+    "confirm": "Notities maken",
+    "nothing_to_do": "Elke taak verwijst al naar een notitie",
+    "done": "{{n}} taken gekoppeld aan hun notities",
+    "done_partial": "{{n}} taken gekoppeld; {{skipped}} konden niet worden bijgewerkt"
   },
   "settings": {
     "display_options": "Weergaveopties",

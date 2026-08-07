@@ -25,7 +25,13 @@ import { TasksMapSettingTab } from "./settings/settings-tab";
 import { initI18n, changeLanguage, t } from "./i18n";
 import { FilterState, DEFAULT_FILTER_STATE } from "./types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "./types/embed-config";
-import { checkDataviewPlugin } from "./lib/utils";
+import { Notice } from "obsidian";
+import { checkDataviewPlugin, getAllTasks } from "./lib/utils";
+import {
+  findTasksNeedingNotes,
+  retrofitCompanionNotes,
+} from "./lib/companion-note-retrofit";
+import { confirm } from "./components/confirm-modal";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 
 const EMBED_CODE_BLOCK = "tasks-map";
@@ -94,6 +100,14 @@ export default class TasksMapPlugin extends Plugin {
       name: t("commands.open_gantt_view"),
       callback: () => {
         void this.activateGanttViewInMainArea();
+      },
+    });
+
+    this.addCommand({
+      id: "create-notes-for-existing-tasks",
+      name: t("commands.retrofit_companion_notes"),
+      callback: () => {
+        void this.createNotesForExistingTasks();
       },
     });
 
@@ -167,6 +181,44 @@ export default class TasksMapPlugin extends Plugin {
     changeLanguage(this.settings.language);
     // Notify open views of settings change
     window.dispatchEvent(new Event("tasks-map:settings-changed"));
+  }
+
+  /**
+   * Gives every existing inline task a note and rewrites it as a link, the
+   * same shape new tasks get. Bulk-rewrites task lines, so it asks first.
+   */
+  async createNotesForExistingTasks(): Promise<void> {
+    const tasks = getAllTasks(this.app);
+    const targets = findTasksNeedingNotes(tasks);
+
+    if (targets.length === 0) {
+      new Notice(t("retrofit.nothing_to_do"));
+      return;
+    }
+
+    const proceed = await confirm(this.app, {
+      title: t("retrofit.title"),
+      body: t("retrofit.body", {
+        n: targets.length,
+        folder: this.settings.companionNoteFolder,
+      }),
+      confirmLabel: t("retrofit.confirm"),
+    });
+    if (!proceed) return;
+
+    const result = await retrofitCompanionNotes(this.app, tasks, {
+      enabled: true,
+      folder: this.settings.companionNoteFolder,
+    });
+
+    new Notice(
+      result.failed === 0 && result.skipped === 0
+        ? t("retrofit.done", { n: result.linked })
+        : t("retrofit.done_partial", {
+            n: result.linked,
+            skipped: result.skipped + result.failed,
+          })
+    );
   }
 
   /** Persists the Gantt task-column width after a resize drag. */

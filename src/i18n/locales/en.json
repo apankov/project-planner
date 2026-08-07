@@ -6,7 +6,8 @@
   "commands": {
     "open_map_view": "Open map view",
     "insert_filter_as_code_block": "Insert current filter as embedded Tasks Map",
-    "open_gantt_view": "Open Gantt view"
+    "open_gantt_view": "Open Gantt view",
+    "retrofit_companion_notes": "Create notes for existing tasks"
   },
   "ribbon": {
     "open_tasks_map": "Open tasks map view",
@@ -91,6 +92,14 @@
     "could_not_read": "That task could not be read back — nothing was changed",
     "failed": "Could not create the task",
     "created": "Task added to {{note}}"
+  },
+  "retrofit": {
+    "title": "Create notes for existing tasks",
+    "body": "This will create up to {{n}} notes in \"{{folder}}\" and rewrite those task lines to link to them. Tasks that are already links are left alone.",
+    "confirm": "Create notes",
+    "nothing_to_do": "Every task already links to a note",
+    "done": "Linked {{n}} tasks to their notes",
+    "done_partial": "Linked {{n}} tasks; {{skipped}} could not be updated"
   },
   "settings": {
     "display_options": "Display Options",
