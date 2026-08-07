@@ -44,7 +44,14 @@
     "apply_inferred_desc": "将所有建议日期写入对应笔记",
     "applied_inferred": "已为 {{n}} 个任务安排日期",
     "applied_inferred_partial": "已安排 {{n}} 个任务，{{failed}} 个写入失败",
-    "write_failed": "无法更新“{{task}}”的日期"
+    "write_failed": "无法更新“{{task}}”的日期",
+    "resize_columns": "拖动以调整任务列宽度",
+    "legend_todo": "待办",
+    "legend_in_progress": "进行中",
+    "legend_done": "已完成",
+    "legend_canceled": "已取消",
+    "legend_suggested": "建议日期",
+    "legend_today": "今天"
   },
   "settings": {
     "display_options": "显示选项",

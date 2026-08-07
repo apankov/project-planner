@@ -25,6 +25,9 @@ export interface TasksMapSettings {
   // Manual per-tag colors; tags absent here follow the palette
   tagColorOverrides: TagColorOverrides;
 
+  // Width of the Gantt view's task-name column, in pixels
+  ganttLabelWidth: number;
+
   // Language setting
   language: Language;
 
@@ -47,6 +50,8 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   // Tag color defaults
   tagColorPalette: "rainbow",
   tagColorOverrides: {},
+
+  ganttLabelWidth: 260,
 
   // Language default
   language: "en",

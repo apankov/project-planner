@@ -27,13 +27,16 @@ import {
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { TasksMapSettings } from "src/types/settings";
+import { GanttLegend } from "src/components/gantt-legend";
+import TasksMapPlugin from "../main";
 import { t } from "../i18n";
 
 interface GanttViewProps {
   settings: TasksMapSettings;
+  plugin: TasksMapPlugin;
 }
 
-export default function GanttView({ settings }: GanttViewProps) {
+export default function GanttView({ settings, plugin }: GanttViewProps) {
   const app = useApp();
   const [tasks, setTasks] = useState<BaseTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -186,6 +189,13 @@ export default function GanttView({ settings }: GanttViewProps) {
     [markSaving, rows, writeRowDates]
   );
 
+  const handleLabelWidthChange = useCallback(
+    (width: number) => {
+      void plugin.setGanttLabelWidth(width);
+    },
+    [plugin]
+  );
+
   const handleApplyInferred = useCallback(async () => {
     if (inferredRows.length === 0 || applying) return;
 
@@ -262,14 +272,19 @@ export default function GanttView({ settings }: GanttViewProps) {
           onSelect={setSelectedTaskId}
           onCommit={(result) => void handleCommit(result)}
           scrollRef={scrollRef}
+          labelWidth={settings.ganttLabelWidth}
+          onLabelWidthChange={handleLabelWidthChange}
         />
       )}
 
-      {inferredRows.length > 0 && (
-        <div className="tasks-map-gantt-hint">
-          {t("gantt.inferred_hint", { n: inferredRows.length })}
-        </div>
-      )}
+      <div className="tasks-map-gantt-footer">
+        <GanttLegend />
+        {inferredRows.length > 0 && (
+          <div className="tasks-map-gantt-hint">
+            {t("gantt.inferred_hint", { n: inferredRows.length })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

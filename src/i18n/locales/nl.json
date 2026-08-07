@@ -44,7 +44,14 @@
     "apply_inferred_desc": "Schrijf elke voorgestelde datum naar de notitie",
     "applied_inferred": "{{n}} taken ingepland",
     "applied_inferred_partial": "{{n}} taken ingepland, {{failed}} konden niet worden geschreven",
-    "write_failed": "Kon de datums van \"{{task}}\" niet bijwerken"
+    "write_failed": "Kon de datums van \"{{task}}\" niet bijwerken",
+    "resize_columns": "Sleep om de taakkolom te verbreden",
+    "legend_todo": "Te doen",
+    "legend_in_progress": "Bezig",
+    "legend_done": "Klaar",
+    "legend_canceled": "Geannuleerd",
+    "legend_suggested": "Voorgestelde datums",
+    "legend_today": "Vandaag"
   },
   "settings": {
     "display_options": "Weergaveopties",
