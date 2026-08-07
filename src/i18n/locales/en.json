@@ -98,7 +98,9 @@
     "could_not_read": "That task could not be read back — nothing was changed",
     "failed": "Could not create the task",
     "created": "Task added to {{note}}",
-    "show_in_gantt": "Show in Gantt view"
+    "show_in_gantt": "Show in Gantt view",
+    "inserted_into_chain": "{{task}} now sits between {{from}} and {{to}}",
+    "insert_failed": "Could not put that task into the chain"
   },
   "retrofit": {
     "title": "Create notes for existing tasks",

@@ -1348,6 +1348,14 @@ If your plugin does not need CSS, delete this file.
   opacity: 0.15;
 }
 
+/* A dragged task is hovering over this connection and would split it */
+.tasks-map-hash-edge-path--drop-target {
+  stroke: var(--interactive-accent);
+  stroke-width: 4;
+  stroke-dasharray: 6 4;
+  opacity: 1;
+}
+
 .tasks-map-task-node-root--dimmed {
   opacity: 0.35;
 }

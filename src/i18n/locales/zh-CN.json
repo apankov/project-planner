@@ -98,7 +98,9 @@
     "could_not_read": "无法读取该任务 — 未做任何更改",
     "failed": "无法创建任务",
     "created": "任务已添加到 {{note}}",
-    "show_in_gantt": "在甘特图中显示"
+    "show_in_gantt": "在甘特图中显示",
+    "inserted_into_chain": "{{task}} 现在位于 {{from}} 与 {{to}} 之间",
+    "insert_failed": "无法将该任务插入此链条"
   },
   "retrofit": {
     "title": "为现有任务创建笔记",

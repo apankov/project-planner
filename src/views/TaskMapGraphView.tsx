@@ -42,6 +42,7 @@ import TaskNode from "src/components/task-node";
 import ProjectGroupNode from "src/components/project-group-node";
 import { getFilteredNodeIds } from "src/lib/filter-tasks";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
+import { EdgeCandidate, findEdgeUnderPoint } from "src/lib/edge-hit-test";
 import { TaskMinimap } from "src/components/task-minimap";
 import HashEdge from "src/components/hash-edge";
 import { DeleteEdgeButton } from "src/components/delete-edge-button";
@@ -112,6 +113,9 @@ export default function TaskMapGraphView({
     string | null
   >(null);
   const [edgeStyleOpen, setEdgeStyleOpen] = React.useState(false);
+  // Connection a dragged task is hovering over, ready to be spliced into
+  const [dropEdgeId, setDropEdgeId] = React.useState<string | null>(null);
+  const dropEdgeRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const reactFlowInstance = useReactFlow();
   const skipFitViewRef = React.useRef(false);
@@ -434,6 +438,14 @@ export default function TaskMapGraphView({
       settings.edgeStyleOverrides
     );
 
+    if (dropEdgeId) {
+      newEdges = newEdges.map((edge) =>
+        edge.id === dropEdgeId && edge.data
+          ? { ...edge, data: { ...edge.data, dropTarget: true } }
+          : edge
+      );
+    }
+
     const filteredNodeIds = getFilteredNodeIds(graphTasks, filterState);
     newlyCreatedTaskIds.forEach((taskId) => {
       if (!filteredNodeIds.includes(taskId)) {
@@ -494,6 +506,7 @@ export default function TaskMapGraphView({
     droppedTaskIds,
     groupByProject,
     connectionHighlight,
+    dropEdgeId,
   ]);
 
   const nodeTypes = useMemo(
@@ -1177,6 +1190,126 @@ export default function TaskMapGraphView({
     [findGroupAtPosition, setNodes]
   );
 
+  /** Node-centre geometry for every connection currently drawn. */
+  const edgeCandidates = useCallback((): EdgeCandidate[] => {
+    const nodesById = new Map(
+      reactFlowInstance.getNodes().map((node) => [node.id, node])
+    );
+
+    return edges.flatMap((edge) => {
+      const source = nodesById.get(edge.source);
+      const target = nodesById.get(edge.target);
+      if (!source || !target) return [];
+
+      const centre = (node: typeof source) => ({
+        x:
+          (node.positionAbsolute?.x ?? node.position.x) + (node.width ?? 0) / 2,
+        y:
+          (node.positionAbsolute?.y ?? node.position.y) +
+          (node.height ?? 0) / 2,
+      });
+
+      return [
+        {
+          id: edge.id,
+          sourceId: edge.source,
+          targetId: edge.target,
+          source: centre(source),
+          target: centre(target),
+        },
+      ];
+    });
+  }, [edges, reactFlowInstance]);
+
+  /** Marks the connection a dragged task would drop into. */
+  const updateDropEdge = useCallback(
+    (draggedNode: {
+      id: string;
+      position: { x: number; y: number };
+      width?: number | null;
+      height?: number | null;
+      positionAbsolute?: { x: number; y: number };
+    }) => {
+      const centre = {
+        x:
+          (draggedNode.positionAbsolute?.x ?? draggedNode.position.x) +
+          (draggedNode.width ?? 0) / 2,
+        y:
+          (draggedNode.positionAbsolute?.y ?? draggedNode.position.y) +
+          (draggedNode.height ?? 0) / 2,
+      };
+
+      const hit = findEdgeUnderPoint(centre, edgeCandidates(), draggedNode.id);
+      const nextId = hit?.id ?? null;
+      if (nextId === dropEdgeRef.current) return;
+
+      dropEdgeRef.current = nextId;
+      setDropEdgeId(nextId);
+    },
+    [edgeCandidates]
+  );
+
+  /**
+   * Puts a task in the middle of an existing chain: the connection it was
+   * dropped on is replaced by one into the task and one out of it.
+   */
+  const insertTaskIntoEdge = useCallback(
+    async (taskId: string, edgeId: string) => {
+      const edge = edges.find((candidate) => candidate.id === edgeId);
+      if (!edge || !vault) return;
+
+      const sourceTask = tasks.find((task) => task.id === edge.source);
+      const targetTask = tasks.find((task) => task.id === edge.target);
+      const movedTask = tasks.find((task) => task.id === taskId);
+      if (!sourceTask || !targetTask || !movedTask) return;
+
+      if (
+        movedTask.id === sourceTask.id ||
+        movedTask.id === targetTask.id ||
+        targetTask.incomingLinks.includes(movedTask.id)
+      ) {
+        return;
+      }
+
+      try {
+        await removeLinkSignsBetweenTasks(vault, targetTask, sourceTask.id);
+        await addLinkSignsBetweenTasks(
+          vault,
+          sourceTask,
+          movedTask,
+          settings.linkingStyle
+        );
+        await addLinkSignsBetweenTasks(
+          vault,
+          movedTask,
+          targetTask,
+          settings.linkingStyle
+        );
+
+        skipFitViewRef.current = true;
+        updateTaskIncomingLinks(targetTask.id, (links) => [
+          ...links.filter((id) => id !== sourceTask.id),
+          movedTask.id,
+        ]);
+        updateTaskIncomingLinks(movedTask.id, (links) =>
+          links.includes(sourceTask.id) ? links : [...links, sourceTask.id]
+        );
+
+        new Notice(
+          t("task_create.inserted_into_chain", {
+            task: movedTask.summary,
+            from: sourceTask.summary,
+            to: targetTask.summary,
+          })
+        );
+      } catch (error) {
+        console.error("Could not insert the task into that chain", error);
+        new Notice(t("task_create.insert_failed"));
+      }
+    },
+    [edges, settings.linkingStyle, tasks, updateTaskIncomingLinks, vault]
+  );
+
   // Highlight project group node while a task node is dragged over it
   const onNodeDrag: NodeDragHandler = useCallback(
     (_event, draggedNode) => {
@@ -1188,8 +1321,9 @@ export default function TaskMapGraphView({
       const parentNodeId = currentNode?.parentNode ?? draggedNode.parentId;
       const excludeGroupIds = new Set(parentNodeId ? [parentNodeId] : []);
       updateDragOverHighlights([dragPos], excludeGroupIds);
+      updateDropEdge(draggedNode);
     },
-    [updateDragOverHighlights, nodes]
+    [updateDragOverHighlights, nodes, updateDropEdge]
   );
 
   // Highlight project group nodes while multiple selected task nodes are dragged
@@ -1283,10 +1417,21 @@ export default function TaskMapGraphView({
   const onNodeDragStop: NodeDragHandler = useCallback(
     (_event, draggedNode) => {
       clearDragOverHighlights();
+
+      const edgeId = dropEdgeRef.current;
+      dropEdgeRef.current = null;
+      setDropEdgeId(null);
+
+      if (edgeId) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises -- NodeDragHandler expects void; async work is intentionally fire-and-forget
+        insertTaskIntoEdge(draggedNode.id, edgeId);
+        return;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-floating-promises -- NodeDragHandler expects void; async work is intentionally fire-and-forget
       assignDraggedNodesToProject([draggedNode]);
     },
-    [clearDragOverHighlights, assignDraggedNodesToProject]
+    [clearDragOverHighlights, assignDraggedNodesToProject, insertTaskIntoEdge]
   );
 
   // Handle drag-stop of a multi-node selection — assign all task nodes to projects

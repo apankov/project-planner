@@ -98,7 +98,9 @@
     "could_not_read": "Die taak kon niet worden teruggelezen — er is niets gewijzigd",
     "failed": "Kon de taak niet aanmaken",
     "created": "Taak toegevoegd aan {{note}}",
-    "show_in_gantt": "Tonen in Gantt-weergave"
+    "show_in_gantt": "Tonen in Gantt-weergave",
+    "inserted_into_chain": "{{task}} staat nu tussen {{from}} en {{to}}",
+    "insert_failed": "Kon die taak niet in de keten plaatsen"
   },
   "retrofit": {
     "title": "Notities maken voor bestaande taken",
