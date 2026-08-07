@@ -39,6 +39,15 @@ import { getFilteredNodeIds } from "src/lib/filter-tasks";
 import { TaskMinimap } from "src/components/task-minimap";
 import HashEdge from "src/components/hash-edge";
 import { DeleteEdgeButton } from "src/components/delete-edge-button";
+import { EdgeStylePopover } from "src/components/edge-style-popover";
+import { EdgeMarkerDefs } from "src/components/edge-marker-defs";
+import {
+  DEFAULT_EDGE_STYLE,
+  EdgeStyleOverride,
+  clearEdgeStyleOverride,
+  getEdgeStyle,
+  setEdgeStyleOverride,
+} from "src/lib/edge-style-manager";
 import { TagsContext } from "src/contexts/context";
 import UnlinkedTasksPanel, {
   DRAG_DATA_KEY,
@@ -87,6 +96,7 @@ export default function TaskMapGraphView({
     Set<string>
   >(new Set());
   const [selectedEdge, setSelectedEdge] = React.useState<string | null>(null);
+  const [edgeStyleOpen, setEdgeStyleOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const reactFlowInstance = useReactFlow();
   const skipFitViewRef = React.useRef(false);
@@ -366,7 +376,8 @@ export default function TaskMapGraphView({
       settings.layoutDirection,
       settings.debugVisualization,
       settings.edgeStyle,
-      settings.smoothStepRadius
+      settings.smoothStepRadius,
+      settings.edgeStyleOverrides
     );
 
     const filteredNodeIds = getFilteredNodeIds(graphTasks, filterState);
@@ -442,13 +453,11 @@ export default function TaskMapGraphView({
     [tasks]
   );
 
-  const onEdgeClick = useCallback<EdgeMouseHandler>(
-    (event, edge) => {
-      event.stopPropagation();
-      setSelectedEdge(edge.id);
-    },
-    [setSelectedEdge]
-  );
+  const onEdgeClick = useCallback<EdgeMouseHandler>((event, edge) => {
+    event.stopPropagation();
+    setSelectedEdge(edge.id);
+    setEdgeStyleOpen(false);
+  }, []);
 
   const onNodeClick = useCallback(() => {
     setSelectedEdge(null);
@@ -456,7 +465,8 @@ export default function TaskMapGraphView({
 
   const onPaneClick = useCallback(() => {
     setSelectedEdge(null);
-  }, [setSelectedEdge]);
+    setEdgeStyleOpen(false);
+  }, []);
 
   const getSelectedEdgeTasks = useCallback(() => {
     if (!selectedEdge) return null;
@@ -470,6 +480,78 @@ export default function TaskMapGraphView({
 
     return { edge, sourceTask, targetTask };
   }, [selectedEdge, edges, tasks]);
+
+  const selectedEdgeStyle = useMemo((): EdgeStyleOverride => {
+    const selection = getSelectedEdgeTasks();
+    if (!selection) return DEFAULT_EDGE_STYLE;
+    return getEdgeStyle(
+      settings.edgeStyleOverrides,
+      selection.edge.source,
+      selection.edge.target
+    );
+  }, [getSelectedEdgeTasks, settings.edgeStyleOverrides]);
+
+  /**
+   * A dataview task only has a durable id once one is written to its line.
+   * Styling a connection to a task without one would key the style to an id
+   * that changes on the next reload, so stamp the id first.
+   */
+  const ensureTaskIdWritten = useCallback(
+    async (task: BaseTask) => {
+      if (task.type !== "dataview") return;
+      if (task.text.includes(task.id)) return;
+      await addSignToTaskInFile(
+        vault,
+        task,
+        "id",
+        task.id,
+        settings.linkingStyle
+      );
+    },
+    [settings.linkingStyle, vault]
+  );
+
+  const onChangeSelectedEdgeStyle = useCallback(
+    async (style: EdgeStyleOverride) => {
+      const selection = getSelectedEdgeTasks();
+      if (!selection) return;
+
+      try {
+        await ensureTaskIdWritten(selection.sourceTask);
+        await ensureTaskIdWritten(selection.targetTask);
+      } catch (error) {
+        console.error("Could not persist task ids for edge style", error);
+      }
+
+      await plugin.setEdgeStyleOverrides(
+        setEdgeStyleOverride(
+          settings.edgeStyleOverrides,
+          selection.edge.source,
+          selection.edge.target,
+          style
+        )
+      );
+    },
+    [
+      ensureTaskIdWritten,
+      getSelectedEdgeTasks,
+      plugin,
+      settings.edgeStyleOverrides,
+    ]
+  );
+
+  const onResetSelectedEdgeStyle = useCallback(async () => {
+    const selection = getSelectedEdgeTasks();
+    if (!selection) return;
+
+    await plugin.setEdgeStyleOverrides(
+      clearEdgeStyleOverride(
+        settings.edgeStyleOverrides,
+        selection.edge.source,
+        selection.edge.target
+      )
+    );
+  }, [getSelectedEdgeTasks, plugin, settings.edgeStyleOverrides]);
 
   const createUpdatedTask = useCallback(
     (task: BaseTask, incomingLinks: string[]) =>
@@ -1224,15 +1306,27 @@ export default function TaskMapGraphView({
           </div>
           {embed.showMinimap && <TaskMinimap />}
           <Background />
+          <EdgeMarkerDefs />
           {settings.showStatusCounts && embed.showStatusCounts && (
             <StatusCountsOverlay tasks={filteredTasks} />
           )}
         </ReactFlow>
         {selectedEdge && (
-          <DeleteEdgeButton
-            onDelete={() => void onDeleteSelectedEdge()}
-            onInsertTask={() => void onInsertTaskBetweenSelectedEdge()}
-          />
+          <>
+            <DeleteEdgeButton
+              onDelete={() => void onDeleteSelectedEdge()}
+              onInsertTask={() => void onInsertTaskBetweenSelectedEdge()}
+              onToggleStyle={() => setEdgeStyleOpen((open) => !open)}
+              styleOpen={edgeStyleOpen}
+            />
+            {edgeStyleOpen && (
+              <EdgeStylePopover
+                edgeStyle={selectedEdgeStyle}
+                onChange={(style) => void onChangeSelectedEdgeStyle(style)}
+                onReset={() => void onResetSelectedEdgeStyle()}
+              />
+            )}
+          </>
         )}
       </div>
     </TagsContext.Provider>

@@ -91,6 +91,161 @@ If your plugin does not need CSS, delete this file.
   gap: 8px;
 }
 
+/* Style editor for the selected connection, stacked above its action buttons */
+.tasks-map-edge-style {
+  position: fixed;
+  bottom: 210px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.tasks-map-edge-style__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tasks-map-edge-style__label {
+  min-width: 54px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.tasks-map-edge-style__swatches,
+.tasks-map-edge-style__group {
+  display: flex;
+  gap: 4px;
+}
+
+.tasks-map-edge-style__swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.tasks-map-edge-style__swatch--active {
+  border-color: var(--text-normal);
+}
+
+.tasks-map-edge-style__swatch--default {
+  background: var(--text-muted);
+}
+.tasks-map-edge-style__swatch--red {
+  background: #e05c5c;
+}
+.tasks-map-edge-style__swatch--orange {
+  background: #e07c3a;
+}
+.tasks-map-edge-style__swatch--green {
+  background: #4caf62;
+}
+.tasks-map-edge-style__swatch--blue {
+  background: #2674b5;
+}
+.tasks-map-edge-style__swatch--purple {
+  background: #7c5cbf;
+}
+.tasks-map-edge-style__swatch--grey {
+  background: #6e7681;
+}
+
+.tasks-map-edge-style__option {
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  background: var(--background-primary);
+  box-shadow: none;
+}
+
+.tasks-map-edge-style__option--active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tasks-map-edge-style__reset {
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.tasks-map-style-edge-button--active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+/* Connection colours and dash patterns */
+.tasks-map-hash-edge-path--color-red {
+  stroke: #e05c5c;
+}
+.tasks-map-hash-edge-path--color-orange {
+  stroke: #e07c3a;
+}
+.tasks-map-hash-edge-path--color-green {
+  stroke: #4caf62;
+}
+.tasks-map-hash-edge-path--color-blue {
+  stroke: #2674b5;
+}
+.tasks-map-hash-edge-path--color-purple {
+  stroke: #7c5cbf;
+}
+.tasks-map-hash-edge-path--color-grey {
+  stroke: #6e7681;
+}
+
+.tasks-map-hash-edge-path--dashed {
+  stroke-dasharray: 8 5;
+}
+
+.tasks-map-hash-edge-path--dotted {
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
+}
+
+.tasks-map-edge-marker-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.tasks-map-edge-arrowhead {
+  fill: var(--text-faint);
+}
+.tasks-map-edge-arrowhead--red {
+  fill: #e05c5c;
+}
+.tasks-map-edge-arrowhead--orange {
+  fill: #e07c3a;
+}
+.tasks-map-edge-arrowhead--green {
+  fill: #4caf62;
+}
+.tasks-map-edge-arrowhead--blue {
+  fill: #2674b5;
+}
+.tasks-map-edge-arrowhead--purple {
+  fill: #7c5cbf;
+}
+.tasks-map-edge-arrowhead--grey {
+  fill: #6e7681;
+}
+
 .tasks-map-delete-edge-button,
 .tasks-map-insert-task-button {
   padding: 10px;

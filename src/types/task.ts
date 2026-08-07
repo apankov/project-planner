@@ -1,6 +1,7 @@
 import { Node, Edge } from "reactflow";
 import { BaseTask } from "./base-task";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
+import { EdgeStyleOverride } from "../lib/edge-style-manager";
 
 export type TaskStatus = "todo" | "in_progress" | "canceled" | "done";
 export type TaskType = "dataview" | "note";
@@ -36,6 +37,7 @@ export interface TaskEdgeData {
   debugVisualization?: boolean;
   edgeStyle?: "Bezier" | "Straight" | "SmoothStep";
   smoothStepRadius?: number;
+  style?: EdgeStyleOverride;
 }
 
 export type TaskNode = Node<TaskNodeData, "task">;

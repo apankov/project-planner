@@ -26,6 +26,7 @@ import { initI18n, changeLanguage, t } from "./i18n";
 import { FilterState, DEFAULT_FILTER_STATE } from "./types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "./types/embed-config";
 import { checkDataviewPlugin } from "./lib/utils";
+import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 
 const EMBED_CODE_BLOCK = "tasks-map";
 
@@ -177,6 +178,12 @@ export default class TasksMapPlugin extends Plugin {
   /** Persists the Gantt's manual row order. */
   async setGanttTaskOrder(order: string[]): Promise<void> {
     this.settings.ganttTaskOrder = order;
+    await this.saveSettings();
+  }
+
+  /** Persists per-connection line styles. */
+  async setEdgeStyleOverrides(overrides: EdgeStyleOverrides): Promise<void> {
+    this.settings.edgeStyleOverrides = overrides;
     await this.saveSettings();
   }
 

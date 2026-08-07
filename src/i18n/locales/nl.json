@@ -196,7 +196,26 @@
   },
   "edge_actions": {
     "delete_edge": "Verbinding verwijderen",
-    "insert_task": "Taak invoegen"
+    "insert_task": "Taak invoegen",
+    "style_edge": "Lijnstijl",
+    "colour": "Kleur",
+    "line": "Lijn",
+    "arrows": "Pijlen",
+    "colour_default": "Standaard",
+    "colour_red": "Rood",
+    "colour_orange": "Oranje",
+    "colour_green": "Groen",
+    "colour_blue": "Blauw",
+    "colour_purple": "Paars",
+    "colour_grey": "Grijs",
+    "line_solid": "Doorgetrokken",
+    "line_dashed": "Gestreept",
+    "line_dotted": "Gestippeld",
+    "arrows_end": "Einde",
+    "arrows_start": "Begin",
+    "arrows_both": "Beide",
+    "arrows_none": "Geen",
+    "reset_style": "Terug naar standaard"
   },
   "errors": {
     "cannot_create_edges_different_types": "Kan geen verbindingen maken tussen verschillende taaktypes (dataview en notitie-gebaseerde taken). Beide taken moeten van hetzelfde type zijn.",
