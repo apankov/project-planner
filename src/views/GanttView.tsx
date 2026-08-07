@@ -372,19 +372,14 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         setTasks((previous) => [...previous, newTask]);
 
         // Slot the row in where the user asked for it rather than at the end
-        const currentOrder = normalizeOrder(rows, settings.ganttTaskOrder);
-        const nextOrder = anchorRow
-          ? [...currentOrder, newTask.id].filter(Boolean)
-          : [...currentOrder, newTask.id];
+        const appended = [
+          ...normalizeOrder(rows, settings.ganttTaskOrder),
+          newTask.id,
+        ];
         void plugin.setGanttTaskOrder(
           anchorRow
-            ? moveRelativeTo(
-                [...currentOrder, newTask.id],
-                newTask.id,
-                anchorRow.task.id,
-                "after"
-              )
-            : nextOrder
+            ? moveRelativeTo(appended, newTask.id, anchorRow.task.id, "after")
+            : appended
         );
 
         new Notice(t("gantt.task_added"));
