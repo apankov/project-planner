@@ -2,6 +2,7 @@ import { NoteTask } from "../src/types/note-task";
 import {
   connectionKey,
   getConnectionHighlight,
+  highlightDirection,
   isHighlightActive,
 } from "../src/lib/connection-highlight";
 
@@ -101,5 +102,37 @@ describe("getConnectionHighlight", () => {
       const highlight = getConnectionHighlight("a", tasks);
       expect([...highlight.taskIds].sort()).toEqual(["a", "b"]);
     });
+  });
+});
+
+describe("direction", () => {
+  it("marks the way in as upstream", () => {
+    const highlight = getConnectionHighlight("c", CHAIN);
+    expect(highlightDirection(highlight, "a", "b")).toBe("upstream");
+    expect(highlightDirection(highlight, "b", "c")).toBe("upstream");
+  });
+
+  it("marks the way out as downstream", () => {
+    const highlight = getConnectionHighlight("a", CHAIN);
+    expect(highlightDirection(highlight, "a", "b")).toBe("downstream");
+    expect(highlightDirection(highlight, "b", "d")).toBe("downstream");
+  });
+
+  it("splits both sides when the task sits in the middle", () => {
+    const highlight = getConnectionHighlight("b", CHAIN);
+    expect(highlightDirection(highlight, "a", "b")).toBe("upstream");
+    expect(highlightDirection(highlight, "b", "c")).toBe("downstream");
+    expect(highlightDirection(highlight, "b", "d")).toBe("downstream");
+  });
+
+  it("separates the two sets of tasks", () => {
+    const highlight = getConnectionHighlight("b", CHAIN);
+    expect([...highlight.upstreamIds].sort()).toEqual(["a", "b"]);
+    expect([...highlight.downstreamIds].sort()).toEqual(["b", "c", "d"]);
+  });
+
+  it("has no direction for a connection off the chain", () => {
+    const highlight = getConnectionHighlight("b", CHAIN);
+    expect(highlightDirection(highlight, "z", "b")).toBeNull();
   });
 });

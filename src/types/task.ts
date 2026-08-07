@@ -45,6 +45,10 @@ export interface TaskEdgeData {
   smoothStepRadius?: number;
   connected?: boolean;
   dimmed?: boolean;
+  /** Which side of the selected task this connection sits on. */
+  direction?: "upstream" | "downstream" | null;
+  /** A dragged task is hovering here, ready to be spliced in. */
+  dropTarget?: boolean;
   style?: EdgeStyleOverride;
 }
 

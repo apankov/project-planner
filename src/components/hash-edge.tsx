@@ -96,6 +96,7 @@ export default function HashEdge({
           "tasks-map-hash-edge-path",
           selected ? "tasks-map-hash-edge-path--selected" : "",
           data?.connected ? "tasks-map-hash-edge-path--connected" : "",
+          data?.direction ? `tasks-map-hash-edge-path--${data.direction}` : "",
           data?.dimmed ? "tasks-map-hash-edge-path--dimmed" : "",
           data?.dropTarget ? "tasks-map-hash-edge-path--drop-target" : "",
           ...getEdgeStyleClasses(style),

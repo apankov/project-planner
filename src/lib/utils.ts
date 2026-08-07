@@ -20,6 +20,7 @@ import {
   ConnectionHighlight,
   EMPTY_HIGHLIGHT,
   connectionKey,
+  highlightDirection,
   isHighlightActive,
 } from "./connection-highlight";
 import { NODEHEIGHT, NODEWIDTH } from "src/components/task-node";
@@ -1814,6 +1815,9 @@ export function createEdgesFromTasks(
           connected:
             highlighting &&
             highlight.edgeKeys.has(connectionKey(parentTaskId, task.id)),
+          direction: highlighting
+            ? highlightDirection(highlight, parentTaskId, task.id)
+            : null,
           dimmed:
             highlighting &&
             !highlight.edgeKeys.has(connectionKey(parentTaskId, task.id)),

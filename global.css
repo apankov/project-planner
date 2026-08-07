@@ -1348,6 +1348,17 @@ If your plugin does not need CSS, delete this file.
   opacity: 0.15;
 }
 
+/* Upstream feeds into the selected task, downstream waits on it */
+.tasks-map-hash-edge-path--upstream {
+  stroke: var(--color-purple, #7c5cbf);
+  stroke-width: 2.5;
+}
+
+.tasks-map-hash-edge-path--downstream {
+  stroke: var(--color-orange, #e07c3a);
+  stroke-width: 2.5;
+}
+
 /* A dragged task is hovering over this connection and would split it */
 .tasks-map-hash-edge-path--drop-target {
   stroke: var(--interactive-accent);
@@ -2498,6 +2509,14 @@ If your plugin does not need CSS, delete this file.
   border: 1px dashed var(--text-muted);
 }
 
+.tasks-map-gantt-legend__swatch--upstream {
+  background: var(--color-purple, #7c5cbf);
+}
+
+.tasks-map-gantt-legend__swatch--downstream {
+  background: var(--color-orange, #e07c3a);
+}
+
 .tasks-map-gantt-legend__swatch--today {
   width: 2px;
   height: 12px;
@@ -2589,6 +2608,14 @@ If your plugin does not need CSS, delete this file.
 
 .tasks-map-gantt__label--connected {
   background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+}
+
+.tasks-map-gantt__label--upstream {
+  background: color-mix(in srgb, var(--color-purple, #7c5cbf) 14%, transparent);
+}
+
+.tasks-map-gantt__label--downstream {
+  background: color-mix(in srgb, var(--color-orange, #e07c3a) 14%, transparent);
 }
 
 .tasks-map-gantt__tag-input {
@@ -2859,6 +2886,18 @@ If your plugin does not need CSS, delete this file.
 
 .tasks-map-gantt__arrow--dimmed {
   opacity: 0.12;
+}
+
+.tasks-map-gantt__arrow--upstream {
+  stroke: var(--color-purple, #7c5cbf);
+  stroke-width: 2.5;
+  opacity: 1;
+}
+
+.tasks-map-gantt__arrow--downstream {
+  stroke: var(--color-orange, #e07c3a);
+  stroke-width: 2.5;
+  opacity: 1;
 }
 
 .tasks-map-gantt__arrowhead {

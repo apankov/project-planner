@@ -24,6 +24,14 @@ export function GanttLegend() {
         <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--today" />
         {t("gantt.legend_today")}
       </span>
+      <span className="tasks-map-gantt-legend__item">
+        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--upstream" />
+        {t("gantt.legend_upstream")}
+      </span>
+      <span className="tasks-map-gantt-legend__item">
+        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--downstream" />
+        {t("gantt.legend_downstream")}
+      </span>
     </div>
   );
 }

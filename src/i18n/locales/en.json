@@ -83,7 +83,9 @@
     "moved_together_hint": "{{n}} tasks selected — drag any one of them to move them all",
     "add_tag": "Add a tag",
     "tag_failed": "Could not update the task tags",
-    "show_in_map": "Show this task on the map"
+    "show_in_map": "Show this task on the map",
+    "legend_upstream": "Comes before (upstream)",
+    "legend_downstream": "Waits on it (downstream)"
   },
   "task_create": {
     "add_task_here": "Add task here",

@@ -83,7 +83,9 @@
     "moved_together_hint": "已选择 {{n}} 个任务 — 拖动其中任意一个即可同时移动",
     "add_tag": "添加标签",
     "tag_failed": "无法更新任务标签",
-    "show_in_map": "在任务图中显示此任务"
+    "show_in_map": "在任务图中显示此任务",
+    "legend_upstream": "前置任务（上游）",
+    "legend_downstream": "后续任务（下游）"
   },
   "task_create": {
     "add_task_here": "在此添加任务",

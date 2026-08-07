@@ -21,6 +21,7 @@ import { GanttGroup } from "src/lib/gantt-order";
 import {
   ConnectionHighlight,
   connectionKey,
+  highlightDirection,
   isHighlightActive,
 } from "src/lib/connection-highlight";
 import { GanttBar, BarDragResult } from "./gantt-bar";
@@ -506,6 +507,12 @@ export function GanttChart({
       highlighting && highlight.taskIds.has(row.task.id)
         ? `${base}--connected`
         : "",
+      highlighting && highlight.upstreamIds.has(row.task.id)
+        ? `${base}--upstream`
+        : "",
+      highlighting && highlight.downstreamIds.has(row.task.id)
+        ? `${base}--downstream`
+        : "",
       highlighting && !highlight.taskIds.has(row.task.id)
         ? `${base}--dimmed`
         : "",
@@ -794,11 +801,18 @@ function buildArrowPaths(
     const d = `M ${fromX} ${fromY} H ${midX} V ${toY} H ${toX}`;
 
     const key = connectionKey(dependency.fromId, dependency.toId);
+    const direction = highlightDirection(
+      highlight,
+      dependency.fromId,
+      dependency.toId
+    );
     const className = !highlighting
       ? ""
-      : highlight.edgeKeys.has(key)
-        ? "tasks-map-gantt__arrow--connected"
-        : "tasks-map-gantt__arrow--dimmed";
+      : direction
+        ? `tasks-map-gantt__arrow--${direction}`
+        : highlight.edgeKeys.has(key)
+          ? "tasks-map-gantt__arrow--connected"
+          : "tasks-map-gantt__arrow--dimmed";
 
     return [{ key, d, className }];
   });
