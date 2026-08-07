@@ -90,12 +90,13 @@ interface GanttChartProps {
   palette: TagColorPalette;
   colorOverrides: TagColorOverrides;
   showTags: boolean;
-  selectedTaskId: string | null;
+  /** Every selected task; dragging one bar moves all of them. */
+  selectedTaskIds: Set<string>;
   highlight: ConnectionHighlight;
   savingTaskIds: Set<string>;
   /** `toggle` clears the selection when the same task is picked again; a
       drag selects without toggling, so releasing keeps the task selected. */
-  onSelect: (_taskId: string, _toggle?: boolean) => void;
+  onSelect: (_taskId: string, _toggle?: boolean, _additive?: boolean) => void;
   onCommit: (_result: BarDragResult) => void;
   onReorder: (_reorder: RowReorder) => void;
   onAddTaskAfter: (_taskId: string) => void;
@@ -242,7 +243,7 @@ export function GanttChart({
   palette,
   colorOverrides,
   showTags,
-  selectedTaskId,
+  selectedTaskIds,
   highlight,
   savingTaskIds,
   onSelect,
@@ -270,7 +271,7 @@ export function GanttChart({
   // Bars select on pointer-down, which happens at the start of every drag —
   // toggling there would clear the selection the drag was meant to keep.
   const selectWithoutToggle = useCallback(
-    (taskId: string) => onSelect(taskId),
+    (taskId: string, additive?: boolean) => onSelect(taskId, false, additive),
     [onSelect]
   );
 
@@ -307,6 +308,24 @@ export function GanttChart({
       };
     },
     [lines]
+  );
+
+  /** A bar dragged up or down shows the same drop indicator as a row drag. */
+  const handleVerticalPreview = useCallback(
+    (clientY: number | null) => {
+      setDropTarget(clientY === null ? null : resolveDropTarget(clientY));
+    },
+    [resolveDropTarget]
+  );
+
+  const handleVerticalDrop = useCallback(
+    (movedId: string, clientY: number) => {
+      setDropTarget(null);
+      const target = resolveDropTarget(clientY);
+      if (!target || target.id === movedId) return;
+      onReorder({ movedId, targetId: target.id, placement: target.placement });
+    },
+    [onReorder, resolveDropTarget]
   );
 
   const handleReorderDown = useCallback(
@@ -472,7 +491,7 @@ export function GanttChart({
   const rowClassName = (row: GanttRow, base: string) =>
     [
       base,
-      selectedTaskId === row.task.id ? `${base}--selected` : "",
+      selectedTaskIds.has(row.task.id) ? `${base}--selected` : "",
       draggingId === row.task.id ? `${base}--dragging` : "",
       dropTarget?.id === row.task.id
         ? `${base}--drop-${dropTarget.placement}`
@@ -515,7 +534,13 @@ export function GanttChart({
               <div
                 key={line.key}
                 className={rowClassName(line.row, "tasks-map-gantt__label")}
-                onClick={() => onSelect(line.row.task.id, true)}
+                onClick={(event) =>
+                  onSelect(
+                    line.row.task.id,
+                    true,
+                    event.ctrlKey || event.metaKey
+                  )
+                }
               >
                 <span
                   className="tasks-map-gantt__grip"
@@ -667,7 +692,9 @@ export function GanttChart({
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
                     onSelect={selectWithoutToggle}
-                    selected={selectedTaskId === line.row.task.id}
+                    onVerticalPreview={handleVerticalPreview}
+                    onVerticalDrop={handleVerticalDrop}
+                    selected={selectedTaskIds.has(line.row.task.id)}
                     saving={savingTaskIds.has(line.row.task.id)}
                   />
                 </div>

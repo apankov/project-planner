@@ -65,6 +65,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [hideCompleted, setHideCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  // Ctrl/Cmd-click builds a set; dragging any member moves them all together
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(
+    new Set()
+  );
   const [groupBy, setGroupBy] = useState<GanttGroupBy>("none");
   // Previous orders, newest last, so a sort or a drag can be taken back
   const [orderHistory, setOrderHistory] = useState<string[][]>([]);
@@ -227,11 +231,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [app, applyTaskUpdate]
   );
 
-  const handleCommit = useCallback(
-    async ({ taskId, mode, days }: BarDragResult) => {
-      const row = rows.find((candidate) => candidate.task.id === taskId);
-      if (!row) return;
-
+  /** Applies one bar edit and writes it, reporting failure to the user. */
+  const commitRowDates = useCallback(
+    async (row: GanttRow, mode: BarDragResult["mode"], days: number) => {
       const skipWeekends = settings.ganttSkipWeekends;
       const next =
         mode === "move"
@@ -243,19 +245,48 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
               skipWeekends
             );
 
-      markSaving(taskId, true);
+      markSaving(row.task.id, true);
       try {
         const ok = await writeRowDates(row, next.start, next.end);
-        if (!ok)
+        if (!ok) {
           new Notice(t("gantt.write_failed", { task: row.task.summary }));
+        }
       } catch (error) {
         console.error("Failed to write task dates", error);
         new Notice(t("gantt.write_failed", { task: row.task.summary }));
       } finally {
-        markSaving(taskId, false);
+        markSaving(row.task.id, false);
       }
     },
-    [markSaving, rows, settings.ganttSkipWeekends, writeRowDates]
+    [markSaving, settings.ganttSkipWeekends, writeRowDates]
+  );
+
+  const handleCommit = useCallback(
+    async ({ taskId, mode, days }: BarDragResult) => {
+      const row = rows.find((candidate) => candidate.task.id === taskId);
+      if (!row) return;
+
+      // Moving one of several selected bars carries the rest along, which is
+      // how a slipped date gets pushed through the tasks that follow it
+      const movingTogether =
+        mode === "move" &&
+        selectedTaskIds.size > 1 &&
+        selectedTaskIds.has(taskId);
+
+      if (!movingTogether) {
+        await commitRowDates(row, mode, days);
+        return;
+      }
+
+      const moving = rows.filter((candidate) =>
+        selectedTaskIds.has(candidate.task.id)
+      );
+      for (const target of moving) {
+        await commitRowDates(target, mode, days);
+      }
+      new Notice(t("gantt.moved_together", { n: moving.length }));
+    },
+    [commitRowDates, rows, selectedTaskIds]
   );
 
   const handleLabelWidthChange = useCallback(
@@ -467,14 +498,31 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const handleSelect = useCallback(
-    (taskId: string, toggle = false) => {
+    (taskId: string, toggle = false, additive = false) => {
       if (linkingFromId) {
         void completeLink(taskId);
         return;
       }
-      setSelectedTaskId((previous) =>
-        toggle && previous === taskId ? null : taskId
-      );
+
+      if (additive) {
+        setSelectedTaskIds((previous) => {
+          const next = new Set(previous);
+          if (next.has(taskId)) {
+            next.delete(taskId);
+          } else {
+            next.add(taskId);
+          }
+          return next;
+        });
+        setSelectedTaskId(taskId);
+        return;
+      }
+
+      setSelectedTaskId((previous) => {
+        const cleared = toggle && previous === taskId;
+        setSelectedTaskIds(cleared ? new Set() : new Set([taskId]));
+        return cleared ? null : taskId;
+      });
     },
     [completeLink, linkingFromId]
   );
@@ -575,7 +623,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           palette={settings.tagColorPalette}
           colorOverrides={settings.tagColorOverrides}
           showTags={settings.showTags}
-          selectedTaskId={selectedTaskId}
+          selectedTaskIds={selectedTaskIds}
           highlight={highlight}
           savingTaskIds={savingTaskIds}
           onSelect={handleSelect}
@@ -592,6 +640,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
 
       <div className="tasks-map-gantt-footer">
         <GanttLegend />
+        {selectedTaskIds.size > 1 && (
+          <div className="tasks-map-gantt-hint">
+            {t("gantt.moved_together_hint", { n: selectedTaskIds.size })}
+          </div>
+        )}
         {inferredRows.length > 0 && (
           <div className="tasks-map-gantt-hint">
             {t("gantt.inferred_hint", { n: inferredRows.length })}

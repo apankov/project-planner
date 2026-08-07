@@ -13,6 +13,9 @@ export interface BarDragResult {
   days: number;
 }
 
+/** How far the pointer must travel vertically before a drag reorders. */
+const VERTICAL_INTENT_PX = 12;
+
 interface GanttBarProps {
   task: BaseTask;
   bar: ScheduledBar;
@@ -21,7 +24,10 @@ interface GanttBarProps {
   timelineStart: string;
   dayWidth: number;
   onCommit: (_result: BarDragResult) => void;
-  onSelect: (_taskId: string) => void;
+  onSelect: (_taskId: string, _additive?: boolean) => void;
+  /** Dragging a bar up or down reorders it, like dragging its row. */
+  onVerticalPreview: (_clientY: number | null) => void;
+  onVerticalDrop: (_taskId: string, _clientY: number) => void;
   selected: boolean;
   saving: boolean;
 }
@@ -43,6 +49,8 @@ export function GanttBar({
   dayWidth,
   onCommit,
   onSelect,
+  onVerticalPreview,
+  onVerticalDrop,
   selected,
   saving,
 }: GanttBarProps) {
@@ -50,8 +58,10 @@ export function GanttBar({
   const dragRef = useRef<{
     mode: BarDragMode;
     startX: number;
+    startY: number;
     days: number;
     pointerId: number;
+    vertical: boolean;
   } | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -99,13 +109,15 @@ export function GanttBar({
       event.preventDefault();
       event.stopPropagation();
 
-      onSelect(task.id);
+      onSelect(task.id, event.ctrlKey || event.metaKey);
 
       dragRef.current = {
         mode,
         startX: event.clientX,
+        startY: event.clientY,
         days: 0,
         pointerId: event.pointerId,
+        vertical: false,
       };
       setDragging(true);
       barRef.current?.setPointerCapture(event.pointerId);
@@ -118,13 +130,34 @@ export function GanttBar({
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
 
-      const days = Math.round((event.clientX - drag.startX) / dayWidth);
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+
+      // Only a whole-bar drag can reorder, and only once the pointer has
+      // clearly committed to moving up or down rather than sideways
+      if (
+        drag.mode === "move" &&
+        !drag.vertical &&
+        Math.abs(dy) > VERTICAL_INTENT_PX &&
+        Math.abs(dy) > Math.abs(dx)
+      ) {
+        drag.vertical = true;
+        // Put the bar back where it started: this drag is about order now
+        applyPreview("move", 0);
+      }
+
+      if (drag.vertical) {
+        onVerticalPreview(event.clientY);
+        return;
+      }
+
+      const days = Math.round(dx / dayWidth);
       if (days === drag.days) return;
 
       drag.days = days;
       applyPreview(drag.mode, days);
     },
-    [applyPreview, dayWidth]
+    [applyPreview, dayWidth, onVerticalPreview]
   );
 
   const endDrag = useCallback(
@@ -135,6 +168,12 @@ export function GanttBar({
       dragRef.current = null;
       setDragging(false);
       barRef.current?.releasePointerCapture(event.pointerId);
+
+      if (drag.vertical) {
+        onVerticalPreview(null);
+        onVerticalDrop(task.id, event.clientY);
+        return;
+      }
 
       const { mode, days } = drag;
 
@@ -155,7 +194,15 @@ export function GanttBar({
 
       onCommit({ taskId: task.id, mode, days: clamped });
     },
-    [applyPreview, inferred, onCommit, spanDays, task.id]
+    [
+      applyPreview,
+      inferred,
+      onCommit,
+      onVerticalDrop,
+      onVerticalPreview,
+      spanDays,
+      task.id,
+    ]
   );
 
   const classNames = [

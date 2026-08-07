@@ -77,7 +77,10 @@
     "linking_hint": "Linking from \"{{task}}\" — click the task it should block.",
     "linking_cancel": "Cancel",
     "skip_weekends": "Working days",
-    "skip_weekends_desc": "Measure durations in working days and keep bars off weekends: a task starting Friday that takes 4 days ends the following Wednesday"
+    "skip_weekends_desc": "Measure durations in working days and keep bars off weekends: a task starting Friday that takes 4 days ends the following Wednesday",
+    "moved_together": "Moved {{n}} tasks",
+    "multiselect_hint": "Ctrl-click to select several tasks, then drag any one of them to move them all",
+    "moved_together_hint": "{{n}} tasks selected — drag any one of them to move them all"
   },
   "task_create": {
     "add_task_here": "Add task here",
