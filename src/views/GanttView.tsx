@@ -457,12 +457,14 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const handleSelect = useCallback(
-    (taskId: string) => {
+    (taskId: string, toggle = false) => {
       if (linkingFromId) {
         void completeLink(taskId);
         return;
       }
-      setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
+      setSelectedTaskId((previous) =>
+        toggle && previous === taskId ? null : taskId
+      );
     },
     [completeLink, linkingFromId]
   );

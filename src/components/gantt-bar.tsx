@@ -2,6 +2,7 @@ import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { BaseTask } from "src/types/base-task";
 import { diffDays, inclusiveDayCount } from "src/lib/date-utils";
 import { ScheduledBar } from "src/lib/gantt-schedule";
+import { plainTaskText } from "src/lib/task-text";
 import { t } from "../i18n";
 
 export type BarDragMode = "move" | "resize-start" | "resize-end";
@@ -54,6 +55,7 @@ export function GanttBar({
   } | null>(null);
   const [dragging, setDragging] = useState(false);
 
+  const label = plainTaskText(task.summary);
   const offsetDays = diffDays(timelineStart, bar.start);
   const spanDays = inclusiveDayCount(bar.start, bar.end);
 
@@ -167,7 +169,7 @@ export function GanttBar({
     .filter(Boolean)
     .join(" ");
 
-  const label = inferred
+  const tooltip = inferred
     ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
     : t("gantt.bar_tooltip", { start: bar.start, end: bar.end });
 
@@ -175,8 +177,8 @@ export function GanttBar({
     <div
       ref={barRef}
       className={classNames}
-      title={label}
-      aria-label={`${task.summary} — ${label}`}
+      title={tooltip}
+      aria-label={`${label} — ${tooltip}`}
       onPointerDown={handlePointerDown("move")}
       onPointerMove={handlePointerMove}
       onPointerUp={endDrag}
@@ -186,7 +188,7 @@ export function GanttBar({
         className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
         onPointerDown={handlePointerDown("resize-start")}
       />
-      <span className="tasks-map-gantt-bar__label">{task.summary}</span>
+      <span className="tasks-map-gantt-bar__label">{label}</span>
       <span
         className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
         onPointerDown={handlePointerDown("resize-end")}

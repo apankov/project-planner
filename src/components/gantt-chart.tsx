@@ -93,7 +93,9 @@ interface GanttChartProps {
   selectedTaskId: string | null;
   highlight: ConnectionHighlight;
   savingTaskIds: Set<string>;
-  onSelect: (_taskId: string) => void;
+  /** `toggle` clears the selection when the same task is picked again; a
+      drag selects without toggling, so releasing keeps the task selected. */
+  onSelect: (_taskId: string, _toggle?: boolean) => void;
   onCommit: (_result: BarDragResult) => void;
   onReorder: (_reorder: RowReorder) => void;
   onAddTaskAfter: (_taskId: string) => void;
@@ -264,6 +266,13 @@ export function GanttChart({
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const lines = useMemo(() => buildLines(groups), [groups]);
+
+  // Bars select on pointer-down, which happens at the start of every drag —
+  // toggling there would clear the selection the drag was meant to keep.
+  const selectWithoutToggle = useCallback(
+    (taskId: string) => onSelect(taskId),
+    [onSelect]
+  );
 
   /** Which row the pointer is over, and which side of it. */
   const resolveDropTarget = useCallback(
@@ -506,7 +515,7 @@ export function GanttChart({
               <div
                 key={line.key}
                 className={rowClassName(line.row, "tasks-map-gantt__label")}
-                onClick={() => onSelect(line.row.task.id)}
+                onClick={() => onSelect(line.row.task.id, true)}
               >
                 <span
                   className="tasks-map-gantt__grip"
@@ -657,7 +666,7 @@ export function GanttChart({
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
-                    onSelect={onSelect}
+                    onSelect={selectWithoutToggle}
                     selected={selectedTaskId === line.row.task.id}
                     saving={savingTaskIds.has(line.row.task.id)}
                   />
