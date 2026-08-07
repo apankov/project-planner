@@ -6,6 +6,13 @@ import {
   getSmoothStepPath,
   Position,
 } from "reactflow";
+import {
+  DEFAULT_EDGE_STYLE,
+  edgeMarkerId,
+  getEdgeStyleClasses,
+  showsArrowAtEnd,
+  showsArrowAtStart,
+} from "src/lib/edge-style-manager";
 
 function getEdgePath(
   edgeStyle: string,
@@ -54,6 +61,7 @@ export default function HashEdge({
   const layoutDirection = data?.layoutDirection || "Horizontal";
   const edgeStyle = data?.edgeStyle || "Bezier";
   const smoothStepRadius = data?.smoothStepRadius ?? 10;
+  const style = data?.style ?? DEFAULT_EDGE_STYLE;
   const isVertical = layoutDirection === "Vertical";
   const sourcePosition = isVertical ? Position.Bottom : Position.Right;
   const targetPosition = isVertical ? Position.Top : Position.Left;
@@ -89,10 +97,21 @@ export default function HashEdge({
           selected ? "tasks-map-hash-edge-path--selected" : "",
           data?.connected ? "tasks-map-hash-edge-path--connected" : "",
           data?.dimmed ? "tasks-map-hash-edge-path--dimmed" : "",
+          ...getEdgeStyleClasses(style),
         ]
           .filter(Boolean)
           .join(" ")}
         d={edgePath}
+        markerStart={
+          showsArrowAtStart(style)
+            ? `url(#${edgeMarkerId(style.color)})`
+            : undefined
+        }
+        markerEnd={
+          showsArrowAtEnd(style)
+            ? `url(#${edgeMarkerId(style.color)})`
+            : undefined
+        }
       />
       {data?.debugVisualization && (
         <text

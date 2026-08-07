@@ -1,6 +1,7 @@
 import { Language } from "../i18n";
 import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
+import { EdgeStyleOverrides } from "../lib/edge-style-manager";
 
 export interface FilterPreset {
   id: string;
@@ -30,6 +31,9 @@ export interface TasksMapSettings {
   // Manual Gantt row order, as task IDs
   ganttTaskOrder: string[];
 
+  // Per-connection line styles, keyed "sourceId->targetId"
+  edgeStyleOverrides: EdgeStyleOverrides;
+
   // Language setting
   language: Language;
 
@@ -55,6 +59,8 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
 
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
+
+  edgeStyleOverrides: {},
 
   // Language default
   language: "en",

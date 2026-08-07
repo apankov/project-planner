@@ -27,6 +27,7 @@ import { TaskFactory } from "./task-factory";
 import { Position, Node, Edge } from "reactflow";
 import { t } from "../i18n";
 import { TagColorPalette, TagColorOverrides } from "./tag-color-manager";
+import { EdgeStyleOverrides, getEdgeStyle } from "./edge-style-manager";
 
 export const statusSymbols = {
   todo: "[ ]",
@@ -1736,7 +1737,8 @@ export function createEdgesFromTasks(
   debugVisualization: boolean = false,
   edgeStyle: "Bezier" | "Straight" | "SmoothStep" = "Bezier",
   smoothStepRadius: number = 10,
-  highlight: ConnectionHighlight = EMPTY_HIGHLIGHT
+  highlight: ConnectionHighlight = EMPTY_HIGHLIGHT,
+  edgeStyleOverrides: EdgeStyleOverrides = {}
 ): TaskEdge[] {
   const edges: TaskEdge[] = [];
   const highlighting = isHighlightActive(highlight);
@@ -1763,6 +1765,7 @@ export function createEdgesFromTasks(
           dimmed:
             highlighting &&
             !highlight.edgeKeys.has(connectionKey(parentTaskId, task.id)),
+          style: getEdgeStyle(edgeStyleOverrides, parentTaskId, task.id),
         },
       });
     });

@@ -196,7 +196,26 @@
   },
   "edge_actions": {
     "delete_edge": "删除连线",
-    "insert_task": "插入任务"
+    "insert_task": "插入任务",
+    "style_edge": "线条样式",
+    "colour": "颜色",
+    "line": "线型",
+    "arrows": "箭头",
+    "colour_default": "默认",
+    "colour_red": "红色",
+    "colour_orange": "橙色",
+    "colour_green": "绿色",
+    "colour_blue": "蓝色",
+    "colour_purple": "紫色",
+    "colour_grey": "灰色",
+    "line_solid": "实线",
+    "line_dashed": "虚线",
+    "line_dotted": "点线",
+    "arrows_end": "终点",
+    "arrows_start": "起点",
+    "arrows_both": "两端",
+    "arrows_none": "无",
+    "reset_style": "恢复默认"
   },
   "errors": {
     "cannot_create_edges_different_types": "无法在不同任务类型（dataview 和基于笔记的任务）之间创建连接。两个任务必须是相同类型。",

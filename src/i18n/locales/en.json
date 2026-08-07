@@ -196,7 +196,26 @@
   },
   "edge_actions": {
     "delete_edge": "Delete edge",
-    "insert_task": "Insert task"
+    "insert_task": "Insert task",
+    "style_edge": "Style line",
+    "colour": "Colour",
+    "line": "Line",
+    "arrows": "Arrows",
+    "colour_default": "Default",
+    "colour_red": "Red",
+    "colour_orange": "Orange",
+    "colour_green": "Green",
+    "colour_blue": "Blue",
+    "colour_purple": "Purple",
+    "colour_grey": "Grey",
+    "line_solid": "Solid",
+    "line_dashed": "Dashed",
+    "line_dotted": "Dotted",
+    "arrows_end": "End",
+    "arrows_start": "Start",
+    "arrows_both": "Both",
+    "arrows_none": "None",
+    "reset_style": "Reset to default"
   },
   "errors": {
     "cannot_create_edges_different_types": "Cannot create edges between different task types (dataview and note-based tasks). Both tasks must be of the same type.",
