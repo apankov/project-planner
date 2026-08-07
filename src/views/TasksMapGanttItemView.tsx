@@ -23,7 +23,7 @@ function GanttViewWrapper({ plugin }: { plugin: TasksMapPlugin }) {
       window.removeEventListener("tasks-map:settings-changed", handler);
   }, [plugin]);
 
-  return <GanttView settings={settings} />;
+  return <GanttView settings={settings} plugin={plugin} />;
 }
 
 export default class TasksMapGanttItemView extends ItemView {

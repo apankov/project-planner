@@ -168,6 +168,12 @@ export default class TasksMapPlugin extends Plugin {
     window.dispatchEvent(new Event("tasks-map:settings-changed"));
   }
 
+  /** Persists the Gantt's manual row order. */
+  async setGanttTaskOrder(order: string[]): Promise<void> {
+    this.settings.ganttTaskOrder = order;
+    await this.saveSettings();
+  }
+
   async savePreset(name: string, filter: FilterState): Promise<void> {
     const preset: FilterPreset = {
       id: crypto.randomUUID(),

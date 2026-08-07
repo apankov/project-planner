@@ -25,6 +25,9 @@ export interface TasksMapSettings {
   // Manual per-tag colors; tags absent here follow the palette
   tagColorOverrides: TagColorOverrides;
 
+  // Manual Gantt row order, as task IDs
+  ganttTaskOrder: string[];
+
   // Language setting
   language: Language;
 
@@ -47,6 +50,8 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   // Tag color defaults
   tagColorPalette: "rainbow",
   tagColorOverrides: {},
+
+  ganttTaskOrder: [],
 
   // Language default
   language: "en",

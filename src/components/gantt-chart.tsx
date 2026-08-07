@@ -1,5 +1,12 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { App } from "obsidian";
+import { GripVertical } from "lucide-react";
 import {
   addDays,
   diffDays,
@@ -9,6 +16,7 @@ import {
   dayOfWeek,
 } from "src/lib/date-utils";
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
+import { GanttGroup } from "src/lib/gantt-order";
 import { GanttBar, BarDragResult } from "./gantt-bar";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
@@ -28,7 +36,41 @@ export const GANTT_SCALES: GanttScale[] = [
   { id: "months", dayWidth: 5 },
 ];
 
+export type RowPlacement = "before" | "after";
+
+export interface RowReorder {
+  movedId: string;
+  targetId: string;
+  placement: RowPlacement;
+}
+
+/** A rendered line is either a group heading or a task row. */
+type ChartLine =
+  | { kind: "header"; key: string; label: string; count: number }
+  | { kind: "row"; key: string; row: GanttRow };
+
+function buildLines(groups: GanttGroup[]): ChartLine[] {
+  const lines: ChartLine[] = [];
+
+  for (const group of groups) {
+    if (group.label) {
+      lines.push({
+        kind: "header",
+        key: `group:${group.key}`,
+        label: group.label,
+        count: group.rows.length,
+      });
+    }
+    for (const row of group.rows) {
+      lines.push({ kind: "row", key: row.task.id, row });
+    }
+  }
+
+  return lines;
+}
+
 interface GanttChartProps {
+  groups: GanttGroup[];
   rows: GanttRow[];
   dependencies: GanttDependency[];
   timelineStart: string;
@@ -43,7 +85,47 @@ interface GanttChartProps {
   savingTaskIds: Set<string>;
   onSelect: (_taskId: string) => void;
   onCommit: (_result: BarDragResult) => void;
+  onReorder: (_reorder: RowReorder) => void;
   scrollRef: React.MutableRefObject<HTMLDivElement | null>;
+}
+
+/** The contents of a task row in the left column. */
+function RowLabel({
+  row,
+  app,
+  palette,
+  colorOverrides,
+  showTags,
+}: {
+  row: GanttRow;
+  app: App;
+  palette: TagColorPalette;
+  colorOverrides: TagColorOverrides;
+  showTags: boolean;
+}) {
+  return (
+    <>
+      <span
+        className={`tasks-map-gantt__status tasks-map-gantt__status--${row.task.status}`}
+      />
+      <span className="tasks-map-gantt__label-text" title={row.task.summary}>
+        {row.task.summary}
+      </span>
+      {showTags && row.task.tags.length > 0 && (
+        <span className="tasks-map-gantt__label-tags">
+          {row.task.tags.slice(0, 2).map((tag) => (
+            <Tag
+              key={tag}
+              tag={tag}
+              palette={palette}
+              colorOverrides={colorOverrides}
+            />
+          ))}
+        </span>
+      )}
+      <LinkButton link={row.task.link} app={app} taskStatus={row.task.status} />
+    </>
+  );
 }
 
 interface TickMark {
@@ -121,6 +203,7 @@ function buildMonthBands(
 }
 
 export function GanttChart({
+  groups,
   rows,
   dependencies,
   timelineStart,
@@ -135,9 +218,97 @@ export function GanttChart({
   savingTaskIds,
   onSelect,
   onCommit,
+  onReorder,
   scrollRef,
 }: GanttChartProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const labelsRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ movedId: string; pointerId: number } | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    id: string;
+    placement: RowPlacement;
+  } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const lines = useMemo(() => buildLines(groups), [groups]);
+
+  /** Which row the pointer is over, and which side of it. */
+  const resolveDropTarget = useCallback(
+    (clientY: number): { id: string; placement: RowPlacement } | null => {
+      const container = labelsRef.current;
+      if (!container) return null;
+
+      // The label header spans two timeline header rows plus its border
+      const headerHeight = ROW_HEIGHT * 2 + 1;
+      const offset =
+        clientY - container.getBoundingClientRect().top - headerHeight;
+      const index = Math.floor(offset / ROW_HEIGHT);
+      if (index < 0) {
+        const first = lines.find((line) => line.kind === "row");
+        return first?.kind === "row"
+          ? { id: first.row.task.id, placement: "before" }
+          : null;
+      }
+
+      const clamped = Math.min(index, lines.length - 1);
+      // Headers are not drop targets; fall back to the row above them
+      let line = lines[clamped];
+      for (let i = clamped; i >= 0 && line?.kind !== "row"; i--) {
+        line = lines[i];
+      }
+      if (!line || line.kind !== "row") return null;
+
+      const withinRow = offset - clamped * ROW_HEIGHT;
+      return {
+        id: line.row.task.id,
+        placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
+      };
+    },
+    [lines]
+  );
+
+  const handleReorderDown = useCallback(
+    (movedId: string) => (event: React.PointerEvent<HTMLElement>) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragRef.current = { movedId, pointerId: event.pointerId };
+      setDraggingId(movedId);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    []
+  );
+
+  const handleReorderMove = useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      setDropTarget(resolveDropTarget(event.clientY));
+    },
+    [resolveDropTarget]
+  );
+
+  const handleReorderUp = useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+
+      dragRef.current = null;
+      event.currentTarget.releasePointerCapture(event.pointerId);
+      setDraggingId(null);
+
+      const target = resolveDropTarget(event.clientY);
+      setDropTarget(null);
+      if (!target || target.id === drag.movedId) return;
+
+      onReorder({
+        movedId: drag.movedId,
+        targetId: target.id,
+        placement: target.placement,
+      });
+    },
+    [onReorder, resolveDropTarget]
+  );
 
   const totalDays = inclusiveDayCount(timelineStart, timelineEnd);
   const todayOffset = diffDays(timelineStart, today);
@@ -171,10 +342,44 @@ export function GanttChart({
     []
   );
 
+  // Arrows are positioned by rendered line, so group headings push them down
+  const lineIndexById = useMemo(() => {
+    const index = new Map<string, number>();
+    lines.forEach((line, position) => {
+      if (line.kind === "row") index.set(line.row.task.id, position);
+    });
+    return index;
+  }, [lines]);
+
+  const rowByTaskId = useMemo(() => {
+    const map = new Map<string, GanttRow>();
+    rows.forEach((row) => map.set(row.task.id, row));
+    return map;
+  }, [rows]);
+
   const arrowPaths = useMemo(
-    () => buildArrowPaths(rows, dependencies, timelineStart, scale.dayWidth),
-    [rows, dependencies, timelineStart, scale.dayWidth]
+    () =>
+      buildArrowPaths(
+        rowByTaskId,
+        lineIndexById,
+        dependencies,
+        timelineStart,
+        scale.dayWidth
+      ),
+    [rowByTaskId, lineIndexById, dependencies, timelineStart, scale.dayWidth]
   );
+
+  const rowClassName = (row: GanttRow, base: string) =>
+    [
+      base,
+      selectedTaskId === row.task.id ? `${base}--selected` : "",
+      draggingId === row.task.id ? `${base}--dragging` : "",
+      dropTarget?.id === row.task.id
+        ? `${base}--drop-${dropTarget.placement}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
   return (
     <div className="tasks-map-gantt" ref={gridRef}>
@@ -182,48 +387,46 @@ export function GanttChart({
           labels aligned with their rows, and the label column stays pinned
           during horizontal scrolling via `position: sticky`. */}
       <div className="tasks-map-gantt__scroll" ref={scrollRef}>
-        <div className="tasks-map-gantt__labels">
+        <div className="tasks-map-gantt__labels" ref={labelsRef}>
           <div className="tasks-map-gantt__labels-header">
             {t("gantt.column_task")}
           </div>
-          {rows.map((row) => (
-            <div
-              key={row.task.id}
-              className={`tasks-map-gantt__label ${
-                selectedTaskId === row.task.id
-                  ? "tasks-map-gantt__label--selected"
-                  : ""
-              }`}
-              onClick={() => onSelect(row.task.id)}
-            >
-              <span
-                className={`tasks-map-gantt__status tasks-map-gantt__status--${row.task.status}`}
-              />
-              <span
-                className="tasks-map-gantt__label-text"
-                title={row.task.summary}
-              >
-                {row.task.summary}
-              </span>
-              {showTags && row.task.tags.length > 0 && (
-                <span className="tasks-map-gantt__label-tags">
-                  {row.task.tags.slice(0, 2).map((tag) => (
-                    <Tag
-                      key={tag}
-                      tag={tag}
-                      palette={palette}
-                      colorOverrides={colorOverrides}
-                    />
-                  ))}
+          {lines.map((line) =>
+            line.kind === "header" ? (
+              <div key={line.key} className="tasks-map-gantt__group-header">
+                <span className="tasks-map-gantt__group-label">
+                  {line.label}
                 </span>
-              )}
-              <LinkButton
-                link={row.task.link}
-                app={app}
-                taskStatus={row.task.status}
-              />
-            </div>
-          ))}
+                <span className="tasks-map-gantt__group-count">
+                  {line.count}
+                </span>
+              </div>
+            ) : (
+              <div
+                key={line.key}
+                className={rowClassName(line.row, "tasks-map-gantt__label")}
+                onClick={() => onSelect(line.row.task.id)}
+              >
+                <span
+                  className="tasks-map-gantt__grip"
+                  title={t("gantt.reorder_hint")}
+                  onPointerDown={handleReorderDown(line.row.task.id)}
+                  onPointerMove={handleReorderMove}
+                  onPointerUp={handleReorderUp}
+                  onPointerCancel={handleReorderUp}
+                >
+                  <GripVertical size={12} />
+                </span>
+                <RowLabel
+                  row={line.row}
+                  app={app}
+                  palette={palette}
+                  colorOverrides={colorOverrides}
+                  showTags={showTags}
+                />
+              </div>
+            )
+          )}
         </div>
 
         <div className="tasks-map-gantt__timeline">
@@ -275,7 +478,7 @@ export function GanttChart({
             <svg
               className="tasks-map-gantt__arrows"
               width={totalDays * scale.dayWidth}
-              height={Math.max(rows.length, 1) * ROW_HEIGHT}
+              height={Math.max(lines.length, 1) * ROW_HEIGHT}
             >
               {arrowPaths.map((path) => (
                 <path
@@ -302,28 +505,32 @@ export function GanttChart({
               </defs>
             </svg>
 
-            {rows.map((row) => (
-              <div
-                key={row.task.id}
-                className={`tasks-map-gantt__row ${
-                  selectedTaskId === row.task.id
-                    ? "tasks-map-gantt__row--selected"
-                    : ""
-                }`}
-              >
-                <GanttBar
-                  task={row.task}
-                  bar={row.bar}
-                  inferred={row.inferred}
-                  timelineStart={timelineStart}
-                  dayWidth={scale.dayWidth}
-                  onCommit={onCommit}
-                  onSelect={onSelect}
-                  selected={selectedTaskId === row.task.id}
-                  saving={savingTaskIds.has(row.task.id)}
+            {lines.map((line) =>
+              line.kind === "header" ? (
+                <div
+                  key={line.key}
+                  className="tasks-map-gantt__group-spacer"
+                  aria-hidden="true"
                 />
-              </div>
-            ))}
+              ) : (
+                <div
+                  key={line.key}
+                  className={rowClassName(line.row, "tasks-map-gantt__row")}
+                >
+                  <GanttBar
+                    task={line.row.task}
+                    bar={line.row.bar}
+                    inferred={line.row.inferred}
+                    timelineStart={timelineStart}
+                    dayWidth={scale.dayWidth}
+                    onCommit={onCommit}
+                    onSelect={onSelect}
+                    selected={selectedTaskId === line.row.task.id}
+                    saving={savingTaskIds.has(line.row.task.id)}
+                  />
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -341,20 +548,25 @@ interface ArrowPath {
  * blocks, routed around the rows in between.
  */
 function buildArrowPaths(
-  rows: GanttRow[],
+  rowByTaskId: Map<string, GanttRow>,
+  lineIndexById: Map<string, number>,
   dependencies: GanttDependency[],
   timelineStart: string,
   dayWidth: number
 ): ArrowPath[] {
   return dependencies.flatMap((dependency) => {
-    const from = rows[dependency.fromRow];
-    const to = rows[dependency.toRow];
-    if (!from || !to) return [];
+    const from = rowByTaskId.get(dependency.fromId);
+    const to = rowByTaskId.get(dependency.toId);
+    const fromLine = lineIndexById.get(dependency.fromId);
+    const toLine = lineIndexById.get(dependency.toId);
+    if (!from || !to || fromLine === undefined || toLine === undefined) {
+      return [];
+    }
 
     const fromX = (diffDays(timelineStart, from.bar.end) + 1) * dayWidth;
-    const fromY = dependency.fromRow * ROW_HEIGHT + ROW_HEIGHT / 2;
+    const fromY = fromLine * ROW_HEIGHT + ROW_HEIGHT / 2;
     const toX = diffDays(timelineStart, to.bar.start) * dayWidth;
-    const toY = dependency.toRow * ROW_HEIGHT + ROW_HEIGHT / 2;
+    const toY = toLine * ROW_HEIGHT + ROW_HEIGHT / 2;
 
     const gutter = Math.max(8, dayWidth / 2);
     const midX = toX - gutter > fromX ? toX - gutter : fromX + gutter;
