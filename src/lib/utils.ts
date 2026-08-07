@@ -1751,7 +1751,8 @@ export function createNodesFromTasks(
   companionNoteOptions: CompanionNoteOptions = {
     enabled: false,
     folder: DEFAULT_COMPANION_FOLDER,
-  }
+  },
+  onRequestDelete?: (_task: BaseTask) => Promise<void>
 ): TaskNode[] {
   const highlighting = isHighlightActive(highlight);
   const isVertical = layoutDirection === "Vertical";
@@ -1771,6 +1772,7 @@ export function createNodesFromTasks(
       tagColorPalette,
       tagColorOverrides,
       companionNoteOptions,
+      onRequestDelete,
       connected: highlighting && highlight.taskIds.has(task.id),
       dimmed: highlighting && !highlight.taskIds.has(task.id),
       onDeleteTask,

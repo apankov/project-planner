@@ -43,6 +43,7 @@ import ProjectGroupNode from "src/components/project-group-node";
 import { getFilteredNodeIds } from "src/lib/filter-tasks";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { EdgeCandidate, findEdgeUnderPoint } from "src/lib/edge-hit-test";
+import { findDependents, planChainHealing } from "src/lib/chain-healing";
 import { TaskMinimap } from "src/components/task-minimap";
 import HashEdge from "src/components/hash-edge";
 import { DeleteEdgeButton } from "src/components/delete-edge-button";
@@ -413,6 +414,78 @@ export default function TaskMapGraphView({
     [highlightedTaskId, graphTasks]
   );
 
+  const createUpdatedTask = useCallback(
+    (task: BaseTask, incomingLinks: string[]) =>
+      Object.assign(Object.create(Object.getPrototypeOf(task)), task, {
+        incomingLinks,
+      }) as BaseTask,
+    []
+  );
+
+  /**
+   * Deletes a task without breaking the run of work it sat in: whatever was
+   * waiting on it is reconnected to whatever it was waiting for, so
+   * A → B → C becomes A → C rather than leaving C dangling.
+   */
+  const deleteTaskAndHealChain = useCallback(
+    async (task: BaseTask) => {
+      const dependents = findDependents(task.id, tasks);
+      const healingLinks = planChainHealing(task.id, tasks);
+
+      // Detach the dependents first: their ⛔ still names the task that is
+      // about to disappear
+      for (const dependent of dependents) {
+        try {
+          await removeLinkSignsBetweenTasks(vault, dependent, task.id);
+        } catch (error) {
+          console.error("Could not unlink a dependent task", error);
+        }
+      }
+
+      for (const link of healingLinks) {
+        const from = tasks.find((candidate) => candidate.id === link.fromId);
+        const to = tasks.find((candidate) => candidate.id === link.toId);
+        if (!from || !to) continue;
+
+        try {
+          await addLinkSignsBetweenTasks(
+            vault,
+            from,
+            to,
+            settings.linkingStyle
+          );
+        } catch (error) {
+          console.error("Could not reconnect the chain", error);
+        }
+      }
+
+      await deleteTaskFromVault(task, app);
+
+      skipFitViewRef.current = true;
+      setTasks((previous) =>
+        previous
+          .filter((candidate) => candidate.id !== task.id)
+          .map((candidate) => {
+            const gained = healingLinks
+              .filter((link) => link.toId === candidate.id)
+              .map((link) => link.fromId);
+            const links = candidate.incomingLinks.filter(
+              (id) => id !== task.id
+            );
+            return links.length === candidate.incomingLinks.length &&
+              gained.length === 0
+              ? candidate
+              : createUpdatedTask(candidate, [...links, ...gained]);
+          })
+      );
+
+      if (healingLinks.length > 0) {
+        new Notice(t("task_create.chain_healed", { n: healingLinks.length }));
+      }
+    },
+    [app, createUpdatedTask, settings.linkingStyle, tasks, vault]
+  );
+
   useEffect(() => {
     let newNodes = createNodesFromTasks(
       graphTasks,
@@ -507,6 +580,7 @@ export default function TaskMapGraphView({
     groupByProject,
     connectionHighlight,
     dropEdgeId,
+    deleteTaskAndHealChain,
   ]);
 
   const nodeTypes = useMemo(
@@ -623,14 +697,6 @@ export default function TaskMapGraphView({
       )
     );
   }, [getSelectedEdgeTasks, plugin, settings.edgeStyleOverrides]);
-
-  const createUpdatedTask = useCallback(
-    (task: BaseTask, incomingLinks: string[]) =>
-      Object.assign(Object.create(Object.getPrototypeOf(task)), task, {
-        incomingLinks,
-      }) as BaseTask,
-    []
-  );
 
   const updateTaskIncomingLinks = useCallback(
     (

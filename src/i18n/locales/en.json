@@ -102,7 +102,9 @@
     "created": "Task added to {{note}}",
     "show_in_gantt": "Show in Gantt view",
     "inserted_into_chain": "{{task}} now sits between {{from}} and {{to}}",
-    "insert_failed": "Could not put that task into the chain"
+    "insert_failed": "Could not put that task into the chain",
+    "chain_healed": "Reconnected {{n}} links around the deleted task",
+    "delete_failed": "Could not delete that task"
   },
   "retrofit": {
     "title": "Create notes for existing tasks",

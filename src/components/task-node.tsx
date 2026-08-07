@@ -85,6 +85,7 @@ interface TaskNodeData {
   companionNoteOptions?: import("src/lib/companion-note").CompanionNoteOptions;
   connected?: boolean;
   dimmed?: boolean;
+  onRequestDelete?: (_task: BaseTask) => Promise<void>;
   groupByProject?: boolean;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
@@ -105,6 +106,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     companionNoteOptions = { enabled: false, folder: "Tasks" },
     connected = false,
     dimmed = false,
+    onRequestDelete,
     groupByProject = false,
     onDeleteTask,
     onTaskCreated,
@@ -300,6 +302,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
             app={app}
             companionNoteOptions={companionNoteOptions}
             onTaskDeleted={() => onDeleteTask?.(task.id)}
+            onRequestDelete={onRequestDelete}
             onTaskCreated={onTaskCreated}
             onTaskEdited={onTaskEdited}
           />

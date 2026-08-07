@@ -102,7 +102,9 @@
     "created": "Taak toegevoegd aan {{note}}",
     "show_in_gantt": "Tonen in Gantt-weergave",
     "inserted_into_chain": "{{task}} staat nu tussen {{from}} en {{to}}",
-    "insert_failed": "Kon die taak niet in de keten plaatsen"
+    "insert_failed": "Kon die taak niet in de keten plaatsen",
+    "chain_healed": "{{n}} verbindingen hersteld rond de verwijderde taak",
+    "delete_failed": "Kon die taak niet verwijderen"
   },
   "retrofit": {
     "title": "Notities maken voor bestaande taken",

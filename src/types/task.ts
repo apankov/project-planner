@@ -32,6 +32,7 @@ export interface TaskNodeData {
   dimmed?: boolean;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
+  onRequestDelete?: (_task: BaseTask) => Promise<void>;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onTaskCreated?: (_newTask: BaseTask) => void;
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;

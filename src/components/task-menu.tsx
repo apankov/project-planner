@@ -19,6 +19,8 @@ interface TaskMenuProps {
   app: App;
   companionNoteOptions: CompanionNoteOptions;
   onTaskDeleted?: () => void;
+  /** Provided by the view, which knows the chain the task sits in. */
+  onRequestDelete?: (_task: BaseTask) => Promise<void>;
   onTaskCreated?: (_newTask: BaseTask) => void;
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;
 }
@@ -28,6 +30,7 @@ const TaskMenu = ({
   app,
   companionNoteOptions,
   onTaskDeleted,
+  onRequestDelete,
   onTaskCreated,
   onTaskEdited,
 }: TaskMenuProps) => {
@@ -124,10 +127,16 @@ const TaskMenu = ({
     e.stopPropagation();
 
     try {
-      await deleteTaskFromVault(task, app);
+      if (onRequestDelete) {
+        // The view reconnects whatever this task was standing between
+        await onRequestDelete(task);
+      } else {
+        await deleteTaskFromVault(task, app);
+      }
       onTaskDeleted?.();
     } catch (error) {
       console.error("Failed to delete task:", error);
+      new Notice(t("task_create.delete_failed"));
     }
 
     setIsOpen(false);
