@@ -85,7 +85,16 @@
     "tag_failed": "Could not update the task tags",
     "show_in_map": "Show this task on the map",
     "legend_upstream": "Comes before (upstream)",
-    "legend_downstream": "Waits on it (downstream)"
+    "legend_downstream": "Waits on it (downstream)",
+    "undone": "Undone: {{action}}",
+    "undo_reorder": "moved a row",
+    "undo_sort": "sorted rows by date",
+    "undo_move_one": "moved \"{{task}}\"",
+    "undo_move_many": "moved {{n}} tasks",
+    "undo_tag_added": "added #{{tag}}",
+    "undo_tag_removed": "removed #{{tag}}",
+    "undo_link": "linked {{from}} to {{to}}",
+    "undo_create": "added \"{{task}}\""
   },
   "task_create": {
     "add_task_here": "Add task here",
@@ -104,7 +113,10 @@
     "inserted_into_chain": "{{task}} now sits between {{from}} and {{to}}",
     "insert_failed": "Could not put that task into the chain",
     "chain_healed": "Reconnected {{n}} links around the deleted task",
-    "delete_failed": "Could not delete that task"
+    "delete_failed": "Could not delete that task",
+    "undo_delete": "deleted \"{{task}}\"",
+    "undo_unlink": "unlinked {{from}} from {{to}}",
+    "undo_insert": "inserted \"{{task}}\" into a chain"
   },
   "retrofit": {
     "title": "Create notes for existing tasks",
@@ -212,7 +224,9 @@
     "minimize": "Minimize view controls",
     "group_by_project": "Group by project",
     "open_gantt": "Open Gantt",
-    "open_gantt_desc": "Open the Gantt view for these tasks"
+    "open_gantt_desc": "Open the Gantt view for these tasks",
+    "undo": "Undo",
+    "undo_desc": "Take back the last change made in either view"
   },
   "multiselect": {
     "select": "Select...",

@@ -33,6 +33,7 @@ import {
 } from "./lib/companion-note-retrofit";
 import { confirm } from "./components/confirm-modal";
 import { requestTaskFocus } from "./lib/view-focus";
+import { UndoHistory } from "./lib/undo-history";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 
 const EMBED_CODE_BLOCK = "tasks-map";
@@ -67,6 +68,9 @@ export default class TasksMapPlugin extends Plugin {
     ...DEFAULT_SETTINGS,
     filterPresets: [...DEFAULT_SETTINGS.filterPresets],
   };
+
+  /** Shared by both views, so either can take back the other's edits. */
+  readonly undoHistory = new UndoHistory();
 
   async onload() {
     // Load settings

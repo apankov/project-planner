@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, GanttChartSquare } from "lucide-react";
+import { ChevronDown, ChevronUp, GanttChartSquare, Undo2 } from "lucide-react";
 import { t } from "../i18n";
 
 interface ControlsPanelProps {
@@ -15,6 +15,10 @@ interface ControlsPanelProps {
   setGroupByProject: (_val: boolean) => void;
   /** Omitted in embeds, where opening another view would be surprising. */
   onOpenGantt?: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
+  /** What pressing undo would reverse, for the tooltip. */
+  undoLabel: string | null;
 }
 
 export default function ControlsPanel({
@@ -29,6 +33,9 @@ export default function ControlsPanel({
   groupByProject,
   setGroupByProject,
   onOpenGantt,
+  onUndo,
+  canUndo,
+  undoLabel,
 }: ControlsPanelProps) {
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -114,6 +121,15 @@ export default function ControlsPanel({
               className="tasks-map-gui-overlay-reload-button"
             >
               {t("filters.reload_tasks")}
+            </button>
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="tasks-map-gui-overlay-reload-button tasks-map-open-gantt-button"
+              title={undoLabel ?? t("controls.undo_desc")}
+            >
+              <Undo2 size={14} />
+              <span>{t("controls.undo")}</span>
             </button>
             {onOpenGantt && (
               <button

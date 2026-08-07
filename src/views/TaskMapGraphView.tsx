@@ -27,6 +27,7 @@ import {
   addTaskLineToVault,
   deleteTaskFromVault,
   getTasksApi,
+  findTaskLineByIdOrText,
   parseTaskLine,
   resolveDefaultTaskFile,
   appendTaskLineToFile,
@@ -44,6 +45,7 @@ import { getFilteredNodeIds } from "src/lib/filter-tasks";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { EdgeCandidate, findEdgeUnderPoint } from "src/lib/edge-hit-test";
 import { findDependents, planChainHealing } from "src/lib/chain-healing";
+import { useUndoHistory } from "src/hooks/use-undo-history";
 import { TaskMinimap } from "src/components/task-minimap";
 import HashEdge from "src/components/hash-edge";
 import { DeleteEdgeButton } from "src/components/delete-edge-button";
@@ -414,6 +416,36 @@ export default function TaskMapGraphView({
     [highlightedTaskId, graphTasks]
   );
 
+  // Undo runs long after its action, so it reads tasks through a ref
+  const tasksRef = useRef<BaseTask[]>([]);
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
+  /** The task's line exactly as it appears in its note, if it can be found. */
+  const readTaskLine = useCallback(
+    async (task: BaseTask): Promise<string | null> => {
+      const file = vault.getFileByPath(task.link);
+      if (!file) return null;
+
+      const content = await vault.read(file);
+      const lines = content.split(/\r?\n/);
+      const index = findTaskLineByIdOrText(lines, task.id, task.text);
+      return index === -1 ? null : lines[index];
+    },
+    [vault]
+  );
+
+  /** Puts a deleted task's line back at the end of its note. */
+  const restoreTaskLine = useCallback(
+    async (task: BaseTask, line: string): Promise<void> => {
+      const file = vault.getFileByPath(task.link);
+      if (!file) return;
+      await appendTaskLineToFile(file, line, app);
+    },
+    [app, vault]
+  );
+
   const createUpdatedTask = useCallback(
     (task: BaseTask, incomingLinks: string[]) =>
       Object.assign(Object.create(Object.getPrototypeOf(task)), task, {
@@ -459,7 +491,37 @@ export default function TaskMapGraphView({
         }
       }
 
+      // Capture the line before it goes, so undo can put it back verbatim
+      const removedLine = await readTaskLine(task);
+
       await deleteTaskFromVault(task, app);
+
+      plugin.undoHistory.push({
+        label: t("task_create.undo_delete", { task: task.summary }),
+        undo: async () => {
+          if (removedLine) {
+            await restoreTaskLine(task, removedLine);
+          }
+
+          // Undo the healing links, then re-link the dependents to the task
+          for (const link of healingLinks) {
+            const to = tasksRef.current.find(
+              (candidate) => candidate.id === link.toId
+            );
+            if (to) await removeLinkSignsBetweenTasks(vault, to, link.fromId);
+          }
+          for (const dependent of dependents) {
+            await addLinkSignsBetweenTasks(
+              vault,
+              task,
+              dependent,
+              settings.linkingStyle
+            );
+          }
+
+          handleReloadTasks();
+        },
+      });
 
       skipFitViewRef.current = true;
       setTasks((previous) =>
@@ -483,7 +545,17 @@ export default function TaskMapGraphView({
         new Notice(t("task_create.chain_healed", { n: healingLinks.length }));
       }
     },
-    [app, createUpdatedTask, settings.linkingStyle, tasks, vault]
+    [
+      app,
+      createUpdatedTask,
+      handleReloadTasks,
+      plugin,
+      readTaskLine,
+      restoreTaskLine,
+      settings.linkingStyle,
+      tasks,
+      vault,
+    ]
   );
 
   useEffect(() => {
@@ -729,12 +801,32 @@ export default function TaskMapGraphView({
       );
       setEdges((eds) => eds.filter((e) => e.id !== selectedEdge));
       setSelectedEdge(null);
+
+      plugin.undoHistory.push({
+        label: t("task_create.undo_unlink", {
+          from: sourceTask.summary,
+          to: targetTask.summary,
+        }),
+        undo: async () => {
+          await addLinkSignsBetweenTasks(
+            vault,
+            sourceTask,
+            targetTask,
+            settings.linkingStyle
+          );
+          updateTaskIncomingLinks(targetTask.id, (links) =>
+            links.includes(sourceTask.id) ? links : [...links, sourceTask.id]
+          );
+        },
+      });
     }
   }, [
     selectedEdge,
     vault,
     setEdges,
     getSelectedEdgeTasks,
+    plugin,
+    settings.linkingStyle,
     updateTaskIncomingLinks,
   ]);
 
@@ -894,12 +986,35 @@ export default function TaskMapGraphView({
             eds
           )
         );
+
+        plugin.undoHistory.push({
+          label: t("gantt.undo_link", {
+            from: sourceTask.summary,
+            to: targetTask.summary,
+          }),
+          undo: async () => {
+            await removeLinkSignsBetweenTasks(vault, targetTask, sourceTask.id);
+            updateTaskIncomingLinks(targetTask.id, (links) =>
+              links.filter((id) => id !== sourceTask.id)
+            );
+            setEdges((eds) =>
+              eds.filter(
+                (edge) =>
+                  !(
+                    edge.source === sourceTask.id &&
+                    edge.target === targetTask.id
+                  )
+              )
+            );
+          },
+        });
       }
     },
     [
       vault,
       tasks,
       setEdges,
+      plugin,
       updateTaskIncomingLinks,
       settings.layoutDirection,
       settings.debugVisualization,
@@ -989,6 +1104,16 @@ export default function TaskMapGraphView({
         setDroppedTaskIds((previous) => new Set(previous).add(newTask.id));
         setNewlyCreatedTaskIds((previous) => new Set(previous).add(newTask.id));
         setTasks((previous) => [...previous, newTask]);
+        plugin.undoHistory.push({
+          label: t("gantt.undo_create", { task: newTask.summary }),
+          undo: async () => {
+            await deleteTaskFromVault(newTask, app);
+            setTasks((previous) =>
+              previous.filter((candidate) => candidate.id !== newTask.id)
+            );
+          },
+        });
+
         new Notice(t("task_create.created", { note: targetFile.basename }));
       } catch (error) {
         console.error("Failed to create task:", error);
@@ -1361,6 +1486,21 @@ export default function TaskMapGraphView({
           links.includes(sourceTask.id) ? links : [...links, sourceTask.id]
         );
 
+        plugin.undoHistory.push({
+          label: t("task_create.undo_insert", { task: movedTask.summary }),
+          undo: async () => {
+            await removeLinkSignsBetweenTasks(vault, movedTask, sourceTask.id);
+            await removeLinkSignsBetweenTasks(vault, targetTask, movedTask.id);
+            await addLinkSignsBetweenTasks(
+              vault,
+              sourceTask,
+              targetTask,
+              settings.linkingStyle
+            );
+            handleReloadTasks();
+          },
+        });
+
         new Notice(
           t("task_create.inserted_into_chain", {
             task: movedTask.summary,
@@ -1373,7 +1513,15 @@ export default function TaskMapGraphView({
         new Notice(t("task_create.insert_failed"));
       }
     },
-    [edges, settings.linkingStyle, tasks, updateTaskIncomingLinks, vault]
+    [
+      edges,
+      handleReloadTasks,
+      plugin,
+      settings.linkingStyle,
+      tasks,
+      updateTaskIncomingLinks,
+      vault,
+    ]
   );
 
   // Highlight project group node while a task node is dragged over it
@@ -1614,6 +1762,17 @@ export default function TaskMapGraphView({
     [setFilterState]
   );
 
+  const {
+    canUndo,
+    label: undoLabel,
+    undo,
+  } = useUndoHistory(plugin.undoHistory);
+
+  const handleUndo = useCallback(async () => {
+    const undone = await undo();
+    if (undone) new Notice(t("gantt.undone", { action: undone }));
+  }, [undo]);
+
   const handleOpenGantt = useCallback(() => {
     void plugin.activateGanttViewInMainArea();
   }, [plugin]);
@@ -1726,6 +1885,9 @@ export default function TaskMapGraphView({
                 groupByProject={groupByProject}
                 setGroupByProject={setGroupByProject}
                 onOpenGantt={embedConfig ? undefined : handleOpenGantt}
+                onUndo={() => void handleUndo()}
+                canUndo={canUndo}
+                undoLabel={undoLabel}
               />
             )}
           </div>

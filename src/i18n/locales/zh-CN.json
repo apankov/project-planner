@@ -85,7 +85,16 @@
     "tag_failed": "无法更新任务标签",
     "show_in_map": "在任务图中显示此任务",
     "legend_upstream": "前置任务（上游）",
-    "legend_downstream": "后续任务（下游）"
+    "legend_downstream": "后续任务（下游）",
+    "undone": "已撤销：{{action}}",
+    "undo_reorder": "移动了一行",
+    "undo_sort": "按日期排序",
+    "undo_move_one": "移动了“{{task}}”",
+    "undo_move_many": "移动了 {{n}} 个任务",
+    "undo_tag_added": "添加了 #{{tag}}",
+    "undo_tag_removed": "移除了 #{{tag}}",
+    "undo_link": "将 {{from}} 链接到 {{to}}",
+    "undo_create": "添加了“{{task}}”"
   },
   "task_create": {
     "add_task_here": "在此添加任务",
@@ -104,7 +113,10 @@
     "inserted_into_chain": "{{task}} 现在位于 {{from}} 与 {{to}} 之间",
     "insert_failed": "无法将该任务插入此链条",
     "chain_healed": "已围绕被删除的任务重新连接 {{n}} 条链接",
-    "delete_failed": "无法删除该任务"
+    "delete_failed": "无法删除该任务",
+    "undo_delete": "删除了“{{task}}”",
+    "undo_unlink": "断开了 {{from}} 与 {{to}}",
+    "undo_insert": "将“{{task}}”插入链条"
   },
   "retrofit": {
     "title": "为现有任务创建笔记",
@@ -212,7 +224,9 @@
     "minimize": "最小化视图控制",
     "group_by_project": "按项目分组",
     "open_gantt": "打开甘特图",
-    "open_gantt_desc": "为这些任务打开甘特图视图"
+    "open_gantt_desc": "为这些任务打开甘特图视图",
+    "undo": "撤销",
+    "undo_desc": "撤销在任一视图中所做的最后一次更改"
   },
   "multiselect": {
     "select": "选择...",

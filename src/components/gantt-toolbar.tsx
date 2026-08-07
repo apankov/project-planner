@@ -37,6 +37,8 @@ interface GanttToolbarProps {
   onAddTask: () => void;
   onUndoOrder: () => void;
   canUndoOrder: boolean;
+  /** What pressing undo would reverse, for the tooltip. */
+  undoLabel: string | null;
 }
 
 export function GanttToolbar({
@@ -60,6 +62,7 @@ export function GanttToolbar({
   onAddTask,
   onUndoOrder,
   canUndoOrder,
+  undoLabel,
 }: GanttToolbarProps) {
   return (
     <div className="tasks-map-gantt-toolbar">
@@ -110,7 +113,7 @@ export function GanttToolbar({
         className="tasks-map-gantt-toolbar__button"
         onClick={onUndoOrder}
         disabled={!canUndoOrder}
-        title={t("gantt.undo_order_desc")}
+        title={undoLabel ?? t("gantt.undo_order_desc")}
       >
         <Undo2 size={14} />
         <span>{t("gantt.undo_order")}</span>

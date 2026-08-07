@@ -11,6 +11,7 @@ import { AppWithPlugins } from "src/types/obsidian-internals";
 import { BaseTask } from "src/types/base-task";
 import {
   addLinkSignsBetweenTasks,
+  removeLinkSignsBetweenTasks,
   addSignToTaskInFile,
   addTagToTaskInVault,
   removeTagFromTaskInVault,
@@ -51,6 +52,8 @@ import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { TasksMapSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
+import { useUndoHistory } from "src/hooks/use-undo-history";
+import { findTaskDate } from "src/lib/task-dates";
 import TasksMapPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
@@ -77,8 +80,6 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     new Set()
   );
   const [groupBy, setGroupBy] = useState<GanttGroupBy>("none");
-  // Previous orders, newest last, so a sort or a drag can be taken back
-  const [orderHistory, setOrderHistory] = useState<string[][]>([]);
   // Task a dependency is being drawn from; the next row clicked receives it
   const [linkingFromId, setLinkingFromId] = useState<string | null>(null);
   // Task another view asked us to reveal, cleared once it is on screen
@@ -87,6 +88,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [applying, setApplying] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  // Undo runs long after its action, so it reads tasks through a ref
+  const tasksRef = useRef<BaseTask[]>([]);
   const hasCenteredRef = useRef(false);
 
   // Recomputed per render so a long-open view rolls over at midnight
@@ -241,6 +244,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [linkingFromId]);
 
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
   const applyTaskUpdate = useCallback((taskId: string, updated: BaseTask) => {
     setTasks((previous) =>
       previous.map((task) => (task.id === taskId ? updated : task))
@@ -265,6 +272,40 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       if (!updated) return false;
       applyTaskUpdate(row.task.id, updated);
       return true;
+    },
+    [app, applyTaskUpdate]
+  );
+
+  /** The dates a task carries now, so an undo can put them back. */
+  const capturePreviousDates = useCallback((row: GanttRow) => {
+    return {
+      taskId: row.task.id,
+      start: findTaskDate(row.task.dates, "start"),
+      due: findTaskDate(row.task.dates, "due"),
+    };
+  }, []);
+
+  /** Restores the dates a set of tasks had before an edit. */
+  const restoreDates = useCallback(
+    async (
+      snapshots: Array<{
+        taskId: string;
+        start: string | null;
+        due: string | null;
+      }>
+    ) => {
+      for (const snapshot of snapshots) {
+        const task = tasksRef.current.find(
+          (candidate) => candidate.id === snapshot.taskId
+        );
+        if (!task) continue;
+
+        const updated = await task.setDates(
+          { start: snapshot.start, due: snapshot.due },
+          app
+        );
+        if (updated) applyTaskUpdate(snapshot.taskId, updated);
+      }
     },
     [app, applyTaskUpdate]
   );
@@ -311,20 +352,36 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         selectedTaskIds.size > 1 &&
         selectedTaskIds.has(taskId);
 
-      if (!movingTogether) {
-        await commitRowDates(row, mode, days);
-        return;
-      }
+      const moving = movingTogether
+        ? rows.filter((candidate) => selectedTaskIds.has(candidate.task.id))
+        : [row];
 
-      const moving = rows.filter((candidate) =>
-        selectedTaskIds.has(candidate.task.id)
-      );
+      const snapshots = moving.map(capturePreviousDates);
+
       for (const target of moving) {
         await commitRowDates(target, mode, days);
       }
-      new Notice(t("gantt.moved_together", { n: moving.length }));
+
+      plugin.undoHistory.push({
+        label:
+          moving.length > 1
+            ? t("gantt.undo_move_many", { n: moving.length })
+            : t("gantt.undo_move_one", { task: row.task.summary }),
+        undo: () => restoreDates(snapshots),
+      });
+
+      if (moving.length > 1) {
+        new Notice(t("gantt.moved_together", { n: moving.length }));
+      }
     },
-    [commitRowDates, rows, selectedTaskIds]
+    [
+      capturePreviousDates,
+      commitRowDates,
+      plugin,
+      restoreDates,
+      rows,
+      selectedTaskIds,
+    ]
   );
 
   const handleLabelWidthChange = useCallback(
@@ -335,11 +392,14 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const commitOrder = useCallback(
-    (nextOrder: string[]) => {
-      setOrderHistory((previous) => [
-        ...previous,
-        normalizeOrder(rows, settings.ganttTaskOrder),
-      ]);
+    (nextOrder: string[], label: string) => {
+      const previousOrder = normalizeOrder(rows, settings.ganttTaskOrder);
+      plugin.undoHistory.push({
+        label,
+        undo: async () => {
+          await plugin.setGanttTaskOrder(previousOrder);
+        },
+      });
       void plugin.setGanttTaskOrder(nextOrder);
     },
     [plugin, rows, settings.ganttTaskOrder]
@@ -348,23 +408,28 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const handleReorder = useCallback(
     ({ movedId, targetId, placement }: RowReorder) => {
       const current = normalizeOrder(rows, settings.ganttTaskOrder);
-      commitOrder(moveRelativeTo(current, movedId, targetId, placement));
+      commitOrder(
+        moveRelativeTo(current, movedId, targetId, placement),
+        t("gantt.undo_reorder")
+      );
     },
     [commitOrder, rows, settings.ganttTaskOrder]
   );
 
   const handleSortByDate = useCallback(() => {
-    commitOrder(orderByDate(rows));
+    commitOrder(orderByDate(rows), t("gantt.undo_sort"));
   }, [commitOrder, rows]);
 
-  const handleUndoOrder = useCallback(() => {
-    setOrderHistory((previous) => {
-      const restored = previous[previous.length - 1];
-      if (!restored) return previous;
-      void plugin.setGanttTaskOrder(restored);
-      return previous.slice(0, -1);
-    });
-  }, [plugin]);
+  const {
+    canUndo,
+    label: undoLabel,
+    undo,
+  } = useUndoHistory(plugin.undoHistory);
+
+  const handleUndo = useCallback(async () => {
+    const undone = await undo();
+    if (undone) new Notice(t("gantt.undone", { action: undone }));
+  }, [undo]);
 
   const askForTaskLine = useCallback(async (): Promise<string | null> => {
     const tasksApi = getTasksApi(app);
@@ -461,6 +526,16 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
             : appended
         );
 
+        plugin.undoHistory.push({
+          label: t("gantt.undo_create", { task: newTask.summary }),
+          undo: async () => {
+            await newTask.delete(app);
+            setTasks((previous) =>
+              previous.filter((candidate) => candidate.id !== newTask.id)
+            );
+          },
+        });
+
         new Notice(t("gantt.task_added"));
       } catch (error) {
         console.error("Failed to add task from the Gantt", error);
@@ -523,6 +598,36 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         } else {
           await removeTagFromTaskInVault(task, tag, app);
         }
+
+        plugin.undoHistory.push({
+          label: add
+            ? t("gantt.undo_tag_added", { tag })
+            : t("gantt.undo_tag_removed", { tag }),
+          undo: async () => {
+            const current = tasksRef.current.find(
+              (candidate) => candidate.id === taskId
+            );
+            if (!current) return;
+
+            if (add) {
+              await removeTagFromTaskInVault(current, tag, app);
+            } else {
+              await addTagToTaskInVault(current, tag, app);
+            }
+
+            setTasks((previous) =>
+              previous.map((candidate) =>
+                candidate.id === taskId
+                  ? (Object.assign(
+                      Object.create(Object.getPrototypeOf(candidate)),
+                      candidate,
+                      { tags: task.tags }
+                    ) as BaseTask)
+                  : candidate
+              )
+            );
+          },
+        });
       } catch (error) {
         console.error("Could not change the task's tags", error);
         new Notice(t("gantt.tag_failed"));
@@ -539,7 +644,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         );
       }
     },
-    [app, tasks]
+    [app, plugin, tasks]
   );
 
   const handleStartLink = useCallback((taskId: string) => {
@@ -585,6 +690,32 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
               : task
           )
         );
+
+        plugin.undoHistory.push({
+          label: t("gantt.undo_link", {
+            from: fromTask.summary,
+            to: toTask.summary,
+          }),
+          undo: async () => {
+            await removeLinkSignsBetweenTasks(app.vault, toTask, fromId);
+            setTasks((previous) =>
+              previous.map((task) =>
+                task.id === targetId
+                  ? (Object.assign(
+                      Object.create(Object.getPrototypeOf(task)),
+                      task,
+                      {
+                        incomingLinks: task.incomingLinks.filter(
+                          (id) => id !== fromId
+                        ),
+                      }
+                    ) as BaseTask)
+                  : task
+              )
+            );
+          },
+        });
+
         new Notice(
           t("gantt.link_created", {
             from: fromTask.summary,
@@ -596,7 +727,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         new Notice(t("gantt.link_failed"));
       }
     },
-    [app.vault, linkingFromId, settings.linkingStyle, tasks]
+    [app.vault, linkingFromId, plugin, settings.linkingStyle, tasks]
   );
 
   const handleSelect = useCallback(
@@ -688,8 +819,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         onGroupByChange={setGroupBy}
         onSortByDate={handleSortByDate}
         onAddTask={() => void addTask(null)}
-        onUndoOrder={handleUndoOrder}
-        canUndoOrder={orderHistory.length > 0}
+        onUndoOrder={() => void handleUndo()}
+        canUndoOrder={canUndo}
+        undoLabel={undoLabel}
       />
 
       {linkingFromId && (
