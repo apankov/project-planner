@@ -9,6 +9,7 @@ import {
   dayOfWeek,
 } from "src/lib/date-utils";
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
+import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
 import { GanttBar, BarDragResult } from "./gantt-bar";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
@@ -16,6 +17,9 @@ import { TagColorOverrides, TagColorPalette } from "src/lib/tag-color-manager";
 import { t } from "../i18n";
 
 export const ROW_HEIGHT = 34;
+
+export const MIN_LABEL_WIDTH = 140;
+export const MAX_LABEL_WIDTH = 720;
 
 export interface GanttScale {
   id: "days" | "weeks" | "months";
@@ -44,6 +48,20 @@ interface GanttChartProps {
   onSelect: (_taskId: string) => void;
   onCommit: (_result: BarDragResult) => void;
   scrollRef: React.MutableRefObject<HTMLDivElement | null>;
+  labelWidth: number;
+  onLabelWidthChange: (_width: number) => void;
+}
+
+/**
+ * Task text rendered through the shared summary renderer, so `[[wikilinks]]`
+ * become real links into the vault. Lives in its own component because the
+ * hook cannot be called inside the row loop.
+ */
+function GanttLabelText({ summary, app }: { summary: string; app: App }) {
+  const ref = useSummaryRenderer(summary, app);
+  return (
+    <span className="tasks-map-gantt__label-text" title={summary} ref={ref} />
+  );
 }
 
 interface TickMark {
@@ -136,8 +154,11 @@ export function GanttChart({
   onSelect,
   onCommit,
   scrollRef,
+  labelWidth,
+  onLabelWidthChange,
 }: GanttChartProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const totalDays = inclusiveDayCount(timelineStart, timelineEnd);
   const todayOffset = diffDays(timelineStart, today);
@@ -161,6 +182,54 @@ export function GanttChart({
     el.style.setProperty("--gantt-row-height", `${ROW_HEIGHT}px`);
     el.style.setProperty("--gantt-today-offset", String(todayOffset));
   }, [scale.dayWidth, totalDays, todayOffset]);
+
+  // Written separately from the geometry above so a resize drag can update it
+  // without disturbing anything else
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el || resizeRef.current) return;
+    el.style.setProperty("--gantt-label-width", `${labelWidth}px`);
+  }, [labelWidth]);
+
+  const clampLabelWidth = (width: number) =>
+    Math.min(MAX_LABEL_WIDTH, Math.max(MIN_LABEL_WIDTH, Math.round(width)));
+
+  const handleResizeDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      resizeRef.current = { startX: event.clientX, startWidth: labelWidth };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [labelWidth]
+  );
+
+  const handleResizeMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const resize = resizeRef.current;
+      if (!resize) return;
+      const next = clampLabelWidth(
+        resize.startWidth + (event.clientX - resize.startX)
+      );
+      gridRef.current?.style.setProperty("--gantt-label-width", `${next}px`);
+    },
+    []
+  );
+
+  const handleResizeUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const resize = resizeRef.current;
+      if (!resize) return;
+      resizeRef.current = null;
+      event.currentTarget.releasePointerCapture(event.pointerId);
+
+      const next = clampLabelWidth(
+        resize.startWidth + (event.clientX - resize.startX)
+      );
+      if (next !== labelWidth) onLabelWidthChange(next);
+    },
+    [labelWidth, onLabelWidthChange]
+  );
 
   const setRowRef = useCallback(
     (offset: number, span: number) => (el: HTMLDivElement | null) => {
@@ -199,12 +268,7 @@ export function GanttChart({
               <span
                 className={`tasks-map-gantt__status tasks-map-gantt__status--${row.task.status}`}
               />
-              <span
-                className="tasks-map-gantt__label-text"
-                title={row.task.summary}
-              >
-                {row.task.summary}
-              </span>
+              <GanttLabelText summary={row.task.summary} app={app} />
               {showTags && row.task.tags.length > 0 && (
                 <span className="tasks-map-gantt__label-tags">
                   {row.task.tags.slice(0, 2).map((tag) => (
@@ -224,6 +288,14 @@ export function GanttChart({
               />
             </div>
           ))}
+          <div
+            className="tasks-map-gantt__resizer"
+            onPointerDown={handleResizeDown}
+            onPointerMove={handleResizeMove}
+            onPointerUp={handleResizeUp}
+            onPointerCancel={handleResizeUp}
+            title={t("gantt.resize_columns")}
+          />
         </div>
 
         <div className="tasks-map-gantt__timeline">

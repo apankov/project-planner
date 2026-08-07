@@ -44,7 +44,14 @@
     "apply_inferred_desc": "Write every suggested date to its note",
     "applied_inferred": "Scheduled {{n}} tasks",
     "applied_inferred_partial": "Scheduled {{n}} tasks, {{failed}} could not be written",
-    "write_failed": "Could not update dates for \"{{task}}\""
+    "write_failed": "Could not update dates for \"{{task}}\"",
+    "resize_columns": "Drag to resize the task column",
+    "legend_todo": "To do",
+    "legend_in_progress": "In progress",
+    "legend_done": "Done",
+    "legend_canceled": "Cancelled",
+    "legend_suggested": "Suggested dates",
+    "legend_today": "Today"
   },
   "settings": {
     "display_options": "Display Options",

@@ -2268,8 +2268,58 @@ If your plugin does not need CSS, delete this file.
 }
 
 .tasks-map-gantt-hint {
-  border-top: 1px solid var(--background-modifier-border);
+  padding: 0 12px 8px;
+}
+
+.tasks-map-gantt-footer {
   flex: 0 0 auto;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.tasks-map-gantt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.tasks-map-gantt-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tasks-map-gantt-legend__swatch {
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--color-blue, #2674b5);
+}
+
+.tasks-map-gantt-legend__swatch--in_progress {
+  background: var(--color-orange, #e07c3a);
+}
+
+.tasks-map-gantt-legend__swatch--done {
+  background: var(--color-green, #4caf62);
+}
+
+.tasks-map-gantt-legend__swatch--canceled {
+  background: var(--text-faint);
+}
+
+.tasks-map-gantt-legend__swatch--inferred {
+  background: transparent;
+  border: 1px dashed var(--text-muted);
+}
+
+.tasks-map-gantt-legend__swatch--today {
+  width: 2px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--color-red, #e05c5c);
 }
 
 .tasks-map-gantt {
@@ -2292,10 +2342,27 @@ If your plugin does not need CSS, delete this file.
   position: sticky;
   left: 0;
   z-index: 4;
-  flex: 0 0 260px;
-  width: 260px;
+  flex: 0 0 var(--gantt-label-width, 260px);
+  width: var(--gantt-label-width, 260px);
   border-right: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
+}
+
+/* Full-height grab strip on the column's right edge */
+.tasks-map-gantt__resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 6;
+}
+
+.tasks-map-gantt__resizer:hover {
+  background: var(--interactive-accent);
+  opacity: 0.35;
 }
 
 .tasks-map-gantt__labels-header {
@@ -2363,7 +2430,7 @@ If your plugin does not need CSS, delete this file.
   position: relative;
   flex: 0 0 auto;
   width: calc(var(--gantt-total-days) * var(--gantt-day-width));
-  min-width: calc(100% - 260px);
+  min-width: calc(100% - var(--gantt-label-width, 260px));
 }
 
 .tasks-map-gantt__header {

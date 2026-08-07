@@ -168,6 +168,12 @@ export default class TasksMapPlugin extends Plugin {
     window.dispatchEvent(new Event("tasks-map:settings-changed"));
   }
 
+  /** Persists the Gantt task-column width after a resize drag. */
+  async setGanttLabelWidth(width: number): Promise<void> {
+    this.settings.ganttLabelWidth = width;
+    await this.saveSettings();
+  }
+
   async savePreset(name: string, filter: FilterState): Promise<void> {
     const preset: FilterPreset = {
       id: crypto.randomUUID(),
