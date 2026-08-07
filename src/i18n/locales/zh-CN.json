@@ -66,6 +66,20 @@
     "group_no_project": "无项目",
     "reorder_hint": "拖动以重新排序"
   },
+  "task_create": {
+    "add_task_here": "在此添加任务",
+    "add_task_after": "在其后添加任务",
+    "add_task_before": "在其前添加任务",
+    "modal_title": "新建任务",
+    "modal_field": "任务",
+    "modal_placeholder": "需要做什么？",
+    "modal_submit": "添加任务",
+    "modal_cancel": "取消",
+    "no_target_note": "请先打开一篇笔记，或在笔记中添加任务，以便确定写入位置",
+    "could_not_read": "无法读取该任务 — 未做任何更改",
+    "failed": "无法创建任务",
+    "created": "任务已添加到 {{note}}"
+  },
   "settings": {
     "display_options": "显示选项",
     "show_task_priorities": "显示任务优先级",

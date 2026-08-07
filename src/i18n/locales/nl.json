@@ -66,6 +66,20 @@
     "group_no_project": "Geen project",
     "reorder_hint": "Sleep om te herschikken"
   },
+  "task_create": {
+    "add_task_here": "Hier een taak toevoegen",
+    "add_task_after": "Taak hierna toevoegen",
+    "add_task_before": "Taak hiervoor toevoegen",
+    "modal_title": "Nieuwe taak",
+    "modal_field": "Taak",
+    "modal_placeholder": "Wat moet er gebeuren?",
+    "modal_submit": "Taak toevoegen",
+    "modal_cancel": "Annuleren",
+    "no_target_note": "Open eerst een notitie, of zet er een taak in, zodat Tasks Map weet waar te schrijven",
+    "could_not_read": "Die taak kon niet worden teruggelezen — er is niets gewijzigd",
+    "failed": "Kon de taak niet aanmaken",
+    "created": "Taak toegevoegd aan {{note}}"
+  },
   "settings": {
     "display_options": "Weergaveopties",
     "show_task_priorities": "Taakprioriteiten tonen",
