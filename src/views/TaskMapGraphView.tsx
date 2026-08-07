@@ -62,6 +62,11 @@ import { GraphEmptyState } from "src/components/graph-empty-state";
 import ControlsPanel from "src/components/controls-panel";
 import { t } from "../i18n";
 import TasksMapPlugin from "../main";
+import {
+  FOCUS_TASK_EVENT,
+  MAP_VIEW_TYPE,
+  focusTargetFor,
+} from "src/lib/view-focus";
 
 import { TaskStatus } from "src/types/task";
 import { TasksMapSettings } from "src/types/settings";
@@ -225,6 +230,36 @@ export default function TaskMapGraphView({
       reloadRef.current = handleReloadTasks;
     }
   }, [reloadRef, handleReloadTasks]);
+
+  // The Gantt asking us to show a task: light up its chain and centre on it
+  useEffect(() => {
+    const onFocusTask = (event: Event) => {
+      const focusedId = focusTargetFor(event, MAP_VIEW_TYPE);
+      if (!focusedId) return;
+
+      setHighlightedTaskId(focusedId);
+      skipFitViewRef.current = true;
+
+      // Give the rebuild a beat to place the node before centring on it
+      window.setTimeout(() => {
+        const node = reactFlowInstance
+          .getNodes()
+          .find((candidate) => candidate.id === focusedId);
+        if (!node) return;
+
+        const width = node.width ?? 0;
+        const height = node.height ?? 0;
+        void reactFlowInstance.setCenter(
+          node.position.x + width / 2,
+          node.position.y + height / 2,
+          { zoom: Math.max(reactFlowInstance.getZoom(), 0.8), duration: 300 }
+        );
+      }, 80);
+    };
+
+    window.addEventListener(FOCUS_TASK_EVENT, onFocusTask);
+    return () => window.removeEventListener(FOCUS_TASK_EVENT, onFocusTask);
+  }, [reactFlowInstance]);
 
   const updateTaskTags = useCallback((taskId: string, newTags: string[]) => {
     setTaskTagsRegistry((prevRegistry) => {
@@ -1026,6 +1061,12 @@ export default function TaskMapGraphView({
       menu.addSeparator();
       menu.addItem((item) =>
         item
+          .setTitle(t("task_create.show_in_gantt"))
+          .setIcon("gantt-chart")
+          .onClick(() => void plugin.focusTaskInGantt(anchorTask.id))
+      );
+      menu.addItem((item) =>
+        item
           .setTitle(t("task_create.add_task_here"))
           .setIcon("file-plus")
           .onClick(
@@ -1035,7 +1076,7 @@ export default function TaskMapGraphView({
       );
       menu.showAtMouseEvent(event.nativeEvent);
     },
-    [createConnectedTask, createStandaloneTask, tasks]
+    [createConnectedTask, createStandaloneTask, plugin, tasks]
   );
 
   const onConnectStart = useCallback<OnConnectStart>((_event, params) => {

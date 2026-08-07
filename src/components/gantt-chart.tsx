@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { App } from "obsidian";
-import { GripVertical, Link2, Plus, TagIcon } from "lucide-react";
+import { GripVertical, Link2, Network, Plus, TagIcon } from "lucide-react";
 import {
   addDays,
   diffDays,
@@ -102,6 +102,7 @@ interface GanttChartProps {
   onReorder: (_reorder: RowReorder) => void;
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
+  onShowInMap: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
   onRemoveTag: (_taskId: string, _tag: string) => void;
   /** Every tag in use, most common first, for the tag picker. */
@@ -259,6 +260,7 @@ export function GanttChart({
   onReorder,
   onAddTaskAfter,
   onStartLink,
+  onShowInMap,
   onAddTag,
   onRemoveTag,
   allTags,
@@ -602,6 +604,17 @@ export function GanttChart({
                     }}
                   >
                     <TagIcon size={12} />
+                  </button>
+                  <button
+                    className="tasks-map-gantt__row-action"
+                    title={t("gantt.show_in_map")}
+                    aria-label={t("gantt.show_in_map")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onShowInMap(line.row.task.id);
+                    }}
+                  >
+                    <Network size={12} />
                   </button>
                   <button
                     className="tasks-map-gantt__row-action"

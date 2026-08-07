@@ -32,6 +32,7 @@ import {
   retrofitCompanionNotes,
 } from "./lib/companion-note-retrofit";
 import { confirm } from "./components/confirm-modal";
+import { requestTaskFocus } from "./lib/view-focus";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 
 const EMBED_CODE_BLOCK = "tasks-map";
@@ -323,6 +324,39 @@ export default class TasksMapPlugin extends Plugin {
     const leaf = this.app.workspace.getLeaf(true); // true = main area
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
     void this.app.workspace.revealLeaf(leaf);
+  }
+
+  /**
+   * Opens a view and points it at one task.
+   *
+   * The views listen for this rather than reading a shared field, so a view
+   * that is already open reacts too instead of only picking it up on mount.
+   */
+  private async focusTaskInView(
+    viewType: string,
+    taskId: string
+  ): Promise<void> {
+    const existing = this.app.workspace.getLeavesOfType(viewType)[0];
+    const leaf = existing ?? this.app.workspace.getLeaf(true);
+
+    if (!existing) {
+      await leaf.setViewState({ type: viewType, active: true });
+    }
+    void this.app.workspace.revealLeaf(leaf);
+    this.app.workspace.setActiveLeaf(leaf, { focus: true });
+
+    // After the view has had a chance to mount
+    window.setTimeout(() => requestTaskFocus(viewType, taskId), 50);
+  }
+
+  /** Shows a task on the map, opening it if necessary. */
+  async focusTaskInMap(taskId: string): Promise<void> {
+    await this.focusTaskInView(VIEW_TYPE, taskId);
+  }
+
+  /** Shows a task on the timeline, opening it if necessary. */
+  async focusTaskInGantt(taskId: string): Promise<void> {
+    await this.focusTaskInView(GANTT_VIEW_TYPE, taskId);
   }
 
   async activateGanttViewInMainArea() {

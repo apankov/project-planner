@@ -82,7 +82,8 @@
     "multiselect_hint": "按住 Ctrl 点击可选择多个任务，拖动其中任意一个即可同时移动",
     "moved_together_hint": "已选择 {{n}} 个任务 — 拖动其中任意一个即可同时移动",
     "add_tag": "添加标签",
-    "tag_failed": "无法更新任务标签"
+    "tag_failed": "无法更新任务标签",
+    "show_in_map": "在任务图中显示此任务"
   },
   "task_create": {
     "add_task_here": "在此添加任务",
@@ -96,7 +97,8 @@
     "no_target_note": "请先打开一篇笔记，或在笔记中添加任务，以便确定写入位置",
     "could_not_read": "无法读取该任务 — 未做任何更改",
     "failed": "无法创建任务",
-    "created": "任务已添加到 {{note}}"
+    "created": "任务已添加到 {{note}}",
+    "show_in_gantt": "在甘特图中显示"
   },
   "retrofit": {
     "title": "为现有任务创建笔记",

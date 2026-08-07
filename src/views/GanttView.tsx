@@ -52,6 +52,11 @@ import { BarDragResult } from "src/components/gantt-bar";
 import { TasksMapSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import TasksMapPlugin from "../main";
+import {
+  FOCUS_TASK_EVENT,
+  GANTT_VIEW_TYPE,
+  focusTargetFor,
+} from "src/lib/view-focus";
 import { t } from "../i18n";
 
 interface GanttViewProps {
@@ -76,6 +81,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [orderHistory, setOrderHistory] = useState<string[][]>([]);
   // Task a dependency is being drawn from; the next row clicked receives it
   const [linkingFromId, setLinkingFromId] = useState<string | null>(null);
+  // Task another view asked us to reveal, cleared once it is on screen
+  const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
   const [savingTaskIds, setSavingTaskIds] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
 
@@ -195,6 +202,35 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     hasCenteredRef.current = true;
     scrollToToday();
   }, [rows.length, scrollToToday]);
+
+  // Another view asking us to show a task: select it and scroll it into view
+  useEffect(() => {
+    const onFocusTask = (event: Event) => {
+      const taskId = focusTargetFor(event, GANTT_VIEW_TYPE);
+      if (!taskId) return;
+
+      setSelectedTaskId(taskId);
+      setSelectedTaskIds(new Set([taskId]));
+      setPendingScrollId(taskId);
+    };
+
+    window.addEventListener(FOCUS_TASK_EVENT, onFocusTask);
+    return () => window.removeEventListener(FOCUS_TASK_EVENT, onFocusTask);
+  }, []);
+
+  // Scroll once the row for the focused task exists
+  useEffect(() => {
+    if (!pendingScrollId) return;
+    const row = rows.find((candidate) => candidate.task.id === pendingScrollId);
+    if (!row) return;
+
+    setPendingScrollId(null);
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const offset = diffDays(timeline.start, row.bar.start) * scale.dayWidth;
+    el.scrollTo({ left: Math.max(0, offset - el.clientWidth / 3) });
+  }, [pendingScrollId, rows, scale.dayWidth, timeline.start]);
 
   useEffect(() => {
     if (!linkingFromId) return;
@@ -697,6 +733,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onReorder={handleReorder}
           onAddTaskAfter={(taskId) => void addTask(taskId)}
           onStartLink={handleStartLink}
+          onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
           onRemoveTag={(taskId, tag) => void changeTag(taskId, tag, false)}
           allTags={allTags}

@@ -82,7 +82,8 @@
     "multiselect_hint": "Ctrl-klik om meerdere taken te selecteren en sleep er een om ze allemaal te verplaatsen",
     "moved_together_hint": "{{n}} taken geselecteerd — sleep er een om ze allemaal te verplaatsen",
     "add_tag": "Tag toevoegen",
-    "tag_failed": "Kon de tags van de taak niet bijwerken"
+    "tag_failed": "Kon de tags van de taak niet bijwerken",
+    "show_in_map": "Toon deze taak op de kaart"
   },
   "task_create": {
     "add_task_here": "Hier een taak toevoegen",
@@ -96,7 +97,8 @@
     "no_target_note": "Open eerst een notitie, of zet er een taak in, zodat Tasks Map weet waar te schrijven",
     "could_not_read": "Die taak kon niet worden teruggelezen — er is niets gewijzigd",
     "failed": "Kon de taak niet aanmaken",
-    "created": "Taak toegevoegd aan {{note}}"
+    "created": "Taak toegevoegd aan {{note}}",
+    "show_in_gantt": "Tonen in Gantt-weergave"
   },
   "retrofit": {
     "title": "Notities maken voor bestaande taken",

@@ -82,7 +82,8 @@
     "multiselect_hint": "Ctrl-click to select several tasks, then drag any one of them to move them all",
     "moved_together_hint": "{{n}} tasks selected — drag any one of them to move them all",
     "add_tag": "Add a tag",
-    "tag_failed": "Could not update the task tags"
+    "tag_failed": "Could not update the task tags",
+    "show_in_map": "Show this task on the map"
   },
   "task_create": {
     "add_task_here": "Add task here",
@@ -96,7 +97,8 @@
     "no_target_note": "Open a note first, or add a task to one, so Tasks Map knows where to write",
     "could_not_read": "That task could not be read back — nothing was changed",
     "failed": "Could not create the task",
-    "created": "Task added to {{note}}"
+    "created": "Task added to {{note}}",
+    "show_in_gantt": "Show in Gantt view"
   },
   "retrofit": {
     "title": "Create notes for existing tasks",

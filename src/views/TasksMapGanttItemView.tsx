@@ -6,9 +6,10 @@ import { TasksMapSettings } from "src/types/settings";
 import { checkDataviewPlugin } from "../lib/utils";
 import TasksMapPlugin from "../main";
 import GanttView from "./GanttView";
+import { GANTT_VIEW_TYPE } from "src/lib/view-focus";
 import { t } from "../i18n";
 
-export const GANTT_VIEW_TYPE = "tasks-map-gantt-view";
+export { GANTT_VIEW_TYPE };
 
 /** Keeps the chart in step with the settings tab, like the graph view does. */
 function GanttViewWrapper({ plugin }: { plugin: TasksMapPlugin }) {

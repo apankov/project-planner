@@ -8,6 +8,7 @@ import { checkDataviewPlugin } from "../lib/utils";
 import TasksMapPlugin from "../main";
 import { TasksMapSettings } from "src/types/settings";
 import { FilterState, DEFAULT_FILTER_STATE } from "src/types/filter-state";
+import { MAP_VIEW_TYPE } from "src/lib/view-focus";
 import { t } from "../i18n";
 
 // Wrapper component that manages settings updates and filter state for the graph view
@@ -58,7 +59,7 @@ function TaskMapGraphWrapper({
   );
 }
 
-export const VIEW_TYPE = "tasks-map-graph-view";
+export const VIEW_TYPE = MAP_VIEW_TYPE;
 
 export default class TaskMapGraphItemView extends ItemView {
   root: Root | null = null;
