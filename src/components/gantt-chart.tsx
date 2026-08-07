@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { App } from "obsidian";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Link2, Plus } from "lucide-react";
 import {
   addDays,
   diffDays,
@@ -96,6 +96,10 @@ interface GanttChartProps {
   onSelect: (_taskId: string) => void;
   onCommit: (_result: BarDragResult) => void;
   onReorder: (_reorder: RowReorder) => void;
+  onAddTaskAfter: (_taskId: string) => void;
+  onStartLink: (_taskId: string) => void;
+  /** Task a link is being drawn from, if any. */
+  linkingFromId: string | null;
   scrollRef: React.MutableRefObject<HTMLDivElement | null>;
   labelWidth: number;
   onLabelWidthChange: (_width: number) => void;
@@ -242,6 +246,9 @@ export function GanttChart({
   onSelect,
   onCommit,
   onReorder,
+  onAddTaskAfter,
+  onStartLink,
+  linkingFromId,
   scrollRef,
   labelWidth,
   onLabelWidthChange,
@@ -467,6 +474,10 @@ export function GanttChart({
       highlighting && !highlight.taskIds.has(row.task.id)
         ? `${base}--dimmed`
         : "",
+      linkingFromId === row.task.id ? `${base}--linking` : "",
+      linkingFromId && linkingFromId !== row.task.id
+        ? `${base}--link-target`
+        : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -514,6 +525,30 @@ export function GanttChart({
                   colorOverrides={colorOverrides}
                   showTags={showTags}
                 />
+                <span className="tasks-map-gantt__row-actions">
+                  <button
+                    className="tasks-map-gantt__row-action"
+                    title={t("gantt.link_from")}
+                    aria-label={t("gantt.link_from")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onStartLink(line.row.task.id);
+                    }}
+                  >
+                    <Link2 size={12} />
+                  </button>
+                  <button
+                    className="tasks-map-gantt__row-action"
+                    title={t("gantt.add_task_after")}
+                    aria-label={t("gantt.add_task_after")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onAddTaskAfter(line.row.task.id);
+                    }}
+                  >
+                    <Plus size={12} />
+                  </button>
+                </span>
               </div>
             )
           )}

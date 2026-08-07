@@ -64,7 +64,17 @@
     "group_by_project": "Project",
     "group_untagged": "Geen tag",
     "group_no_project": "Geen project",
-    "reorder_hint": "Sleep om te herschikken"
+    "reorder_hint": "Sleep om te herschikken",
+    "add_task": "Taak toevoegen",
+    "add_task_desc": "Voeg een taak toe onderaan de lijst",
+    "add_task_after": "Voeg hierna een taak toe",
+    "task_added": "Taak toegevoegd",
+    "link_from": "Koppel deze taak aan een andere",
+    "link_exists": "Die taken zijn al gekoppeld",
+    "link_created": "{{from}} blokkeert nu {{to}}",
+    "link_failed": "Kon die taken niet koppelen",
+    "linking_hint": "Koppelen vanaf \"{{task}}\" — klik de taak die geblokkeerd wordt.",
+    "linking_cancel": "Annuleren"
   },
   "task_create": {
     "add_task_here": "Hier een taak toevoegen",

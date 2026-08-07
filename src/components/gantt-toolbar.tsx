@@ -2,6 +2,7 @@ import React from "react";
 import {
   ArrowDownWideNarrow,
   CalendarCheck,
+  Plus,
   RefreshCw,
   Search,
   Undo2,
@@ -31,6 +32,7 @@ interface GanttToolbarProps {
   groupBy: GanttGroupBy;
   onGroupByChange: (_groupBy: GanttGroupBy) => void;
   onSortByDate: () => void;
+  onAddTask: () => void;
   onUndoOrder: () => void;
   canUndoOrder: boolean;
 }
@@ -51,6 +53,7 @@ export function GanttToolbar({
   groupBy,
   onGroupByChange,
   onSortByDate,
+  onAddTask,
   onUndoOrder,
   canUndoOrder,
 }: GanttToolbarProps) {
@@ -79,6 +82,15 @@ export function GanttToolbar({
       >
         <CalendarCheck size={14} />
         <span>{t("gantt.today")}</span>
+      </button>
+
+      <button
+        className="tasks-map-gantt-toolbar__button tasks-map-gantt-toolbar__button--accent"
+        onClick={onAddTask}
+        title={t("gantt.add_task_desc")}
+      >
+        <Plus size={14} />
+        <span>{t("gantt.add_task")}</span>
       </button>
 
       <button

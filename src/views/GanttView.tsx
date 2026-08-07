@@ -9,7 +9,18 @@ import { Events, Notice } from "obsidian";
 import { useApp } from "src/hooks/hooks";
 import { AppWithPlugins } from "src/types/obsidian-internals";
 import { BaseTask } from "src/types/base-task";
-import { getAllTasks } from "src/lib/utils";
+import {
+  addLinkSignsBetweenTasks,
+  addSignToTaskInFile,
+  addTaskLineToVault,
+  appendTaskLineToFile,
+  getAllTasks,
+  getTasksApi,
+  parseTaskLine,
+  resolveDefaultTaskFile,
+} from "src/lib/utils";
+import { promptForTaskLine } from "src/components/task-line-modal";
+import { withCompanionNote } from "src/lib/companion-note";
 import { diffDays, todayIso } from "src/lib/date-utils";
 import { getTimelineRange, resizeBar, shiftBar } from "src/lib/gantt-schedule";
 import {
@@ -57,6 +68,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [groupBy, setGroupBy] = useState<GanttGroupBy>("none");
   // Previous orders, newest last, so a sort or a drag can be taken back
   const [orderHistory, setOrderHistory] = useState<string[][]>([]);
+  // Task a dependency is being drawn from; the next row clicked receives it
+  const [linkingFromId, setLinkingFromId] = useState<string | null>(null);
   const [savingTaskIds, setSavingTaskIds] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
 
@@ -173,6 +186,15 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     scrollToToday();
   }, [rows.length, scrollToToday]);
 
+  useEffect(() => {
+    if (!linkingFromId) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLinkingFromId(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [linkingFromId]);
+
   const applyTaskUpdate = useCallback((taskId: string, updated: BaseTask) => {
     setTasks((previous) =>
       previous.map((task) => (task.id === taskId ? updated : task))
@@ -233,10 +255,6 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [plugin]
   );
 
-  const handleSelect = useCallback((taskId: string) => {
-    setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
-  }, []);
-
   const commitOrder = useCallback(
     (nextOrder: string[]) => {
       setOrderHistory((previous) => [
@@ -268,6 +286,191 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       return previous.slice(0, -1);
     });
   }, [plugin]);
+
+  const askForTaskLine = useCallback(async (): Promise<string | null> => {
+    const tasksApi = getTasksApi(app);
+    const rawLine = await promptForTaskLine(
+      app,
+      tasksApi ? () => tasksApi.createTaskLineModal() : null
+    );
+    if (!rawLine) return null;
+
+    const draft = parseTaskLine(rawLine, "");
+    if (!draft) {
+      new Notice(t("task_create.could_not_read"));
+      return null;
+    }
+
+    try {
+      return await withCompanionNote(
+        app,
+        {
+          enabled: settings.createCompanionNotes,
+          folder: settings.companionNoteFolder,
+        },
+        rawLine,
+        draft.summary
+      );
+    } catch (error) {
+      console.error("Could not create companion note", error);
+      return rawLine;
+    }
+  }, [app, settings.companionNoteFolder, settings.createCompanionNotes]);
+
+  /** Writes the ID into the task line so links and ordering survive a reload. */
+  const stampTaskId = useCallback(
+    async (task: BaseTask) => {
+      if (task.type !== "dataview") return;
+      await addSignToTaskInFile(
+        app.vault,
+        task,
+        "id",
+        task.id,
+        settings.linkingStyle
+      );
+    },
+    [app.vault, settings.linkingStyle]
+  );
+
+  /**
+   * Adds a task to the chart. With an anchor the line is written just below
+   * it and the new row takes the next position; without one the task goes to
+   * the end of the list.
+   */
+  const addTask = useCallback(
+    async (anchorId: string | null) => {
+      const anchorRow = anchorId
+        ? rows.find((row) => row.task.id === anchorId)
+        : undefined;
+
+      const targetFile = anchorRow
+        ? null
+        : resolveDefaultTaskFile(app, visibleTasks);
+      if (!anchorRow && !targetFile) {
+        new Notice(t("task_create.no_target_note"));
+        return;
+      }
+
+      const taskLine = await askForTaskLine();
+      if (!taskLine) return;
+
+      const linkPath = anchorRow ? anchorRow.task.link : targetFile!.path;
+      const newTask = parseTaskLine(taskLine, linkPath);
+      if (!newTask) {
+        new Notice(t("task_create.could_not_read"));
+        return;
+      }
+
+      try {
+        if (anchorRow) {
+          await addTaskLineToVault(anchorRow.task, taskLine, app, "after");
+        } else {
+          await appendTaskLineToFile(targetFile!, taskLine, app);
+        }
+        await stampTaskId(newTask);
+
+        setTasks((previous) => [...previous, newTask]);
+
+        // Slot the row in where the user asked for it rather than at the end
+        const currentOrder = normalizeOrder(rows, settings.ganttTaskOrder);
+        const nextOrder = anchorRow
+          ? [...currentOrder, newTask.id].filter(Boolean)
+          : [...currentOrder, newTask.id];
+        void plugin.setGanttTaskOrder(
+          anchorRow
+            ? moveRelativeTo(
+                [...currentOrder, newTask.id],
+                newTask.id,
+                anchorRow.task.id,
+                "after"
+              )
+            : nextOrder
+        );
+
+        new Notice(t("gantt.task_added"));
+      } catch (error) {
+        console.error("Failed to add task from the Gantt", error);
+        new Notice(t("task_create.failed"));
+      }
+    },
+    [
+      app,
+      askForTaskLine,
+      plugin,
+      rows,
+      settings.ganttTaskOrder,
+      stampTaskId,
+      visibleTasks,
+    ]
+  );
+
+  const handleStartLink = useCallback((taskId: string) => {
+    setLinkingFromId((previous) => (previous === taskId ? null : taskId));
+  }, []);
+
+  /**
+   * Completes a dependency: the source must finish before the target starts.
+   * Written with the same ⛔/🆔 metadata the map uses, so the link shows up
+   * there too on its next reload.
+   */
+  const completeLink = useCallback(
+    async (targetId: string) => {
+      const fromId = linkingFromId;
+      setLinkingFromId(null);
+      if (!fromId || fromId === targetId) return;
+
+      const fromTask = tasks.find((task) => task.id === fromId);
+      const toTask = tasks.find((task) => task.id === targetId);
+      if (!fromTask || !toTask) return;
+
+      if (toTask.incomingLinks.includes(fromId)) {
+        new Notice(t("gantt.link_exists"));
+        return;
+      }
+
+      try {
+        await addLinkSignsBetweenTasks(
+          app.vault,
+          fromTask,
+          toTask,
+          settings.linkingStyle
+        );
+
+        setTasks((previous) =>
+          previous.map((task) =>
+            task.id === targetId
+              ? (Object.assign(
+                  Object.create(Object.getPrototypeOf(task)),
+                  task,
+                  { incomingLinks: [...task.incomingLinks, fromId] }
+                ) as BaseTask)
+              : task
+          )
+        );
+        new Notice(
+          t("gantt.link_created", {
+            from: fromTask.summary,
+            to: toTask.summary,
+          })
+        );
+      } catch (error) {
+        console.error("Failed to link tasks", error);
+        new Notice(t("gantt.link_failed"));
+      }
+    },
+    [app.vault, linkingFromId, settings.linkingStyle, tasks]
+  );
+
+  const handleSelect = useCallback(
+    (taskId: string) => {
+      if (linkingFromId) {
+        void completeLink(taskId);
+        return;
+      }
+      setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
+    },
+    [completeLink, linkingFromId]
+  );
 
   const handleApplyInferred = useCallback(async () => {
     if (inferredRows.length === 0 || applying) return;
@@ -325,9 +528,26 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         groupBy={groupBy}
         onGroupByChange={setGroupBy}
         onSortByDate={handleSortByDate}
+        onAddTask={() => void addTask(null)}
         onUndoOrder={handleUndoOrder}
         canUndoOrder={orderHistory.length > 0}
       />
+
+      {linkingFromId && (
+        <div className="tasks-map-gantt-linking">
+          {t("gantt.linking_hint", {
+            task:
+              rows.find((row) => row.task.id === linkingFromId)?.task.summary ??
+              "",
+          })}
+          <button
+            className="tasks-map-gantt-linking__cancel"
+            onClick={() => setLinkingFromId(null)}
+          >
+            {t("gantt.linking_cancel")}
+          </button>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <div className="tasks-map-gantt-empty">
@@ -352,6 +572,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onSelect={handleSelect}
           onCommit={(result) => void handleCommit(result)}
           onReorder={handleReorder}
+          onAddTaskAfter={(taskId) => void addTask(taskId)}
+          onStartLink={handleStartLink}
+          linkingFromId={linkingFromId}
           scrollRef={scrollRef}
           labelWidth={settings.ganttLabelWidth}
           onLabelWidthChange={handleLabelWidthChange}

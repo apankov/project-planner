@@ -64,7 +64,17 @@
     "group_by_project": "Project",
     "group_untagged": "No tag",
     "group_no_project": "No project",
-    "reorder_hint": "Drag to reorder"
+    "reorder_hint": "Drag to reorder",
+    "add_task": "Add task",
+    "add_task_desc": "Add a task at the end of the list",
+    "add_task_after": "Add a task after this one",
+    "task_added": "Task added",
+    "link_from": "Link this task to another",
+    "link_exists": "Those tasks are already linked",
+    "link_created": "{{from}} now blocks {{to}}",
+    "link_failed": "Could not link those tasks",
+    "linking_hint": "Linking from \"{{task}}\" — click the task it should block.",
+    "linking_cancel": "Cancel"
   },
   "task_create": {
     "add_task_here": "Add task here",
