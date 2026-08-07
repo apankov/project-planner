@@ -12,6 +12,8 @@ import { BaseTask } from "src/types/base-task";
 import {
   addLinkSignsBetweenTasks,
   addSignToTaskInFile,
+  addTagToTaskInVault,
+  removeTagFromTaskInVault,
   addTaskLineToVault,
   appendTaskLineToFile,
   getAllTasks,
@@ -440,6 +442,70 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     ]
   );
 
+  /** Tags in use, most common first, so the picker suggests the usual ones. */
+  const allTags = useMemo(() => {
+    const frequency = new Map<string, number>();
+    tasks.forEach((task) =>
+      task.tags.forEach((tag) =>
+        frequency.set(tag, (frequency.get(tag) ?? 0) + 1)
+      )
+    );
+    return Array.from(frequency.keys()).sort((a, b) => {
+      const byCount = (frequency.get(b) ?? 0) - (frequency.get(a) ?? 0);
+      if (byCount !== 0) return byCount;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+  }, [tasks]);
+
+  /** Adds or removes a tag, updating the row without a full reload. */
+  const changeTag = useCallback(
+    async (taskId: string, tag: string, add: boolean) => {
+      const task = tasks.find((candidate) => candidate.id === taskId);
+      if (!task) return;
+      if (add && task.tags.includes(tag)) return;
+
+      const nextTags = add
+        ? [...task.tags, tag]
+        : task.tags.filter((existing) => existing !== tag);
+
+      // Optimistic: the vault write is slower than the eye
+      setTasks((previous) =>
+        previous.map((candidate) =>
+          candidate.id === taskId
+            ? (Object.assign(
+                Object.create(Object.getPrototypeOf(candidate)),
+                candidate,
+                { tags: nextTags }
+              ) as BaseTask)
+            : candidate
+        )
+      );
+
+      try {
+        if (add) {
+          await addTagToTaskInVault(task, tag, app);
+        } else {
+          await removeTagFromTaskInVault(task, tag, app);
+        }
+      } catch (error) {
+        console.error("Could not change the task's tags", error);
+        new Notice(t("gantt.tag_failed"));
+        setTasks((previous) =>
+          previous.map((candidate) =>
+            candidate.id === taskId
+              ? (Object.assign(
+                  Object.create(Object.getPrototypeOf(candidate)),
+                  candidate,
+                  { tags: task.tags }
+                ) as BaseTask)
+              : candidate
+          )
+        );
+      }
+    },
+    [app, tasks]
+  );
+
   const handleStartLink = useCallback((taskId: string) => {
     setLinkingFromId((previous) => (previous === taskId ? null : taskId));
   }, []);
@@ -631,6 +697,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onReorder={handleReorder}
           onAddTaskAfter={(taskId) => void addTask(taskId)}
           onStartLink={handleStartLink}
+          onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
+          onRemoveTag={(taskId, tag) => void changeTag(taskId, tag, false)}
+          allTags={allTags}
           linkingFromId={linkingFromId}
           scrollRef={scrollRef}
           labelWidth={settings.ganttLabelWidth}

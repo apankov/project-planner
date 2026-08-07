@@ -80,7 +80,9 @@
     "skip_weekends_desc": "Meet duur in werkdagen en houd balken van het weekend af: een taak die vrijdag begint en 4 dagen duurt, eindigt de woensdag erna",
     "moved_together": "{{n}} taken verplaatst",
     "multiselect_hint": "Ctrl-klik om meerdere taken te selecteren en sleep er een om ze allemaal te verplaatsen",
-    "moved_together_hint": "{{n}} taken geselecteerd — sleep er een om ze allemaal te verplaatsen"
+    "moved_together_hint": "{{n}} taken geselecteerd — sleep er een om ze allemaal te verplaatsen",
+    "add_tag": "Tag toevoegen",
+    "tag_failed": "Kon de tags van de taak niet bijwerken"
   },
   "task_create": {
     "add_task_here": "Hier een taak toevoegen",

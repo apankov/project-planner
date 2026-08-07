@@ -2583,6 +2583,11 @@ If your plugin does not need CSS, delete this file.
   background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
 }
 
+.tasks-map-gantt__tag-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .tasks-map-gantt__row-actions {
   flex: 0 0 auto;
   display: inline-flex;

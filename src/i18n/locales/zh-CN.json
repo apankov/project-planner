@@ -80,7 +80,9 @@
     "skip_weekends_desc": "按工作日计算时长并避开周末：周五开始、需要 4 天的任务将在下周三结束",
     "moved_together": "已移动 {{n}} 个任务",
     "multiselect_hint": "按住 Ctrl 点击可选择多个任务，拖动其中任意一个即可同时移动",
-    "moved_together_hint": "已选择 {{n}} 个任务 — 拖动其中任意一个即可同时移动"
+    "moved_together_hint": "已选择 {{n}} 个任务 — 拖动其中任意一个即可同时移动",
+    "add_tag": "添加标签",
+    "tag_failed": "无法更新任务标签"
   },
   "task_create": {
     "add_task_here": "在此添加任务",

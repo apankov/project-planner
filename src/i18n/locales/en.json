@@ -80,7 +80,9 @@
     "skip_weekends_desc": "Measure durations in working days and keep bars off weekends: a task starting Friday that takes 4 days ends the following Wednesday",
     "moved_together": "Moved {{n}} tasks",
     "multiselect_hint": "Ctrl-click to select several tasks, then drag any one of them to move them all",
-    "moved_together_hint": "{{n}} tasks selected — drag any one of them to move them all"
+    "moved_together_hint": "{{n}} tasks selected — drag any one of them to move them all",
+    "add_tag": "Add a tag",
+    "tag_failed": "Could not update the task tags"
   },
   "task_create": {
     "add_task_here": "Add task here",

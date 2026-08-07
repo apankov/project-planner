@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { App } from "obsidian";
-import { GripVertical, Link2, Plus } from "lucide-react";
+import { GripVertical, Link2, Plus, TagIcon } from "lucide-react";
 import {
   addDays,
   diffDays,
@@ -24,6 +24,7 @@ import {
   isHighlightActive,
 } from "src/lib/connection-highlight";
 import { GanttBar, BarDragResult } from "./gantt-bar";
+import { TagInput } from "./tag-input";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
 import { TagColorOverrides, TagColorPalette } from "src/lib/tag-color-manager";
@@ -101,6 +102,10 @@ interface GanttChartProps {
   onReorder: (_reorder: RowReorder) => void;
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
+  onAddTag: (_taskId: string, _tag: string) => void;
+  onRemoveTag: (_taskId: string, _tag: string) => void;
+  /** Every tag in use, most common first, for the tag picker. */
+  allTags: string[];
   /** Task a link is being drawn from, if any. */
   linkingFromId: string | null;
   scrollRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -127,12 +132,14 @@ function RowLabel({
   palette,
   colorOverrides,
   showTags,
+  onRemoveTag,
 }: {
   row: GanttRow;
   app: App;
   palette: TagColorPalette;
   colorOverrides: TagColorOverrides;
   showTags: boolean;
+  onRemoveTag: (_taskId: string, _tag: string) => void;
 }) {
   return (
     <>
@@ -148,6 +155,7 @@ function RowLabel({
               tag={tag}
               palette={palette}
               colorOverrides={colorOverrides}
+              onRemove={() => onRemoveTag(row.task.id, tag)}
             />
           ))}
         </span>
@@ -251,6 +259,9 @@ export function GanttChart({
   onReorder,
   onAddTaskAfter,
   onStartLink,
+  onAddTag,
+  onRemoveTag,
+  allTags,
   linkingFromId,
   scrollRef,
   labelWidth,
@@ -265,6 +276,7 @@ export function GanttChart({
     placement: RowPlacement;
   } | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [taggingId, setTaggingId] = useState<string | null>(null);
 
   const lines = useMemo(() => buildLines(groups), [groups]);
 
@@ -552,14 +564,45 @@ export function GanttChart({
                 >
                   <GripVertical size={12} />
                 </span>
-                <RowLabel
-                  row={line.row}
-                  app={app}
-                  palette={palette}
-                  colorOverrides={colorOverrides}
-                  showTags={showTags}
-                />
+                {taggingId === line.row.task.id ? (
+                  <span
+                    className="tasks-map-gantt__tag-input"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <TagInput
+                      allTags={allTags}
+                      existingTags={line.row.task.tags}
+                      onAddTag={(tag) => {
+                        setTaggingId(null);
+                        onAddTag(line.row.task.id, tag);
+                      }}
+                      onCancel={() => setTaggingId(null)}
+                    />
+                  </span>
+                ) : (
+                  <RowLabel
+                    row={line.row}
+                    app={app}
+                    palette={palette}
+                    colorOverrides={colorOverrides}
+                    showTags={showTags}
+                    onRemoveTag={onRemoveTag}
+                  />
+                )}
                 <span className="tasks-map-gantt__row-actions">
+                  <button
+                    className="tasks-map-gantt__row-action"
+                    title={t("gantt.add_tag")}
+                    aria-label={t("gantt.add_tag")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setTaggingId((previous) =>
+                        previous === line.row.task.id ? null : line.row.task.id
+                      );
+                    }}
+                  >
+                    <TagIcon size={12} />
+                  </button>
                   <button
                     className="tasks-map-gantt__row-action"
                     title={t("gantt.link_from")}
