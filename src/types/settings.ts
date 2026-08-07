@@ -27,6 +27,8 @@ export interface TasksMapSettings {
 
   // Width of the Gantt view's task-name column, in pixels
   ganttLabelWidth: number;
+  // Manual Gantt row order, as task IDs
+  ganttTaskOrder: string[];
 
   // Language setting
   language: Language;
@@ -52,6 +54,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   tagColorOverrides: {},
 
   ganttLabelWidth: 260,
+  ganttTaskOrder: [],
 
   // Language default
   language: "en",

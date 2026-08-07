@@ -2394,8 +2394,78 @@ If your plugin does not need CSS, delete this file.
   border-bottom: 1px solid var(--background-modifier-border-hover);
 }
 
-.tasks-map-gantt__label--selected {
+.tasks-map-gantt__label--selected,
+.tasks-map-gantt__row--selected {
   background: var(--background-modifier-hover);
+}
+
+.tasks-map-gantt__grip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-faint);
+  cursor: grab;
+  touch-action: none;
+  opacity: 0;
+}
+
+.tasks-map-gantt__label:hover .tasks-map-gantt__grip {
+  opacity: 1;
+}
+
+.tasks-map-gantt__label--dragging,
+.tasks-map-gantt__row--dragging {
+  opacity: 0.5;
+}
+
+/* Insertion line showing where a dragged row will land */
+.tasks-map-gantt__label--drop-before,
+.tasks-map-gantt__row--drop-before {
+  box-shadow: inset 0 2px 0 0 var(--interactive-accent);
+}
+
+.tasks-map-gantt__label--drop-after,
+.tasks-map-gantt__row--drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--interactive-accent);
+}
+
+.tasks-map-gantt__group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--gantt-row-height);
+  padding: 0 8px;
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tasks-map-gantt__group-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tasks-map-gantt__group-count {
+  color: var(--text-faint);
+}
+
+.tasks-map-gantt__group-spacer {
+  height: var(--gantt-row-height);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  box-sizing: border-box;
+}
+
+.tasks-map-gantt-toolbar__toggle select {
+  font-size: 12px;
+  padding: 2px 4px;
 }
 
 .tasks-map-gantt__label-text {

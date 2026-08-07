@@ -51,7 +51,20 @@
     "legend_done": "Done",
     "legend_canceled": "Cancelled",
     "legend_suggested": "Suggested dates",
-    "legend_today": "Today"
+    "legend_today": "Today",
+    "sort_by_date": "Sort by date",
+    "sort_by_date_desc": "Reorder rows earliest first (undoable)",
+    "undo_order": "Undo",
+    "undo_order_desc": "Restore the previous row order",
+    "group_by": "Group by",
+    "group_by_none": "Nothing",
+    "group_by_tag": "Tag",
+    "group_by_status": "Status",
+    "group_by_file": "Note",
+    "group_by_project": "Project",
+    "group_untagged": "No tag",
+    "group_no_project": "No project",
+    "reorder_hint": "Drag to reorder"
   },
   "settings": {
     "display_options": "Display Options",

@@ -1,6 +1,5 @@
 import { BaseTask } from "src/types/base-task";
 import { findTaskDate } from "./task-dates";
-import { diffDays } from "./date-utils";
 import {
   GanttTaskInput,
   ScheduledBar,
@@ -44,7 +43,12 @@ export function toScheduleInput(task: BaseTask): GanttTaskInput {
   };
 }
 
-/** Schedules the tasks and orders them the way a plan reads: earliest first. */
+/**
+ * Schedules the tasks, keeping them in the order they were given.
+ *
+ * Row order is the user's to decide — see `gantt-order` — so this
+ * deliberately does not sort. Sorting by date is an action they trigger.
+ */
 export function buildGanttRows(
   tasks: BaseTask[],
   options: BuildRowsOptions = {}
@@ -58,18 +62,7 @@ export function buildGanttRows(
     rows.push({ task, bar, inferred: isInferredBar(bar) });
   }
 
-  return rows.sort((a, b) => {
-    // diffDays(b, a) is a - b in days, i.e. ascending by date
-    const byStart = diffDays(b.bar.start, a.bar.start);
-    if (byStart !== 0) return byStart;
-
-    const byEnd = diffDays(b.bar.end, a.bar.end);
-    if (byEnd !== 0) return byEnd;
-
-    return a.task.summary.localeCompare(b.task.summary, undefined, {
-      sensitivity: "base",
-    });
-  });
+  return rows;
 }
 
 /**

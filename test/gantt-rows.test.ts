@@ -84,7 +84,9 @@ describe("buildGanttRows", () => {
     expect(rows.map((row) => row.task.id).sort()).toEqual(["a", "b"]);
   });
 
-  it("orders rows by start date", () => {
+  it("keeps the tasks in the order they were given", () => {
+    // Row order belongs to the user (see gantt-order), so scheduling must not
+    // quietly re-sort by date
     const rows = buildGanttRows(
       [
         makeTask({ id: "late", dates: dates({ start: "2026-09-01" }) }),
@@ -94,7 +96,7 @@ describe("buildGanttRows", () => {
       { today: TODAY }
     );
 
-    expect(rows.map((row) => row.task.id)).toEqual(["early", "middle", "late"]);
+    expect(rows.map((row) => row.task.id)).toEqual(["late", "early", "middle"]);
   });
 
   it("marks a task with no dates as inferred", () => {
@@ -134,16 +136,10 @@ describe("buildGanttRows", () => {
     expect(blocked?.bar.start).toBe("2026-08-12");
   });
 
-  it("breaks ties on summary so ordering is stable", () => {
-    const rows = buildGanttRows(
-      [
-        makeTask({ id: "b", summary: "Beta" }),
-        makeTask({ id: "a", summary: "Alpha" }),
-      ],
-      { today: TODAY }
-    );
+  it("drops tasks the scheduler could not place", () => {
+    const rows = buildGanttRows([], { today: TODAY });
 
-    expect(rows.map((row) => row.task.summary)).toEqual(["Alpha", "Beta"]);
+    expect(rows).toEqual([]);
   });
 });
 

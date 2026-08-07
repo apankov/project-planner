@@ -51,7 +51,20 @@
     "legend_done": "已完成",
     "legend_canceled": "已取消",
     "legend_suggested": "建议日期",
-    "legend_today": "今天"
+    "legend_today": "今天",
+    "sort_by_date": "按日期排序",
+    "sort_by_date_desc": "按最早日期重新排列（可撤销）",
+    "undo_order": "撤销",
+    "undo_order_desc": "恢复上一次的排列顺序",
+    "group_by": "分组方式",
+    "group_by_none": "不分组",
+    "group_by_tag": "标签",
+    "group_by_status": "状态",
+    "group_by_file": "笔记",
+    "group_by_project": "项目",
+    "group_untagged": "无标签",
+    "group_no_project": "无项目",
+    "reorder_hint": "拖动以重新排序"
   },
   "settings": {
     "display_options": "显示选项",

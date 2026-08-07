@@ -19,10 +19,19 @@ import {
   getInferredRows,
 } from "src/lib/gantt-rows";
 import {
+  GanttGroupBy,
+  applyOrder,
+  groupRows,
+  moveRelativeTo,
+  normalizeOrder,
+  orderByDate,
+} from "src/lib/gantt-order";
+import {
   GANTT_SCALES,
   GanttChart,
   GanttScale,
   ROW_HEIGHT,
+  RowReorder,
 } from "src/components/gantt-chart";
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
@@ -44,6 +53,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [hideCompleted, setHideCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<GanttGroupBy>("none");
+  // Previous orders, newest last, so a sort or a drag can be taken back
+  const [orderHistory, setOrderHistory] = useState<string[][]>([]);
   const [savingTaskIds, setSavingTaskIds] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
 
@@ -105,9 +117,26 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     });
   }, [tasks, searchQuery, hideCompleted]);
 
-  const rows = useMemo(
+  const scheduledRows = useMemo(
     () => buildGanttRows(visibleTasks, { today }),
     [visibleTasks, today]
+  );
+
+  // The chart never re-sorts on its own: rows follow the saved order, and new
+  // tasks are appended rather than slotted in by date.
+  const rows = useMemo(
+    () => applyOrder(scheduledRows, settings.ganttTaskOrder),
+    [scheduledRows, settings.ganttTaskOrder]
+  );
+
+  const groups = useMemo(
+    () =>
+      groupRows(rows, groupBy, {
+        untagged: t("gantt.group_untagged"),
+        noProject: t("gantt.group_no_project"),
+        status: (status) => t(`gantt.legend_${status}`),
+      }),
+    [rows, groupBy]
   );
 
   const dependencies = useMemo(() => getDependencies(rows), [rows]);
@@ -196,6 +225,38 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [plugin]
   );
 
+  const commitOrder = useCallback(
+    (nextOrder: string[]) => {
+      setOrderHistory((previous) => [
+        ...previous,
+        normalizeOrder(rows, settings.ganttTaskOrder),
+      ]);
+      void plugin.setGanttTaskOrder(nextOrder);
+    },
+    [plugin, rows, settings.ganttTaskOrder]
+  );
+
+  const handleReorder = useCallback(
+    ({ movedId, targetId, placement }: RowReorder) => {
+      const current = normalizeOrder(rows, settings.ganttTaskOrder);
+      commitOrder(moveRelativeTo(current, movedId, targetId, placement));
+    },
+    [commitOrder, rows, settings.ganttTaskOrder]
+  );
+
+  const handleSortByDate = useCallback(() => {
+    commitOrder(orderByDate(rows));
+  }, [commitOrder, rows]);
+
+  const handleUndoOrder = useCallback(() => {
+    setOrderHistory((previous) => {
+      const restored = previous[previous.length - 1];
+      if (!restored) return previous;
+      void plugin.setGanttTaskOrder(restored);
+      return previous.slice(0, -1);
+    });
+  }, [plugin]);
+
   const handleApplyInferred = useCallback(async () => {
     if (inferredRows.length === 0 || applying) return;
 
@@ -249,6 +310,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         hideCompleted={hideCompleted}
         onHideCompletedChange={setHideCompleted}
         taskCount={rows.length}
+        groupBy={groupBy}
+        onGroupByChange={setGroupBy}
+        onSortByDate={handleSortByDate}
+        onUndoOrder={handleUndoOrder}
+        canUndoOrder={orderHistory.length > 0}
       />
 
       {rows.length === 0 ? (
@@ -257,6 +323,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         </div>
       ) : (
         <GanttChart
+          groups={groups}
           rows={rows}
           dependencies={dependencies}
           timelineStart={timeline.start}
@@ -271,6 +338,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           savingTaskIds={savingTaskIds}
           onSelect={setSelectedTaskId}
           onCommit={(result) => void handleCommit(result)}
+          onReorder={handleReorder}
           scrollRef={scrollRef}
           labelWidth={settings.ganttLabelWidth}
           onLabelWidthChange={handleLabelWidthChange}

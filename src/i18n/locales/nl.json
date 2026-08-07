@@ -51,7 +51,20 @@
     "legend_done": "Klaar",
     "legend_canceled": "Geannuleerd",
     "legend_suggested": "Voorgestelde datums",
-    "legend_today": "Vandaag"
+    "legend_today": "Vandaag",
+    "sort_by_date": "Sorteren op datum",
+    "sort_by_date_desc": "Rijen op datum zetten, vroegste eerst (ongedaan te maken)",
+    "undo_order": "Ongedaan maken",
+    "undo_order_desc": "Herstel de vorige volgorde",
+    "group_by": "Groeperen op",
+    "group_by_none": "Niets",
+    "group_by_tag": "Tag",
+    "group_by_status": "Status",
+    "group_by_file": "Notitie",
+    "group_by_project": "Project",
+    "group_untagged": "Geen tag",
+    "group_no_project": "Geen project",
+    "reorder_hint": "Sleep om te herschikken"
   },
   "settings": {
     "display_options": "Weergaveopties",
