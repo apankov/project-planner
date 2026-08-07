@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, GanttChartSquare } from "lucide-react";
 import { t } from "../i18n";
 
 interface ControlsPanelProps {
@@ -13,6 +13,8 @@ interface ControlsPanelProps {
   showGroupByProject: boolean;
   groupByProject: boolean;
   setGroupByProject: (_val: boolean) => void;
+  /** Omitted in embeds, where opening another view would be surprising. */
+  onOpenGantt?: () => void;
 }
 
 export default function ControlsPanel({
@@ -26,6 +28,7 @@ export default function ControlsPanel({
   showGroupByProject,
   groupByProject,
   setGroupByProject,
+  onOpenGantt,
 }: ControlsPanelProps) {
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -112,6 +115,16 @@ export default function ControlsPanel({
             >
               {t("filters.reload_tasks")}
             </button>
+            {onOpenGantt && (
+              <button
+                onClick={onOpenGantt}
+                className="tasks-map-gui-overlay-reload-button tasks-map-open-gantt-button"
+                title={t("controls.open_gantt_desc")}
+              >
+                <GanttChartSquare size={14} />
+                <span>{t("controls.open_gantt")}</span>
+              </button>
+            )}
           </div>
         </div>
       )}

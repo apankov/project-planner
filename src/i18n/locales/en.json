@@ -137,7 +137,9 @@
     "title": "View",
     "expand": "Expand view controls",
     "minimize": "Minimize view controls",
-    "group_by_project": "Group by project"
+    "group_by_project": "Group by project",
+    "open_gantt": "Open Gantt",
+    "open_gantt_desc": "Open the Gantt view for these tasks"
   },
   "multiselect": {
     "select": "Select...",

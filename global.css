@@ -2150,6 +2150,14 @@ If your plugin does not need CSS, delete this file.
   padding: 8px 0;
 }
 
+.tasks-map-open-gantt-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 /* ---------------------------------------------------------------------------
    Gantt view
    Bar geometry comes from the --bar-offset / --bar-span custom properties set

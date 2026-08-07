@@ -137,7 +137,9 @@
     "title": "Weergave",
     "expand": "Weergavebediening uitvouwen",
     "minimize": "Weergavebediening minimaliseren",
-    "group_by_project": "Groeperen op project"
+    "group_by_project": "Groeperen op project",
+    "open_gantt": "Gantt openen",
+    "open_gantt_desc": "Open de Gantt-weergave voor deze taken"
   },
   "multiselect": {
     "select": "Selecteer...",

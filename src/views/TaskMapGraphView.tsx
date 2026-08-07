@@ -1109,6 +1109,10 @@ export default function TaskMapGraphView({
     [setFilterState]
   );
 
+  const handleOpenGantt = useCallback(() => {
+    void plugin.activateGanttViewInMainArea();
+  }, [plugin]);
+
   const handleSavePreset = useCallback(
     async (name: string, filter: FilterState): Promise<void> => {
       await plugin.savePreset(name, filter);
@@ -1214,6 +1218,7 @@ export default function TaskMapGraphView({
                 showGroupByProject={showGroupByProject}
                 groupByProject={groupByProject}
                 setGroupByProject={setGroupByProject}
+                onOpenGantt={embedConfig ? undefined : handleOpenGantt}
               />
             )}
           </div>
