@@ -132,7 +132,7 @@ export class NoteTask extends BaseTask {
    */
   private async updateFrontmatter(
     app: App,
-    mutate: (frontmatter: Record<string, unknown>) => void
+    mutate: (_frontmatter: Record<string, unknown>) => void
   ): Promise<boolean> {
     if (!this.link) return false;
     const vault = app?.vault;
