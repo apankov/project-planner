@@ -10,6 +10,7 @@ nav = [
     "getting-started/usage.md",
     "getting-started/unlinked-tasks-panel.md",
     "getting-started/gantt.md",
+    "getting-started/finance.md",
     "getting-started/embedding.md",
     "getting-started/settings.md",
   ] },

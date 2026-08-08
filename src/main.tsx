@@ -12,6 +12,9 @@ import TaskMapGraphItemView, { VIEW_TYPE } from "./views/TaskMapGraphItemView";
 import TasksMapGanttItemView, {
   GANTT_VIEW_TYPE,
 } from "./views/TasksMapGanttItemView";
+import TasksMapFinanceItemView, {
+  FINANCE_VIEW_TYPE,
+} from "./views/TasksMapFinanceItemView";
 import TaskMapGraphEmbedView, {
   TaskMapEmbedError,
   filterStateFromSource,
@@ -34,6 +37,7 @@ import {
 import { confirm } from "./components/confirm-modal";
 import { requestTaskFocus } from "./lib/view-focus";
 import { UndoHistory } from "./lib/undo-history";
+import { ensureRateNote } from "./lib/rate-book-note";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 
 const EMBED_CODE_BLOCK = "tasks-map";
@@ -90,6 +94,11 @@ export default class TasksMapPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new TasksMapGanttItemView(leaf)
     );
 
+    this.registerView(
+      FINANCE_VIEW_TYPE,
+      (leaf: WorkspaceLeaf) => new TasksMapFinanceItemView(leaf)
+    );
+
     this.addSettingTab(new TasksMapSettingTab(this.app, this));
 
     this.addCommand({
@@ -107,6 +116,30 @@ export default class TasksMapPlugin extends Plugin {
         void this.activateGanttViewInMainArea();
       },
     });
+
+    // Finance is off by default, so its command, ribbon icon and menu entries
+    // stay out of the way until somebody turns it on
+    if (this.settings.financeEnabled) {
+      this.addCommand({
+        id: "open-tasks-map-finance-view",
+        name: t("commands.open_finance_view"),
+        callback: () => {
+          void this.activateFinanceViewInMainArea();
+        },
+      });
+
+      this.addCommand({
+        id: "create-tasks-map-rate-note",
+        name: t("commands.create_rate_note"),
+        callback: () => {
+          void this.createRateNote();
+        },
+      });
+
+      this.addRibbonIcon("coins", t("ribbon.open_tasks_finance"), () => {
+        void this.activateFinanceViewInMainArea();
+      });
+    }
 
     this.addCommand({
       id: "create-notes-for-existing-tasks",
@@ -367,6 +400,27 @@ export default class TasksMapPlugin extends Plugin {
     const leaf = this.app.workspace.getLeaf(true); // true = main area
     await leaf.setViewState({ type: GANTT_VIEW_TYPE, active: true });
     void this.app.workspace.revealLeaf(leaf);
+  }
+
+  async activateFinanceViewInMainArea() {
+    const leaf = this.app.workspace.getLeaf(true); // true = main area
+    await leaf.setViewState({ type: FINANCE_VIEW_TYPE, active: true });
+    void this.app.workspace.revealLeaf(leaf);
+  }
+
+  /** Creates the rates note if it is missing, then opens it either way. */
+  async createRateNote(): Promise<void> {
+    const file = await ensureRateNote(
+      this.app,
+      this.settings.financeRateNotePath
+    );
+
+    if (!file) {
+      new Notice(t("finance.rate_note_failed"));
+      return;
+    }
+
+    await this.app.workspace.getLeaf(true).openFile(file);
   }
 
   onunload(): void {
