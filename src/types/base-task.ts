@@ -113,6 +113,16 @@ export abstract class BaseTask {
   ): Promise<BaseTask | null>;
 
   /**
+   * Write the task's hours, people and expenses, returning the updated task.
+   * The finance given is the whole of it: anything absent is cleared, so one
+   * call can also wipe a task's costing.
+   */
+  abstract setFinance(
+    _finance: TaskFinance,
+    _app: App
+  ): Promise<BaseTask | null>;
+
+  /**
    * Add link metadata to this task (for creating dependencies)
    */
   abstract addLinkMetadata(

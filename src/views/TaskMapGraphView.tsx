@@ -33,6 +33,11 @@ import {
   appendTaskLineToFile,
 } from "src/lib/utils";
 import { promptForTaskLine } from "src/components/task-line-modal";
+import { promptForTaskFinance } from "src/components/task-finance-modal";
+import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
+import { readRateBook } from "src/lib/rate-book-note";
+import { buildGanttRows } from "src/lib/gantt-rows";
+import { barLength } from "src/lib/gantt-schedule";
 import { withCompanionNote } from "src/lib/companion-note";
 import { BaseTask } from "src/types/task";
 import { NoteTask } from "src/types/note-task";
@@ -422,6 +427,21 @@ export default function TaskMapGraphView({
     tasksRef.current = tasks;
   }, [tasks]);
 
+  /** Writes the ID into the task line so a later write finds the right one. */
+  const stampTaskId = useCallback(
+    async (task: BaseTask) => {
+      if (task.type !== "dataview") return;
+      await addSignToTaskInFile(
+        vault,
+        task,
+        "id",
+        task.id,
+        settings.linkingStyle
+      );
+    },
+    [vault, settings.linkingStyle]
+  );
+
   /** The task's line exactly as it appears in its note, if it can be found. */
   const readTaskLine = useCallback(
     async (task: BaseTask): Promise<string | null> => {
@@ -444,6 +464,87 @@ export default function TaskMapGraphView({
       await appendTaskLineToFile(file, line, app);
     },
     [app, vault]
+  );
+
+  /**
+   * Opens the finance modal for a task and writes what comes back.
+   *
+   * The bar is scheduled here rather than stored, because hours-per-day needs
+   * to know how long the task runs and the map has no timeline of its own. It
+   * goes through the same `buildGanttRows` the chart uses, so the number in the
+   * modal is the number the Gantt would show.
+   */
+  const handleEditFinance = useCallback(
+    async (task: BaseTask) => {
+      const { book } = await readRateBook(app, settings.financeRateNotePath);
+
+      const row = buildGanttRows(tasksRef.current, {
+        skipWeekends: settings.ganttSkipWeekends,
+      }).find((candidate) => candidate.task.id === task.id);
+
+      const result = await promptForTaskFinance(app, {
+        initial: task.finance,
+        summary: task.summary,
+        days: row
+          ? barLength(row.bar.start, row.bar.end, settings.ganttSkipWeekends)
+          : 1,
+        inferred: row?.inferred ?? true,
+        defaultHoursPerDay: settings.financeDefaultHoursPerDay,
+        book,
+        currency: settings.financeCurrency,
+        inline: task.type === "dataview",
+      });
+
+      if (!result) return;
+
+      const finance =
+        result.action === "clear" ? EMPTY_TASK_FINANCE : result.finance;
+      const previous = task.finance;
+
+      // An inline task with no ID in its line is found by its text, which is
+      // ambiguous when two tasks read the same. Stamping first makes the write
+      // land on the right line.
+      await stampTaskId(task);
+
+      const updated = await task.setFinance(finance, app);
+      if (!updated) {
+        new Notice(t("finance.write_failed"));
+        return;
+      }
+
+      setTasks((previousTasks) =>
+        previousTasks.map((candidate) =>
+          candidate.id === task.id ? updated : candidate
+        )
+      );
+
+      plugin.undoHistory.push({
+        label: t("finance.undo_edit", { task: task.summary }),
+        undo: async () => {
+          // Read the task afresh: the line has moved on since the edit
+          const current =
+            tasksRef.current.find((candidate) => candidate.id === task.id) ??
+            updated;
+          const reverted = await current.setFinance(previous, app);
+          if (!reverted) return;
+
+          setTasks((previousTasks) =>
+            previousTasks.map((candidate) =>
+              candidate.id === task.id ? reverted : candidate
+            )
+          );
+        },
+      });
+    },
+    [
+      app,
+      plugin,
+      settings.financeRateNotePath,
+      settings.financeDefaultHoursPerDay,
+      settings.financeCurrency,
+      settings.ganttSkipWeekends,
+      stampTaskId,
+    ]
   );
 
   const createUpdatedTask = useCallback(
@@ -571,7 +672,10 @@ export default function TaskMapGraphView({
       settings.tagColorOverrides,
       handleTaskEdited,
       handleTaskCreated,
-      connectionHighlight
+      connectionHighlight,
+      undefined,
+      undefined,
+      settings.financeEnabled ? handleEditFinance : undefined
     );
     let newEdges = createEdgesFromTasks(
       graphTasks,
@@ -653,6 +757,7 @@ export default function TaskMapGraphView({
     connectionHighlight,
     dropEdgeId,
     deleteTaskAndHealChain,
+    handleEditFinance,
   ]);
 
   const nodeTypes = useMemo(

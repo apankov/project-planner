@@ -2338,6 +2338,80 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-warning, var(--color-orange));
 }
 
+/* Finance modal. Rows are dense on purpose: a task with four people on it
+   should still fit without scrolling. */
+.tasks-map-finance-modal__task {
+  margin: 0;
+  font-weight: var(--font-medium, 500);
+}
+
+.tasks-map-finance-modal__schedule,
+.tasks-map-finance-modal__hint {
+  margin: 2px 0 0;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-modal h4 {
+  margin: 18px 0 4px;
+}
+
+.tasks-map-finance-modal__row {
+  padding: 4px 0;
+  border-top: none;
+}
+
+.tasks-map-finance-modal__row-info {
+  display: none;
+}
+
+.tasks-map-finance-modal__row-control {
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.tasks-map-finance-modal__share,
+.tasks-map-finance-modal__amount {
+  width: 5.5em;
+}
+
+.tasks-map-finance-modal__readout {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tasks-map-finance-modal__chip {
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-modifier-border);
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+/* Shares that do not add up are shown, never quietly scaled to fit */
+.tasks-map-finance-modal__chip--warning {
+  background: color-mix(
+    in srgb,
+    var(--color-orange) 20%,
+    var(--background-modifier-border)
+  );
+  color: var(--text-normal);
+}
+
+.tasks-map-finance-modal__summary {
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+  font-weight: var(--font-medium, 500);
+}
+
 .tasks-map-tag-color-list {
   max-height: 320px;
   overflow-y: auto;
