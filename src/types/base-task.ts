@@ -1,6 +1,7 @@
 import { App, Vault } from "obsidian";
 import { TaskStatus } from "./task";
 import { TaskDateProperty } from "../lib/task-dates";
+import { EMPTY_TASK_FINANCE, TaskFinance } from "../lib/task-finance";
 
 export type TaskInsertPosition = "before" | "after";
 
@@ -32,6 +33,8 @@ export abstract class BaseTask {
   projects: string[];
   /** Dates carried by the task, from the task line or from frontmatter. */
   dates: TaskDateProperty[];
+  /** Hours, people and expenses, from the task line or from frontmatter. */
+  finance: TaskFinance;
 
   constructor(data: {
     id: string;
@@ -45,6 +48,7 @@ export abstract class BaseTask {
     starred: boolean;
     projects?: string[];
     dates?: TaskDateProperty[];
+    finance?: TaskFinance;
   }) {
     this.id = data.id;
     this.summary = data.summary;
@@ -57,6 +61,7 @@ export abstract class BaseTask {
     this.starred = data.starred;
     this.projects = data.projects ?? [];
     this.dates = data.dates ?? [];
+    this.finance = data.finance ?? EMPTY_TASK_FINANCE;
   }
 
   /**
@@ -138,6 +143,7 @@ export abstract class BaseTask {
       starred: this.starred,
       projects: this.projects,
       dates: this.dates,
+      finance: this.finance,
     };
   }
 }

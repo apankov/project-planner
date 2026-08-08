@@ -343,4 +343,48 @@ describe("TaskFactory", () => {
       expect(factory.isEmptyTask(task)).toBe(true);
     });
   });
+
+  describe("finance fields", () => {
+    const raw: RawTask = {
+      status: " ",
+      text: "Fit the loom [hoursPerDay:: 6] [people:: Alice Smith 60%, Bob Jones 40%] [costs:: Loom kit 240] 📅 2026-03-06 🆔 abc123",
+      link: { path: "tasks/foo.md" },
+    };
+
+    it("keeps them out of the summary", () => {
+      expect(factory.parse(raw).summary).toBe("Fit the loom");
+    });
+
+    it("parses them onto the task", () => {
+      const { finance } = factory.parse(raw);
+
+      expect(finance.hoursPerDay).toBe(6);
+      expect(finance.allocations).toEqual([
+        { person: "Alice Smith", share: 0.6 },
+        { person: "Bob Jones", share: 0.4 },
+      ]);
+      expect(finance.expenses).toEqual([
+        { description: "Loom kit", amount: 240 },
+      ]);
+    });
+
+    it("leaves the raw text intact so the line can still be found", () => {
+      expect(factory.parse(raw).text).toBe(raw.text);
+    });
+
+    it("gives a task without them an empty finance record", () => {
+      const plain = factory.parse({
+        status: " ",
+        text: "Plain task 🆔 abc123",
+        link: { path: "tasks/foo.md" },
+      });
+
+      expect(plain.finance).toEqual({
+        hoursPerDay: null,
+        totalHours: null,
+        allocations: [],
+        expenses: [],
+      });
+    });
+  });
 });

@@ -16,6 +16,7 @@ import {
   TaskDateUpdate,
 } from "src/types/base-task";
 import { getFrontmatterDateProperties } from "./task-dates";
+import { getFrontmatterFinance } from "./task-finance";
 import {
   ConnectionHighlight,
   EMPTY_HIGHLIGHT,
@@ -415,6 +416,10 @@ export async function editTaskWithTasksModal(
 // import cycle; re-exported here because callers already import it from utils.
 export type { TaskDateType, TaskDateProperty } from "./task-dates";
 export { getTaskDateProperties, findTaskDate } from "./task-dates";
+
+// Finance parsing lives in `task-finance` for the same reason.
+export type { TaskFinance, TaskAllocation, TaskExpense } from "./task-finance";
+export { getTaskFinance, hasFinanceData } from "./task-finance";
 
 /**
  * Writes start/due dates to a task and returns the refreshed task. Both task
@@ -1594,6 +1599,7 @@ function parseTaskNote(
 
     // Note tasks keep their dates in frontmatter rather than in the task text
     task.dates = getFrontmatterDateProperties(frontmatter);
+    task.finance = getFrontmatterFinance(frontmatter);
 
     // Collect all incoming links from various sources
     const allIncomingLinks: string[] = [];
