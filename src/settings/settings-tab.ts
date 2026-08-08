@@ -10,8 +10,32 @@ import {
 } from "../lib/tag-color-manager";
 import { getAllTasks } from "../lib/utils";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
+import {
+  DEFAULT_RATE_NOTE_PATH,
+  ensureRateNote,
+  readRateBook,
+} from "../lib/rate-book-note";
 import { t } from "../i18n";
 import { SUPPORTED_LANGUAGES } from "../i18n";
+
+/** Offered in the currency picker; any other code can still be set by hand. */
+const CURRENCY_CODES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "AUD",
+  "CAD",
+  "CHF",
+  "CNY",
+  "DKK",
+  "INR",
+  "JPY",
+  "NOK",
+  "NZD",
+  "SEK",
+  "SGD",
+  "ZAR",
+];
 
 export class TasksMapSettingTab extends PluginSettingTab {
   plugin: TasksMapPlugin;
@@ -38,6 +62,116 @@ export class TasksMapSettingTab extends PluginSettingTab {
         text: tag,
       });
     });
+  }
+
+  /**
+   * The finance rows, shown only while finance is switched on.
+   *
+   * The status line at the bottom is what makes the rate note's format
+   * teachable: it reports what was actually read back, so a mistyped table
+   * header shows up here rather than as a silently empty dashboard.
+   */
+  private displayFinanceSettings(containerEl: HTMLElement): void {
+    const rateNoteStatus = containerEl.createDiv({
+      cls: "tasks-map-setting-status",
+    });
+
+    new Setting(containerEl)
+      .setName(t("settings.finance_rate_note"))
+      .setDesc(t("settings.finance_rate_note_desc"))
+      .addText((text) =>
+        text
+          .setPlaceholder(DEFAULT_RATE_NOTE_PATH)
+          .setValue(this.plugin.settings.financeRateNotePath)
+          .onChange(async (value) => {
+            this.plugin.settings.financeRateNotePath =
+              value.trim() || DEFAULT_RATE_NOTE_PATH;
+            await this.plugin.saveSettings();
+            void this.showRateNoteStatus(rateNoteStatus);
+          })
+      )
+      .addExtraButton((button) =>
+        button
+          .setIcon("file-plus")
+          .setTooltip(t("settings.finance_rate_note_create"))
+          .onClick(async () => {
+            const file = await ensureRateNote(
+              this.app,
+              this.plugin.settings.financeRateNotePath
+            );
+            if (file) await this.app.workspace.getLeaf(true).openFile(file);
+            void this.showRateNoteStatus(rateNoteStatus);
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.finance_default_hours"))
+      .setDesc(t("settings.finance_default_hours_desc"))
+      .addText((text) =>
+        text
+          .setPlaceholder("8")
+          .setValue(this.plugin.settings.financeDefaultHoursPerDay.toString())
+          .onChange(async (value) => {
+            const hours = parseFloat(value);
+            this.plugin.settings.financeDefaultHoursPerDay =
+              Number.isFinite(hours) && hours >= 0 ? hours : 8;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.finance_currency"))
+      .setDesc(t("settings.finance_currency_desc"))
+      .addDropdown((dropdown) => {
+        const current = this.plugin.settings.financeCurrency;
+        const codes = [...CURRENCY_CODES];
+        if (!codes.includes(current)) codes.push(current);
+
+        codes.forEach((code) => dropdown.addOption(code, code));
+        dropdown.setValue(current).onChange(async (value) => {
+          this.plugin.settings.financeCurrency = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.finance_include_inferred"))
+      .setDesc(t("settings.finance_include_inferred_desc"))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.financeIncludeInferred)
+          .onChange(async (value) => {
+            this.plugin.settings.financeIncludeInferred = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    void this.showRateNoteStatus(rateNoteStatus);
+  }
+
+  /** Reports what the rate note actually yielded, or that there isn't one. */
+  private async showRateNoteStatus(container: HTMLElement): Promise<void> {
+    const { book, found } = await readRateBook(
+      this.app,
+      this.plugin.settings.financeRateNotePath
+    );
+
+    container.empty();
+
+    if (!found) {
+      container.setText(t("settings.finance_rate_note_missing"));
+      container.addClass("tasks-map-setting-status--warning");
+      return;
+    }
+
+    container.removeClass("tasks-map-setting-status--warning");
+    container.setText(
+      t("settings.finance_rate_note_status", {
+        grades: book.grades.length,
+        people: book.people.length,
+        problems: book.problems.length,
+      })
+    );
   }
 
   /**
@@ -328,6 +462,26 @@ export class TasksMapSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl).setHeading().setName(t("settings.finance"));
+
+    new Setting(containerEl)
+      .setName(t("settings.finance_enabled"))
+      .setDesc(t("settings.finance_enabled_desc"))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.financeEnabled)
+          .onChange(async (value) => {
+            this.plugin.settings.financeEnabled = value;
+            await this.plugin.saveSettings();
+            // The rest of the section only makes sense when it is on
+            this.display();
+          })
+      );
+
+    if (this.plugin.settings.financeEnabled) {
+      this.displayFinanceSettings(containerEl);
+    }
 
     new Setting(containerEl)
       .setHeading()

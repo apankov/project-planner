@@ -196,7 +196,21 @@
     "companion_notes": "为每个新任务创建笔记",
     "companion_notes_desc": "新任务将写成指向其专属笔记的链接，方便随时记录细节。现有任务不受影响。",
     "companion_note_folder": "笔记文件夹",
-    "companion_note_folder_desc": "任务笔记的创建位置"
+    "companion_note_folder_desc": "任务笔记的创建位置",
+    "finance": "财务",
+    "finance_enabled": "启用财务规划",
+    "finance_enabled_desc": "跟踪任务的工时、人员和成本，并显示财务仪表盘",
+    "finance_rate_note": "费率笔记",
+    "finance_rate_note_desc": "包含职级到费率、人员到职级两张表格的笔记",
+    "finance_rate_note_create": "创建费率笔记",
+    "finance_rate_note_missing": "尚无费率笔记 — 创建一个以开始为任务定价",
+    "finance_rate_note_status": "费率笔记：{{grades}} 个职级，{{people}} 人，{{problems}} 个问题",
+    "finance_default_hours": "默认每日工时",
+    "finance_default_hours_desc": "任务未另行说明时，一人一天的工作小时数",
+    "finance_currency": "货币",
+    "finance_currency_desc": "显示成本所用的货币；笔记中的费率为纯数字",
+    "finance_include_inferred": "包含建议日期",
+    "finance_include_inferred_desc": "统计 Gantt 日期为系统建议而非已写入的任务"
   },
   "filters": {
     "status": "状态",

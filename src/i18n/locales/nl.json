@@ -196,7 +196,21 @@
     "companion_notes": "Maak een notitie voor elke nieuwe taak",
     "companion_notes_desc": "Nieuwe taken worden als link naar hun eigen notitie geschreven, zodat er altijd een plek is voor details. Bestaande taken blijven ongewijzigd.",
     "companion_note_folder": "Notitiemap",
-    "companion_note_folder_desc": "Waar taaknotities worden aangemaakt"
+    "companion_note_folder_desc": "Waar taaknotities worden aangemaakt",
+    "finance": "Financiën",
+    "finance_enabled": "Financiële planning inschakelen",
+    "finance_enabled_desc": "Houd uren, mensen en kosten bij op taken en toon het financiële dashboard",
+    "finance_rate_note": "Tariefnotitie",
+    "finance_rate_note_desc": "Notitie met de tabellen graad-naar-tarief en persoon-naar-graad",
+    "finance_rate_note_create": "Tariefnotitie aanmaken",
+    "finance_rate_note_missing": "Nog geen tariefnotitie — maak er een aan om taken te kunnen beprijzen",
+    "finance_rate_note_status": "Tariefnotitie: {{grades}} graden, {{people}} mensen, {{problems}} problemen",
+    "finance_default_hours": "Standaarduren per dag",
+    "finance_default_hours_desc": "Uren die iemand op een dag werkt als de taak niets anders aangeeft",
+    "finance_currency": "Valuta",
+    "finance_currency_desc": "Valuta waarin kosten worden getoond; tarieven in de notitie zijn kale getallen",
+    "finance_include_inferred": "Voorgestelde datums meetellen",
+    "finance_include_inferred_desc": "Tel taken mee waarvan de Gantt-datums zijn voorgesteld in plaats van vastgelegd"
   },
   "filters": {
     "status": "Status",

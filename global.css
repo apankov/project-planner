@@ -2327,6 +2327,17 @@ If your plugin does not need CSS, delete this file.
   flex-wrap: wrap;
 }
 
+/* Read-only report under a setting, e.g. what the rates note yielded */
+.tasks-map-setting-status {
+  margin-top: 12px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-setting-status--warning {
+  color: var(--text-warning, var(--color-orange));
+}
+
 .tasks-map-tag-color-list {
   max-height: 320px;
   overflow-y: auto;

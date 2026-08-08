@@ -196,7 +196,21 @@
     "companion_notes": "Create a note for each new task",
     "companion_notes_desc": "New tasks are written as a link to their own note, so there is always somewhere to keep the detail. Existing tasks are left alone.",
     "companion_note_folder": "Note folder",
-    "companion_note_folder_desc": "Where task notes are created"
+    "companion_note_folder_desc": "Where task notes are created",
+    "finance": "Finance",
+    "finance_enabled": "Enable finance planning",
+    "finance_enabled_desc": "Track hours, people and costs on tasks, and show the finance dashboard",
+    "finance_rate_note": "Rates note",
+    "finance_rate_note_desc": "Note holding the grade-to-rate and person-to-grade tables",
+    "finance_rate_note_create": "Create the rates note",
+    "finance_rate_note_missing": "No rates note yet — create one to start pricing tasks",
+    "finance_rate_note_status": "Rates note: {{grades}} grades, {{people}} people, {{problems}} problems",
+    "finance_default_hours": "Default hours per day",
+    "finance_default_hours_desc": "Hours a person works in a day when a task does not say otherwise",
+    "finance_currency": "Currency",
+    "finance_currency_desc": "Currency costs are shown in; rates in the note are plain numbers",
+    "finance_include_inferred": "Include suggested dates",
+    "finance_include_inferred_desc": "Count tasks whose Gantt dates were suggested rather than written"
   },
   "filters": {
     "status": "Status",
