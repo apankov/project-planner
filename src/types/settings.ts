@@ -2,6 +2,7 @@ import { Language } from "../i18n";
 import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverrides } from "../lib/edge-style-manager";
+import { GanttMilestone } from "../lib/gantt-milestones";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 
 export interface FilterPreset {
@@ -33,6 +34,8 @@ export interface TasksMapSettings {
   ganttTaskOrder: string[];
   // Measure Gantt durations in working days and keep bars off weekends
   ganttSkipWeekends: boolean;
+  // Named days marked across the Gantt timeline
+  ganttMilestones: GanttMilestone[];
 
   // Per-connection line styles, keyed "sourceId->targetId"
   edgeStyleOverrides: EdgeStyleOverrides;
@@ -67,6 +70,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
   ganttSkipWeekends: false,
+  ganttMilestones: [],
 
   edgeStyleOverrides: {},
 

@@ -2540,12 +2540,19 @@ If your plugin does not need CSS, delete this file.
   overflow: auto;
 }
 
+/* Both columns size to their own content rather than stretching to the
+   visible area. As flex items they would otherwise be exactly one viewport
+   tall however many rows there are, which left the label column's background
+   (and its sticky header) ending at the fold, with the bars below showing
+   through the task names. `min-height` keeps a short list filling the pane. */
 .tasks-map-gantt__labels {
   position: sticky;
   left: 0;
   z-index: 4;
   flex: 0 0 var(--gantt-label-width, 260px);
+  align-self: flex-start;
   width: var(--gantt-label-width, 260px);
+  min-height: 100%;
   border-right: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
 }
@@ -2572,8 +2579,8 @@ If your plugin does not need CSS, delete this file.
   top: 0;
   z-index: 5;
   background: var(--background-primary);
-  /* Matches the two header rows plus the timeline header's bottom border */
-  height: calc(var(--gantt-row-height) * 2 + 1px);
+  /* Matches the timeline header lanes plus its bottom border */
+  height: calc(var(--gantt-row-height) * var(--gantt-header-rows, 2) + 1px);
   display: flex;
   align-items: flex-end;
   padding: 0 8px 6px;
@@ -2773,11 +2780,16 @@ If your plugin does not need CSS, delete this file.
 .tasks-map-gantt__status--done { background: var(--color-green, #4caf62); }
 .tasks-map-gantt__status--canceled { background: var(--text-faint); }
 
+/* Sized to its content for the same reason as the label column: the date
+   header and the milestone flags are sticky within it, so a timeline only one
+   viewport tall would let both slide away once the chart scrolls past that. */
 .tasks-map-gantt__timeline {
   position: relative;
   flex: 0 0 auto;
+  align-self: flex-start;
   width: calc(var(--gantt-total-days) * var(--gantt-day-width));
   min-width: calc(100% - var(--gantt-label-width, 260px));
+  min-height: 100%;
 }
 
 .tasks-map-gantt__header {
@@ -2861,6 +2873,120 @@ If your plugin does not need CSS, delete this file.
   z-index: 2;
 }
 
+/* Milestones. The flag and the guide line share one wrapper, so a drag moves
+   both by writing a single offset. The lane below the ticks is empty in the
+   header itself: the flags float over it from the marker layer, which spans
+   the whole timeline so the line can run on past the header. */
+.tasks-map-gantt__milestone-lane {
+  height: var(--gantt-row-height);
+  /* The lane's border has to fit inside the row, or the label column's
+     header no longer lines up with the first row of the timeline */
+  box-sizing: border-box;
+  border-top: 1px solid var(--background-modifier-border-hover);
+}
+
+/* No z-index here: the flag and the line each pick their own layer, so the
+   line can sit under the bars while the flag sits over the header */
+.tasks-map-gantt__milestones {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.tasks-map-gantt__milestone {
+  --milestone-color: var(--color-purple, #7c5cbf);
+
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--milestone-offset, 0) + 0.5) * var(--gantt-day-width));
+  width: 0;
+}
+
+.tasks-map-gantt__milestone--today { --milestone-color: var(--color-orange, #e07c3a); }
+.tasks-map-gantt__milestone--past { --milestone-color: var(--text-faint); }
+
+.tasks-map-gantt__milestone-line {
+  position: absolute;
+  top: calc(var(--gantt-row-height) * var(--gantt-header-rows, 3) + 1px);
+  bottom: 0;
+  left: -1px;
+  width: 0;
+  border-left: 2px dashed var(--milestone-color);
+  opacity: 0.55;
+  z-index: 1;
+}
+
+/* Sticky keeps the flag in its lane at every scroll position, because the
+   wrapper it sits in is as tall as the whole chart */
+.tasks-map-gantt__milestone-flag {
+  position: sticky;
+  top: calc(var(--gantt-row-height) * 2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--gantt-row-height);
+  max-width: 180px;
+  margin-left: -7px;
+  padding: 0 6px 0 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--milestone-color);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+  /* Over the header, but under the label column so a flag scrolled off to
+     the left disappears behind the task names rather than across them */
+  z-index: 3;
+}
+
+.tasks-map-gantt__milestone-diamond {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  background: var(--milestone-color);
+  transform: rotate(45deg);
+}
+
+.tasks-map-gantt__milestone-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.tasks-map-gantt__milestone-flag:hover .tasks-map-gantt__milestone-label {
+  text-decoration: underline;
+}
+
+.tasks-map-gantt__milestone--dragging .tasks-map-gantt__milestone-flag {
+  cursor: grabbing;
+}
+
+.tasks-map-gantt__milestone--dragging .tasks-map-gantt__milestone-line {
+  opacity: 1;
+}
+
+.tasks-map-gantt-legend__swatch--milestone {
+  width: 9px;
+  height: 9px;
+  border-radius: 0;
+  background: var(--color-purple, #7c5cbf);
+  transform: rotate(45deg);
+}
+
+.tasks-map-gantt-milestone-modal__error {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--text-error);
+}
+
 .tasks-map-gantt__arrows {
   position: absolute;
   top: 0;
@@ -2905,9 +3031,14 @@ If your plugin does not need CSS, delete this file.
   opacity: 0.7;
 }
 
+/* border-box so the row's border sits inside its height, matching the label
+   rows and the flat row pitch the arrow and drop-target maths assume — with
+   content-box every row was a pixel taller than its name, and the two columns
+   slid apart further with every task */
 .tasks-map-gantt__row {
   position: relative;
   height: var(--gantt-row-height);
+  box-sizing: border-box;
   border-bottom: 1px solid var(--background-modifier-border-hover);
 }
 

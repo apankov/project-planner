@@ -47,9 +47,20 @@ import {
   ROW_HEIGHT,
   RowReorder,
 } from "src/components/gantt-chart";
+import {
+  GanttMilestone,
+  addMilestone,
+  findMilestone,
+  readMilestones,
+  removeMilestone,
+  shiftMilestone,
+  updateMilestone,
+} from "src/lib/gantt-milestones";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
+import { MilestoneDragResult } from "src/components/gantt-milestone";
+import { promptForMilestone } from "src/components/gantt-milestone-modal";
 import { TasksMapSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import { useUndoHistory } from "src/hooks/use-undo-history";
@@ -183,13 +194,20 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
   const inferredRows = useMemo(() => getInferredRows(rows), [rows]);
 
+  // Milestones belong to the chart rather than the vault, so they come from
+  // settings — and the timeline has to stretch to reach them
+  const milestones = useMemo(
+    () => readMilestones(settings.ganttMilestones),
+    [settings.ganttMilestones]
+  );
+
   const timeline = useMemo(
     () =>
       getTimelineRange(
         rows.map((row) => row.bar),
-        { today }
+        { today, anchors: milestones.map((milestone) => milestone.date) }
       ),
-    [rows, today]
+    [milestones, rows, today]
   );
 
   const scrollToToday = useCallback(() => {
@@ -419,6 +437,80 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const handleSortByDate = useCallback(() => {
     commitOrder(orderByDate(rows), t("gantt.undo_sort"));
   }, [commitOrder, rows]);
+
+  /** Saves a milestone edit, keeping the previous list for undo. */
+  const commitMilestones = useCallback(
+    (next: GanttMilestone[], label: string) => {
+      const previous = milestones;
+      plugin.undoHistory.push({
+        label,
+        undo: async () => {
+          await plugin.setGanttMilestones(previous);
+        },
+      });
+      void plugin.setGanttMilestones(next);
+    },
+    [milestones, plugin]
+  );
+
+  const handleAddMilestone = useCallback(async () => {
+    const result = await promptForMilestone(app, { defaultDate: today });
+    if (result?.action !== "save") return;
+
+    const milestone: GanttMilestone = {
+      id: crypto.randomUUID(),
+      label: result.draft.label,
+      date: result.draft.date,
+    };
+
+    commitMilestones(
+      addMilestone(milestones, milestone),
+      t("gantt.undo_milestone_added", { label: milestone.label })
+    );
+    new Notice(t("gantt.milestone_added", { label: milestone.label }));
+  }, [app, commitMilestones, milestones, today]);
+
+  /** Clicking a flag reopens it, for a rename, a new date, or a delete. */
+  const handleEditMilestone = useCallback(
+    async (milestoneId: string) => {
+      const milestone = findMilestone(milestones, milestoneId);
+      if (!milestone) return;
+
+      const result = await promptForMilestone(app, {
+        initial: { label: milestone.label, date: milestone.date },
+        defaultDate: today,
+      });
+      if (!result) return;
+
+      if (result.action === "delete") {
+        commitMilestones(
+          removeMilestone(milestones, milestoneId),
+          t("gantt.undo_milestone_removed", { label: milestone.label })
+        );
+        new Notice(t("gantt.milestone_removed", { label: milestone.label }));
+        return;
+      }
+
+      commitMilestones(
+        updateMilestone(milestones, milestoneId, result.draft),
+        t("gantt.undo_milestone_edited", { label: result.draft.label })
+      );
+    },
+    [app, commitMilestones, milestones, today]
+  );
+
+  const handleMoveMilestone = useCallback(
+    ({ milestoneId, days }: MilestoneDragResult) => {
+      const milestone = findMilestone(milestones, milestoneId);
+      if (!milestone) return;
+
+      commitMilestones(
+        shiftMilestone(milestones, milestoneId, days),
+        t("gantt.undo_milestone_moved", { label: milestone.label })
+      );
+    },
+    [commitMilestones, milestones]
+  );
 
   const {
     canUndo,
@@ -819,6 +911,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         onGroupByChange={setGroupBy}
         onSortByDate={handleSortByDate}
         onAddTask={() => void addTask(null)}
+        onAddMilestone={() => void handleAddMilestone()}
         onUndoOrder={() => void handleUndo()}
         canUndoOrder={canUndo}
         undoLabel={undoLabel}
@@ -868,6 +961,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
           onRemoveTag={(taskId, tag) => void changeTag(taskId, tag, false)}
+          milestones={milestones}
+          onMoveMilestone={handleMoveMilestone}
+          onEditMilestone={(milestoneId) =>
+            void handleEditMilestone(milestoneId)
+          }
           allTags={allTags}
           linkingFromId={linkingFromId}
           scrollRef={scrollRef}

@@ -255,6 +255,43 @@ describe("getTimelineRange", () => {
 
     expect(range).toEqual({ start: "2026-08-03", end: "2026-08-09" });
   });
+
+  it("stretches to reach an anchor beyond every bar", () => {
+    const range = getTimelineRange(
+      [
+        {
+          id: "a",
+          start: "2026-08-10",
+          end: "2026-08-12",
+          startInferred: false,
+          endInferred: false,
+        },
+      ],
+      { today: "2026-08-11", padDays: 1, anchors: ["2026-09-30"] }
+    );
+
+    expect(range.end).toBe("2026-10-01");
+  });
+
+  it("covers an anchor even with no bars at all", () => {
+    const range = getTimelineRange([], {
+      today: TODAY,
+      padDays: 1,
+      anchors: ["2026-08-20"],
+    });
+
+    expect(range).toEqual({ start: "2026-08-05", end: "2026-08-21" });
+  });
+
+  it("ignores unparseable anchors", () => {
+    const range = getTimelineRange([], {
+      today: TODAY,
+      padDays: 3,
+      anchors: ["not a date"],
+    });
+
+    expect(range).toEqual({ start: "2026-08-03", end: "2026-08-09" });
+  });
 });
 
 describe("shiftBar", () => {

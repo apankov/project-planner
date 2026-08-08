@@ -59,6 +59,28 @@ matching group would duplicate the bar.
 Links are written with the same `⛔` / `🆔` metadata the map uses, so anything
 you connect here shows up in the map too.
 
+## Milestones
+
+A milestone is a named day marked across the whole chart — "Design freeze",
+"Release 1.0" — drawn as a diamond in its own band above the rows, with a
+dashed line running down the timeline.
+
+Milestones are not tasks. They have no note behind them, no duration and no
+dependencies, so nothing is ever written to your vault: they are saved with
+the plugin's settings and show up on every chart.
+
+| Control                       | What it does                                    |
+| ----------------------------- | ----------------------------------------------- |
+| **Milestone** in the toolbar  | Asks for a name and a date, then marks the day  |
+| Drag a diamond                | Moves the milestone, snapping to whole days     |
+| Click a diamond               | Reopens it to rename, re-date, or delete it     |
+| Undo                          | Steps back through milestone changes too        |
+
+A milestone that has already passed is drawn in grey, one falling today in
+orange, and anything still ahead in purple. The timeline always stretches far
+enough to reach the milestones, so one set months out is never off the end of
+the chart.
+
 ## Editing the timeline
 
 | Action                     | Result                                          |

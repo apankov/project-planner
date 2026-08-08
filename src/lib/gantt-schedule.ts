@@ -222,24 +222,37 @@ function layOutBar({
   };
 }
 
-/** Inclusive span covering every bar, padded so the chart never starts flush. */
+/**
+ * Inclusive span covering every bar, padded so the chart never starts flush.
+ *
+ * `anchors` are extra days the range must reach — milestones, which have no
+ * bar of their own and would otherwise be marked off the end of the chart.
+ */
 export function getTimelineRange(
   bars: ScheduledBar[],
-  options: { today?: string; padDays?: number } = {}
+  options: { today?: string; padDays?: number; anchors?: string[] } = {}
 ): { start: string; end: string } {
   const today = normalizeDate(options.today) ?? todayIso();
   const pad = options.padDays ?? 3;
+  const anchors = (options.anchors ?? [])
+    .map(normalizeDate)
+    .filter((date): date is string => date !== null);
 
-  if (bars.length === 0) {
+  if (bars.length === 0 && anchors.length === 0) {
     return { start: addDays(today, -pad), end: addDays(today, pad) };
   }
 
-  let min = bars[0].start;
-  let max = bars[0].end;
+  let min = bars[0]?.start ?? anchors[0];
+  let max = bars[0]?.end ?? anchors[0];
 
   for (const bar of bars) {
     if (diffDays(min, bar.start) < 0) min = bar.start;
     if (diffDays(max, bar.end) > 0) max = bar.end;
+  }
+
+  for (const anchor of anchors) {
+    if (diffDays(min, anchor) < 0) min = anchor;
+    if (diffDays(max, anchor) > 0) max = anchor;
   }
 
   // Keep today in view so the marker is never off-screen
