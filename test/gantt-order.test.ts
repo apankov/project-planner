@@ -1,5 +1,6 @@
 import { NoteTask } from "../src/types/note-task";
 import { GanttRow } from "../src/lib/gantt-rows";
+import { milestoneOrderKey } from "../src/lib/gantt-milestones";
 import {
   applyOrder,
   groupRows,
@@ -7,7 +8,9 @@ import {
   moveRelativeTo,
   moveWithinParent,
   normalizeOrder,
+  normalizeOrderIds,
   orderByDate,
+  orderEntriesByDate,
 } from "../src/lib/gantt-order";
 
 const LABELS = {
@@ -80,6 +83,37 @@ describe("normalizeOrder", () => {
   it("falls back to row order when nothing is stored", () => {
     const rows = [makeRow("x"), makeRow("y")];
     expect(normalizeOrder(rows, [])).toEqual(["x", "y"]);
+  });
+
+  // A row milestone holds a slot alongside the tasks, so a normalize run over
+  // rows alone would throw it away and lose where the user put it
+  it("drops a milestone slot when only rows are offered", () => {
+    const rows = [makeRow("a")];
+    expect(normalizeOrder(rows, [milestoneOrderKey("m"), "a"])).toEqual(["a"]);
+  });
+});
+
+describe("normalizeOrderIds", () => {
+  const key = milestoneOrderKey("m");
+
+  it("keeps a milestone's slot among the tasks", () => {
+    expect(normalizeOrderIds(["a", "b", key], ["a", key, "b"])).toEqual([
+      "a",
+      key,
+      "b",
+    ]);
+  });
+
+  it("appends a milestone the order has not seen yet", () => {
+    expect(normalizeOrderIds(["a", key], ["a"])).toEqual(["a", key]);
+  });
+
+  it("drops the slot of a milestone that is no longer a row", () => {
+    expect(normalizeOrderIds(["a"], ["a", key])).toEqual(["a"]);
+  });
+
+  it("removes duplicates", () => {
+    expect(normalizeOrderIds(["a", key], [key, key, "a"])).toEqual([key, "a"]);
   });
 });
 
@@ -254,6 +288,57 @@ describe("moveWithinParent", () => {
       expect(nestedOrder).toEqual(original);
     });
 
+    /*
+     * A row milestone holds a slot in the same flat order but is in no
+     * parent map, so it resolves to a root — which is exactly the rule that
+     * keeps it out of a task's subtree without any special-casing here.
+     */
+    describe("row milestones", () => {
+      const key = milestoneOrderKey("m");
+      const order = ["redesign", "logo", "copy", "invoicing", key];
+
+      it("moves a milestone among the top-level rows", () => {
+        expect(
+          moveWithinParent(order, key, "invoicing", "before", NESTED)
+        ).toEqual(["redesign", "logo", "copy", key, "invoicing"]);
+      });
+
+      // Dropped onto a child, a milestone lands beside that child's top-level
+      // ancestor — never between the children, which would make it look like
+      // one of them
+      it("lands after a parent's whole subtree, not inside it", () => {
+        expect(moveWithinParent(order, key, "logo", "after", NESTED)).toEqual([
+          "redesign",
+          "logo",
+          "copy",
+          key,
+          "invoicing",
+        ]);
+      });
+
+      it("lands above a parent when dropped before one of its children", () => {
+        expect(moveWithinParent(order, key, "copy", "before", NESTED)).toEqual([
+          key,
+          "redesign",
+          "logo",
+          "copy",
+          "invoicing",
+        ]);
+      });
+
+      it("lets a top-level task move past a milestone", () => {
+        expect(
+          moveWithinParent(order, "invoicing", key, "after", NESTED)
+        ).toEqual(["redesign", "logo", "copy", key, "invoicing"]);
+      });
+
+      it("refuses to move a nested task onto a milestone", () => {
+        expect(moveWithinParent(order, "logo", key, "after", NESTED)).toEqual(
+          order
+        );
+      });
+    });
+
     it("refuses rather than hangs on a map that still loops", () => {
       const looped: ReadonlyMap<string, string | null> = new Map<
         string,
@@ -292,6 +377,24 @@ describe("orderByDate", () => {
       makeRow("c", { start: "2026-08-01", end: "2026-08-02", summary: "Aa" }),
     ];
     expect(orderByDate(rows)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("orderEntriesByDate", () => {
+  it("sorts tasks and milestones together", () => {
+    const key = milestoneOrderKey("m");
+
+    expect(
+      orderEntriesByDate([
+        { id: "late", start: "2026-09-01", end: "2026-09-02", label: "Late" },
+        { id: key, start: "2026-08-15", end: "2026-08-15", label: "Freeze" },
+        { id: "early", start: "2026-08-01", end: "2026-08-02", label: "Early" },
+      ])
+    ).toEqual(["early", key, "late"]);
+  });
+
+  it("returns nothing for nothing", () => {
+    expect(orderEntriesByDate([])).toEqual([]);
   });
 });
 

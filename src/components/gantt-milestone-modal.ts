@@ -1,10 +1,17 @@
 import { App, Modal, Setting } from "obsidian";
 import { toEpochDay } from "src/lib/date-utils";
+import {
+  MILESTONE_DISPLAYS,
+  MilestoneDisplay,
+  readMilestoneDisplay,
+} from "src/lib/gantt-milestones";
 import { t } from "../i18n";
 
 export interface MilestoneDraft {
   label: string;
   date: string;
+  /** Flag in the lane above the chart, or a row among the tasks. */
+  display: MilestoneDisplay;
 }
 
 /** Cancelling returns null; editing can also ask for the milestone to go. */
@@ -12,7 +19,7 @@ export type MilestoneModalResult =
   { action: "save"; draft: MilestoneDraft } | { action: "delete" } | null;
 
 /**
- * Asks for a milestone's name and date.
+ * Asks for a milestone's name, its date, and where it is drawn.
  *
  * The same modal creates and edits: an existing milestone pre-fills the
  * fields and gains a delete button, so there is one place to learn rather
@@ -21,6 +28,7 @@ export type MilestoneModalResult =
 export class GanttMilestoneModal extends Modal {
   private label: string;
   private date: string;
+  private display: MilestoneDisplay;
   private readonly existing: boolean;
   private readonly resolve: (_result: MilestoneModalResult) => void;
   private resolved = false;
@@ -35,6 +43,11 @@ export class GanttMilestoneModal extends Modal {
     this.existing = Boolean(options.initial);
     this.label = options.initial?.label ?? "";
     this.date = options.initial?.date ?? options.defaultDate;
+    // Pre-filled from the milestone being edited, so moving one between the
+    // lane and the list is a change of dropdown rather than a delete and a
+    // retype. A new milestone starts in the lane, which is where every
+    // milestone written before this choice existed still is.
+    this.display = readMilestoneDisplay(options.initial?.display);
     this.resolve = resolve;
   }
 
@@ -69,6 +82,22 @@ export class GanttMilestoneModal extends Modal {
         text.setValue(this.date);
         text.onChange((value) => {
           this.date = value;
+        });
+      });
+
+    new Setting(contentEl)
+      .setName(t("gantt.milestone_modal_display"))
+      .setDesc(t("gantt.milestone_modal_display_desc"))
+      .addDropdown((dropdown) => {
+        MILESTONE_DISPLAYS.forEach((display) =>
+          dropdown.addOption(
+            display,
+            t(`gantt.milestone_modal_display_${display}`)
+          )
+        );
+        dropdown.setValue(this.display);
+        dropdown.onChange((value) => {
+          this.display = readMilestoneDisplay(value);
         });
       });
 
@@ -118,7 +147,10 @@ export class GanttMilestoneModal extends Modal {
     }
 
     this.resolved = true;
-    this.resolve({ action: "save", draft: { label, date } });
+    this.resolve({
+      action: "save",
+      draft: { label, date, display: this.display },
+    });
     this.close();
   }
 

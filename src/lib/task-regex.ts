@@ -81,6 +81,11 @@ export const PARENT_FIELD_REMOVAL = new RegExp(
   "gi"
 );
 
+// Emoji date fields: 📅 2025-01-01, ⏳ 2025-01-01, 🛫, ➕, ✅, ❌. The emoji
+// forms are not covered by the Dataview or plain-text date patterns above.
+export const EMOJI_DATE_FIELD_REMOVAL =
+  /[\u{1F4C5}\u{23F3}\u{1F6EB}\u{2795}\u{2705}\u{274C}]️?\s*\d{4}-\d{2}-\d{2}/gu;
+
 // Cleaning patterns - for removing metadata (no capture groups)
 export const EMOJI_ID_REMOVAL = /🆔\s+\S+/g;
 export const DATAVIEW_BRACKET_ID_REMOVAL = /\[id::\s*\S+\]/g;
@@ -94,7 +99,41 @@ export const TAG_PATTERN = /(?:^|\s)#(\S+)/g;
 // Priority pattern - for Obsidian Tasks plugin priority emojis
 export const PRIORITY_PATTERN =
   /([\u{1F53A}\u{23EB}\u{1F53C}\u{1F53D}\u{23EC}])/u;
+export const PRIORITY_PATTERN_GLOBAL =
+  /[\u{1F53A}\u{23EB}\u{1F53C}\u{1F53D}\u{23EC}]/gu;
 
 // Star pattern - for detecting starred tasks
 export const STAR_PATTERN = /⭐/;
 export const STAR_PATTERN_GLOBAL = /⭐/g;
+
+// The checkbox a task line opens with, splitting it into the marker and the
+// text after it: "- [ ] Ship it 📅 2026-01-01" -> "- [ ] " and the rest.
+export const TASK_LINE_PREFIX = /^(\s*[-*+]\s+\[[ x/-]\]\s+)(.*)$/;
+
+/**
+ * Everything on a task line that is metadata rather than description.
+ *
+ * Used to tell the words a person wrote apart from the fields the plugins
+ * wrote, so a rename can rewrite the first and leave the second exactly as it
+ * found it. Finance fields are not here because their pattern is assembled in
+ * `task-finance`; callers append it.
+ *
+ * Every entry must carry the `g` flag: they are scanned with `matchAll`.
+ */
+export const TASK_METADATA_PATTERNS: RegExp[] = [
+  TAG_PATTERN,
+  EMOJI_ID_PATTERN_GLOBAL,
+  DATAVIEW_BRACKET_ID_PATTERN_GLOBAL,
+  DATAVIEW_PARENTHESES_ID_PATTERN_GLOBAL,
+  CSV_LINKS_PATTERN,
+  INDIVIDUAL_LINKS_PATTERN,
+  DATAVIEW_BRACKET_DEPENDS_PATTERN,
+  DATAVIEW_PARENTHESES_DEPENDS_PATTERN,
+  EMOJI_DATE_FIELD_REMOVAL,
+  DATAVIEW_DATE_FIELD_REMOVAL,
+  TEXT_DATE_FIELD_REMOVAL,
+  PROGRESS_FIELD_REMOVAL,
+  PARENT_FIELD_REMOVAL,
+  PRIORITY_PATTERN_GLOBAL,
+  STAR_PATTERN_GLOBAL,
+];

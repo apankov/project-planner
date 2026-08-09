@@ -5,10 +5,15 @@ import { collectDescendantIds } from "./task-hierarchy";
 /**
  * Row ordering and grouping for the Gantt.
  *
- * The chart's running order is a plain list of task IDs held in settings.
+ * The chart's running order is a plain list of slot IDs held in settings.
  * Rows are drawn in that order, so dragging a row is only ever a change to
  * the list, and sorting by date is just one particular list the user can ask
  * for (and undo) rather than something the chart does on its own.
+ *
+ * A slot is usually a task ID. A milestone the user asked to see as a row
+ * takes one too, under a namespaced key (`MILESTONE_ORDER_PREFIX`) that no
+ * task ID can collide with — so every function here keeps working on plain
+ * strings and none of them has to know that milestones exist.
  *
  * The list stays flat even though the chart nests. Nesting is applied when the
  * rows are drawn (`task-hierarchy`), which is what keeps a child inside its
@@ -38,12 +43,19 @@ export function isGanttGroupBy(value: string): value is GanttGroupBy {
 }
 
 /**
- * The stored order, restricted to the rows present and extended with any row
- * it has not seen yet (new tasks land at the end rather than jumping to the
+ * The stored order, restricted to the slots present and extended with any slot
+ * it has not seen yet (new entries land at the end rather than jumping to the
  * top).
+ *
+ * Slots are plain strings, which is what lets a row milestone hold one: it
+ * passes its namespaced key (see `MILESTONE_ORDER_PREFIX`) alongside the task
+ * IDs and nothing here has to know the difference.
  */
-export function normalizeOrder(rows: GanttRow[], order: string[]): string[] {
-  const present = new Set(rows.map((row) => row.task.id));
+export function normalizeOrderIds(
+  presentIds: string[],
+  order: string[]
+): string[] {
+  const present = new Set(presentIds);
   const seen = new Set<string>();
   const next: string[] = [];
 
@@ -53,13 +65,25 @@ export function normalizeOrder(rows: GanttRow[], order: string[]): string[] {
     next.push(id);
   }
 
-  for (const row of rows) {
-    if (seen.has(row.task.id)) continue;
-    seen.add(row.task.id);
-    next.push(row.task.id);
+  for (const id of presentIds) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    next.push(id);
   }
 
   return next;
+}
+
+/**
+ * The stored order, restricted to the rows present and extended with any row
+ * it has not seen yet (new tasks land at the end rather than jumping to the
+ * top).
+ */
+export function normalizeOrder(rows: GanttRow[], order: string[]): string[] {
+  return normalizeOrderIds(
+    rows.map((row) => row.task.id),
+    order
+  );
 }
 
 /** Rows rearranged to match the given order. */
@@ -161,22 +185,46 @@ export function moveWithinParent(
   return without;
 }
 
-/** The order the rows would have if sorted earliest-first. */
-export function orderByDate(rows: GanttRow[]): string[] {
-  return [...rows]
+/**
+ * Anything that occupies a slot in the order and has a day attached: a task
+ * row, or a milestone drawn as one (whose start and end are the same day).
+ */
+export interface DatedOrderEntry {
+  id: string;
+  start: string;
+  end: string;
+  /** Breaks ties between two entries falling on exactly the same days. */
+  label: string;
+}
+
+/** The order the entries would have if sorted earliest-first. */
+export function orderEntriesByDate(entries: DatedOrderEntry[]): string[] {
+  return [...entries]
     .sort((a, b) => {
       // diffDays(b, a) is a - b in days, i.e. ascending by date
-      const byStart = diffDays(b.bar.start, a.bar.start);
+      const byStart = diffDays(b.start, a.start);
       if (byStart !== 0) return byStart;
 
-      const byEnd = diffDays(b.bar.end, a.bar.end);
+      const byEnd = diffDays(b.end, a.end);
       if (byEnd !== 0) return byEnd;
 
-      return a.task.summary.localeCompare(b.task.summary, undefined, {
+      return a.label.localeCompare(b.label, undefined, {
         sensitivity: "base",
       });
     })
-    .map((row) => row.task.id);
+    .map((entry) => entry.id);
+}
+
+/** The order the rows would have if sorted earliest-first. */
+export function orderByDate(rows: GanttRow[]): string[] {
+  return orderEntriesByDate(
+    rows.map((row) => ({
+      id: row.task.id,
+      start: row.bar.start,
+      end: row.bar.end,
+      label: row.task.summary,
+    }))
+  );
 }
 
 function fileLabel(link: string): string {

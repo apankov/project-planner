@@ -7,9 +7,8 @@ export interface MilestoneDragResult {
   days: number;
 }
 
-interface GanttMilestoneMarkerProps {
-  milestone: GanttMilestone;
-  status: MilestoneStatus;
+interface MilestoneDragOptions {
+  milestoneId: string;
   /** Days from the first day of the chart to the milestone. */
   offsetDays: number;
   dayWidth: number;
@@ -18,20 +17,22 @@ interface GanttMilestoneMarkerProps {
 }
 
 /**
- * The flag and guide line for one milestone.
+ * Sideways dragging for a milestone, wherever it is drawn.
  *
- * Both are children of a single positioned wrapper, so a drag moves them
- * together by writing one CSS custom property — the same trick the bars use to
- * stay cheap, and the reason the whole chart does not re-render per day.
+ * The offset is written to a CSS custom property on the wrapper rather than
+ * held in state, which is the same trick the bars use: a drag mutates one
+ * variable instead of re-rendering the chart once per day crossed. A pointer
+ * that never moved was a click, which opens the milestone for editing —
+ * identical in the lane and in the list, so the flag and the row behave the
+ * same way for the same gesture.
  */
-export function GanttMilestoneMarker({
-  milestone,
-  status,
+function useMilestoneDrag({
+  milestoneId,
   offsetDays,
   dayWidth,
   onMove,
   onEdit,
-}: GanttMilestoneMarkerProps) {
+}: MilestoneDragOptions) {
   const markerRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{
     startX: number;
@@ -47,7 +48,7 @@ export function GanttMilestoneMarker({
     el.style.setProperty("--milestone-offset", String(offsetDays));
   }, [offsetDays]);
 
-  const handlePointerDown = useCallback(
+  const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
       if (event.button !== 0) return;
       event.preventDefault();
@@ -64,7 +65,7 @@ export function GanttMilestoneMarker({
     []
   );
 
-  const handlePointerMove = useCallback(
+  const onPointerMove = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
@@ -90,20 +91,63 @@ export function GanttMilestoneMarker({
       setDragging(false);
       event.currentTarget.releasePointerCapture(event.pointerId);
 
-      // A flag that never moved was a click, which opens it for editing
+      // A marker that never moved was a click, which opens it for editing
       if (drag.days === 0) {
         markerRef.current?.style.setProperty(
           "--milestone-offset",
           String(offsetDays)
         );
-        onEdit(milestone.id);
+        onEdit(milestoneId);
         return;
       }
 
-      onMove({ milestoneId: milestone.id, days: drag.days });
+      onMove({ milestoneId, days: drag.days });
     },
-    [milestone.id, offsetDays, onEdit, onMove]
+    [milestoneId, offsetDays, onEdit, onMove]
   );
+
+  return {
+    markerRef,
+    dragging,
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: endDrag,
+      onPointerCancel: endDrag,
+    },
+  };
+}
+
+interface GanttMilestoneMarkerProps extends Omit<
+  MilestoneDragOptions,
+  "milestoneId"
+> {
+  milestone: GanttMilestone;
+  status: MilestoneStatus;
+}
+
+/**
+ * The flag and guide line for one milestone in the lane above the chart.
+ *
+ * Both are children of a single positioned wrapper, so a drag moves them
+ * together by writing one CSS custom property — the same trick the bars use to
+ * stay cheap, and the reason the whole chart does not re-render per day.
+ */
+export function GanttMilestoneMarker({
+  milestone,
+  status,
+  offsetDays,
+  dayWidth,
+  onMove,
+  onEdit,
+}: GanttMilestoneMarkerProps) {
+  const { markerRef, dragging, handlers } = useMilestoneDrag({
+    milestoneId: milestone.id,
+    offsetDays,
+    dayWidth,
+    onMove,
+    onEdit,
+  });
 
   const className = [
     "tasks-map-gantt__milestone",
@@ -113,22 +157,18 @@ export function GanttMilestoneMarker({
     .filter(Boolean)
     .join(" ");
 
+  const tooltip = t("gantt.milestone_tooltip", {
+    label: milestone.label,
+    date: milestone.date,
+  });
+
   return (
     <div ref={markerRef} className={className}>
       <button
         className="tasks-map-gantt__milestone-flag"
-        title={t("gantt.milestone_tooltip", {
-          label: milestone.label,
-          date: milestone.date,
-        })}
-        aria-label={t("gantt.milestone_tooltip", {
-          label: milestone.label,
-          date: milestone.date,
-        })}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        title={tooltip}
+        aria-label={tooltip}
+        {...handlers}
       >
         <span className="tasks-map-gantt__milestone-diamond" />
         <span className="tasks-map-gantt__milestone-label">
@@ -136,6 +176,56 @@ export function GanttMilestoneMarker({
         </span>
       </button>
       <div className="tasks-map-gantt__milestone-line" aria-hidden="true" />
+    </div>
+  );
+}
+
+/**
+ * The diamond a row milestone shows on its own line of the timeline.
+ *
+ * Deliberately not a bar: a milestone is one day, has no length to resize and
+ * nothing to depend on it, so there is no body to grab and no handles. The one
+ * gesture it has is the flag's — drag sideways to move the day, click to edit.
+ */
+export function GanttMilestoneRow({
+  milestone,
+  status,
+  offsetDays,
+  dayWidth,
+  onMove,
+  onEdit,
+}: GanttMilestoneMarkerProps) {
+  const { markerRef, dragging, handlers } = useMilestoneDrag({
+    milestoneId: milestone.id,
+    offsetDays,
+    dayWidth,
+    onMove,
+    onEdit,
+  });
+
+  const className = [
+    "tasks-map-gantt__milestone-point",
+    `tasks-map-gantt__milestone-point--${status}`,
+    dragging ? "tasks-map-gantt__milestone-point--dragging" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const tooltip = t("gantt.milestone_tooltip", {
+    label: milestone.label,
+    date: milestone.date,
+  });
+
+  return (
+    <div ref={markerRef} className={className}>
+      <button
+        className="tasks-map-gantt__milestone-handle"
+        title={tooltip}
+        aria-label={tooltip}
+        {...handlers}
+      >
+        <span className="tasks-map-gantt__milestone-diamond" />
+      </button>
     </div>
   );
 }

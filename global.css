@@ -3594,6 +3594,67 @@ If your plugin does not need CSS, delete this file.
   opacity: 1;
 }
 
+/* A milestone filed among the tasks. It borrows the label row's box so it
+   lines up with the task names, and says what it is with the diamond and the
+   date rather than with a status dot it has no business carrying. */
+.tasks-map-gantt__label--milestone {
+  color: var(--milestone-color, var(--color-purple, #7c5cbf));
+  font-weight: 600;
+}
+
+.tasks-map-gantt__milestone-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  background: var(--milestone-color, var(--color-purple, #7c5cbf));
+  transform: rotate(45deg);
+}
+
+.tasks-map-gantt__milestone-date {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+/* The diamond on a row milestone's line of the timeline. Positioned by the
+   same custom property the lane flag uses, so one drag handler drives both. */
+.tasks-map-gantt__milestone-point {
+  --milestone-color: var(--color-purple, #7c5cbf);
+
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--milestone-offset, 0) + 0.5) * var(--gantt-day-width));
+  width: 0;
+  z-index: 2;
+}
+
+.tasks-map-gantt__milestone-point--today {
+  --milestone-color: var(--color-orange, #e07c3a);
+}
+.tasks-map-gantt__milestone-point--past {
+  --milestone-color: var(--text-faint);
+}
+
+.tasks-map-gantt__milestone-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--gantt-row-height);
+  margin-left: -9px;
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.tasks-map-gantt__milestone-point--dragging .tasks-map-gantt__milestone-handle {
+  cursor: grabbing;
+}
+
 .tasks-map-gantt-legend__swatch--milestone {
   width: 9px;
   height: 9px;
@@ -3606,6 +3667,28 @@ If your plugin does not need CSS, delete this file.
   margin: 0 0 8px;
   font-size: 12px;
   color: var(--text-error);
+}
+
+.tasks-map-task-edit-modal__error {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--text-error);
+}
+
+.tasks-map-task-edit-modal__hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* The words are the field people came here for, so it gets the room */
+.tasks-map-task-edit-modal__text {
+  width: 100%;
+  min-width: 260px;
+}
+
+.tasks-map-task-edit-modal__progress {
+  width: 80px;
 }
 
 .tasks-map-gantt__arrows {

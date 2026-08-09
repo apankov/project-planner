@@ -29,17 +29,26 @@ import {
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
 import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
 import { HierarchyGroup } from "src/lib/task-hierarchy";
+import { buildLines, visibleRowsOf } from "src/lib/gantt-lines";
 import {
   ConnectionHighlight,
   connectionKey,
   highlightDirection,
   isHighlightActive,
 } from "src/lib/connection-highlight";
-import { GanttMilestone, milestoneStatus } from "src/lib/gantt-milestones";
+import {
+  GanttMilestone,
+  laneMilestones,
+  milestoneStatus,
+} from "src/lib/gantt-milestones";
 import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
 import { GanttBar, BarDragResult } from "./gantt-bar";
-import { GanttMilestoneMarker, MilestoneDragResult } from "./gantt-milestone";
+import {
+  GanttMilestoneMarker,
+  GanttMilestoneRow,
+  MilestoneDragResult,
+} from "./gantt-milestone";
 import { TagInput } from "./tag-input";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
@@ -76,59 +85,6 @@ export interface RowReorder {
   placement: RowPlacement;
 }
 
-/** A rendered line is either a group heading or a task row. */
-type ChartLine =
-  | { kind: "header"; key: string; label: string; count: number }
-  | {
-      kind: "row";
-      key: string;
-      row: GanttRow;
-      /** How far the label indents: 0 for a top-level task. */
-      depth: number;
-      hasChildren: boolean;
-      collapsed: boolean;
-    };
-
-/**
- * Every group's heading and its visible rows, in one flat list.
- *
- * The nesting is already done by the time this runs — each group arrives with
- * its own subtree flattened, rows hidden inside a collapsed parent already
- * gone. That is deliberate: hierarchy applies *within* a group, never across
- * one. If a parent and a child end up under different headings (they carry
- * different tags, say) each is drawn where its own metadata puts it, as a
- * top-level row. Indenting a child under a heading its parent is not filed
- * under would claim a relationship the grouping has just denied, and moving
- * the child to its parent's group would quietly overrule the grouping the user
- * asked for.
- */
-function buildLines(groups: HierarchyGroup[]): ChartLine[] {
-  const lines: ChartLine[] = [];
-
-  for (const group of groups) {
-    if (group.label) {
-      lines.push({
-        kind: "header",
-        key: `group:${group.key}`,
-        label: group.label,
-        count: group.count,
-      });
-    }
-    for (const line of group.lines) {
-      lines.push({
-        kind: "row",
-        key: line.row.task.id,
-        row: line.row,
-        depth: line.depth,
-        hasChildren: line.hasChildren,
-        collapsed: line.collapsed,
-      });
-    }
-  }
-
-  return lines;
-}
-
 interface GanttChartProps {
   /** Headings and their rows, already nested and folded. */
   groups: HierarchyGroup[];
@@ -158,6 +114,8 @@ interface GanttChartProps {
       drag selects without toggling, so releasing keeps the task selected. */
   onSelect: (_taskId: string, _toggle?: boolean, _additive?: boolean) => void;
   onCommit: (_result: BarDragResult) => void;
+  /** A click on a bar that moved nothing opens that task for editing. */
+  onOpenTask: (_taskId: string) => void;
   onReorder: (_reorder: RowReorder) => void;
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
@@ -170,8 +128,13 @@ interface GanttChartProps {
   onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
   onRemoveTag: (_taskId: string, _tag: string) => void;
-  /** Named days marked across the timeline. */
+  /** Named days marked across the timeline, in the lane and in the list. */
   milestones: GanttMilestone[];
+  /**
+   * The manual row order, which row milestones take a slot in alongside the
+   * tasks. Already normalised by the view, so every line on screen is in it.
+   */
+  order: string[];
   onMoveMilestone: (_result: MilestoneDragResult) => void;
   onEditMilestone: (_milestoneId: string) => void;
   /** Every tag in use, most common first, for the tag picker. */
@@ -365,6 +328,7 @@ export function GanttChart({
   savingTaskIds,
   onSelect,
   onCommit,
+  onOpenTask,
   onReorder,
   onAddTaskAfter,
   onStartLink,
@@ -375,6 +339,7 @@ export function GanttChart({
   onAddTag,
   onRemoveTag,
   milestones,
+  order,
   onMoveMilestone,
   onEditMilestone,
   allTags,
@@ -394,20 +359,23 @@ export function GanttChart({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [taggingId, setTaggingId] = useState<string | null>(null);
 
-  const lines = useMemo(() => buildLines(groups), [groups]);
+  const lines = useMemo(
+    () => buildLines(groups, milestones, order),
+    [groups, milestones, order]
+  );
 
   /** Rows the arrow layer can reach: the ones actually on screen. */
-  const visibleRows = useMemo(
-    () => lines.flatMap((line) => (line.kind === "row" ? [line.row] : [])),
-    [lines]
-  );
+  const visibleRows = useMemo(() => visibleRowsOf(lines), [lines]);
+
+  /** Only the flag milestones need the band above the chart. */
+  const laneFlags = useMemo(() => laneMilestones(milestones), [milestones]);
 
   // Milestone flags get a lane of their own, but only once there is one to
   // draw — an empty band above every chart would be a strange default
   const headerRows =
-    milestones.length > 0 ? BASE_HEADER_ROWS + 1 : BASE_HEADER_ROWS;
+    laneFlags.length > 0 ? BASE_HEADER_ROWS + 1 : BASE_HEADER_ROWS;
 
-  /** Which row the pointer is over, and which side of it. */
+  /** Which line the pointer is over, and which side of it. */
   const resolveDropTarget = useCallback(
     (clientY: number): { id: string; placement: RowPlacement } | null => {
       const container = labelsRef.current;
@@ -419,23 +387,24 @@ export function GanttChart({
         clientY - container.getBoundingClientRect().top - headerHeight;
       const index = Math.floor(offset / ROW_HEIGHT);
       if (index < 0) {
-        const first = lines.find((line) => line.kind === "row");
-        return first?.kind === "row"
-          ? { id: first.row.task.id, placement: "before" }
+        const first = lines.find((line) => line.orderId !== null);
+        return first?.orderId
+          ? { id: first.orderId, placement: "before" }
           : null;
       }
 
       const clamped = Math.min(index, lines.length - 1);
-      // Headers are not drop targets; fall back to the row above them
+      // Headers hold no slot in the order, so they are not drop targets; fall
+      // back to whichever line above them does
       let line = lines[clamped];
-      for (let i = clamped; i >= 0 && line?.kind !== "row"; i--) {
+      for (let i = clamped; i >= 0 && line?.orderId == null; i--) {
         line = lines[i];
       }
-      if (!line || line.kind !== "row") return null;
+      if (!line?.orderId) return null;
 
       const withinRow = offset - clamped * ROW_HEIGHT;
       return {
-        id: line.row.task.id,
+        id: line.orderId,
         placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
       };
     },
@@ -704,6 +673,22 @@ export function GanttChart({
       .filter(Boolean)
       .join(" ");
 
+  /**
+   * A milestone line carries only the states a milestone can be in. It is not
+   * a task, so it is never selected, never on the critical path, never at
+   * risk and never a link target — the only thing it shares with a row is
+   * that it can be dragged up and down the list.
+   */
+  const milestoneLineClassName = (orderId: string, base: string) =>
+    [
+      base,
+      `${base}--milestone`,
+      draggingId === orderId ? `${base}--dragging` : "",
+      dropTarget?.id === orderId ? `${base}--drop-${dropTarget.placement}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
   return (
     <div className="tasks-map-gantt" ref={gridRef}>
       {/* One scroll container for both panes: vertical scrolling keeps the
@@ -722,6 +707,53 @@ export function GanttChart({
                 </span>
                 <span className="tasks-map-gantt__group-count">
                   {line.count}
+                </span>
+              </div>
+            ) : line.kind === "milestone" ? (
+              /* A milestone filed among the tasks. No status dot, no tags, no
+                 row actions and no twisty with anything behind it — it is a
+                 date the plan is measured against, not a task, and offering
+                 it a task's controls would say otherwise. */
+              <div
+                key={line.key}
+                className={milestoneLineClassName(
+                  line.orderId,
+                  "tasks-map-gantt__label"
+                )}
+                onClick={() => onEditMilestone(line.milestone.id)}
+              >
+                <span
+                  className="tasks-map-gantt__grip"
+                  title={t("gantt.reorder_hint")}
+                  onPointerDown={handleReorderDown(line.orderId)}
+                  onPointerMove={handleReorderMove}
+                  onPointerUp={handleReorderUp}
+                  onPointerCancel={handleReorderUp}
+                  /* The row opens the milestone when clicked, and a drag that
+                     ends on the grip still counts as a click on it */
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <GripVertical size={12} />
+                </span>
+                <span
+                  className="tasks-map-gantt__twisty tasks-map-gantt__twisty--empty"
+                  aria-hidden="true"
+                />
+                <span
+                  className="tasks-map-gantt__milestone-dot"
+                  aria-hidden="true"
+                />
+                <span
+                  className="tasks-map-gantt__label-text"
+                  title={t("gantt.milestone_tooltip", {
+                    label: line.milestone.label,
+                    date: line.milestone.date,
+                  })}
+                >
+                  {line.milestone.label}
+                </span>
+                <span className="tasks-map-gantt__milestone-date">
+                  {line.milestone.date}
                 </span>
               </div>
             ) : (
@@ -930,7 +962,7 @@ export function GanttChart({
                 </div>
               ))}
             </div>
-            {milestones.length > 0 && (
+            {laneFlags.length > 0 && (
               <div
                 className="tasks-map-gantt__milestone-lane"
                 aria-hidden="true"
@@ -991,6 +1023,23 @@ export function GanttChart({
                   className="tasks-map-gantt__group-spacer"
                   aria-hidden="true"
                 />
+              ) : line.kind === "milestone" ? (
+                <div
+                  key={line.key}
+                  className={milestoneLineClassName(
+                    line.orderId,
+                    "tasks-map-gantt__row"
+                  )}
+                >
+                  <GanttMilestoneRow
+                    milestone={line.milestone}
+                    status={milestoneStatus(line.milestone, today)}
+                    offsetDays={diffDays(timelineStart, line.milestone.date)}
+                    dayWidth={scale.dayWidth}
+                    onMove={onMoveMilestone}
+                    onEdit={onEditMilestone}
+                  />
+                </div>
               ) : (
                 <div
                   key={line.key}
@@ -1005,6 +1054,7 @@ export function GanttChart({
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
+                    onOpen={onOpenTask}
                     onVerticalPreview={handleVerticalPreview}
                     onVerticalDrop={handleVerticalDrop}
                     selected={selectedTaskIds.has(line.row.task.id)}
@@ -1017,9 +1067,9 @@ export function GanttChart({
 
           {/* Above both the header and the rows, so a milestone's flag stays
               in its lane while its guide line runs the length of the chart. */}
-          {milestones.length > 0 && (
+          {laneFlags.length > 0 && (
             <div className="tasks-map-gantt__milestones">
-              {milestones.map((milestone) => (
+              {laneFlags.map((milestone) => (
                 <GanttMilestoneMarker
                   key={milestone.id}
                   milestone={milestone}

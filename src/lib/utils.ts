@@ -19,6 +19,7 @@ import { getFrontmatterDateProperties } from "./task-dates";
 import { FINANCE_FIELD_REMOVAL, getFrontmatterFinance } from "./task-finance";
 import { getFrontmatterProgress } from "./task-progress";
 import { getFrontmatterParentId } from "./task-parent";
+import { writeTextToTaskLine } from "./task-text";
 import {
   ConnectionHighlight,
   EMPTY_HIGHLIGHT,
@@ -460,6 +461,60 @@ export async function setTaskDatesInVault(
   app: App
 ): Promise<BaseTask | null> {
   return task.setDates(dates, app);
+}
+
+/**
+ * Rewrites the words on an inline task's line and returns the refreshed task.
+ *
+ * Only inline tasks can be renamed, and the restriction is deliberate rather
+ * than an oversight: a note task's text *is* its file name, and its ID is that
+ * file's path, so renaming one would change its identity — every dependency
+ * naming it, every parent pointing at it and its slot in the Gantt's row order
+ * would all be left naming a task that no longer exists. A `null` result says
+ * nothing was written.
+ */
+export async function setTaskTextInVault(
+  task: BaseTask,
+  description: string,
+  app: App
+): Promise<BaseTask | null> {
+  if (task.type !== "dataview" || !task.link || !task.text) return null;
+  if (!description.trim()) return null;
+
+  const vault = app?.vault;
+  if (!vault) return null;
+  const file = vault.getFileByPath(task.link);
+  if (!file) return null;
+
+  // Held in an object so the assignment inside the callback survives
+  // TypeScript's control-flow narrowing
+  const written: { line: string | null } = { line: null };
+
+  await vault.process(file, (fileContent) => {
+    const lines = fileContent.split(/\r?\n/);
+    const taskLineIdx = findTaskLineByIdOrText(lines, task.id, task.text);
+
+    if (taskLineIdx === -1) return fileContent;
+
+    const line = writeTextToTaskLine(lines[taskLineIdx], description);
+    lines[taskLineIdx] = line;
+    written.line = line;
+    return lines.join("\n");
+  });
+
+  const updatedLine = written.line;
+  if (!updatedLine) return null;
+
+  const updatedTask = parseTaskLine(updatedLine, task.link);
+  if (!updatedTask) return null;
+
+  // The line keeps its ID, but re-parsing a line without one would mint a
+  // random replacement and orphan the task's dependencies.
+  if (!updatedLine.includes(updatedTask.id)) {
+    updatedTask.id = task.id;
+  }
+  updatedTask.projects = task.projects;
+  return updatedTask;
 }
 
 export async function deleteTaskFromVault(

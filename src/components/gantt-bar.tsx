@@ -42,11 +42,15 @@ interface GanttBarProps {
   dayWidth: number;
   /**
    * A rollup of the task's children rather than work in its own right. Drawn
-   * slimmer and end-capped, and not draggable: its dates are its children's,
-   * so a drag could only write dates the chart would then ignore.
+   * slimmer and end-capped, and neither draggable nor resizable: its dates are
+   * its children's, so a drag could only write dates the chart would then
+   * ignore. It is still clickable — a parent is a task, and its words, its
+   * status and its progress are all still its own.
    */
   summary?: boolean;
   onCommit: (_result: BarDragResult) => void;
+  /** A click that moved nothing: open this task for editing. */
+  onOpen: (_taskId: string) => void;
   /** Dragging a bar up or down reorders it, like dragging its row. */
   onVerticalPreview: (_clientY: number | null) => void;
   onVerticalDrop: (_taskId: string, _clientY: number) => void;
@@ -72,6 +76,7 @@ export function GanttBar({
   dayWidth,
   summary = false,
   onCommit,
+  onOpen,
   onVerticalPreview,
   onVerticalDrop,
   selected,
@@ -86,6 +91,8 @@ export function GanttBar({
     days: number;
     pointerId: number;
     vertical: boolean;
+    /** A summary bar: it can be clicked, but it cannot be moved. */
+    readOnly: boolean;
   } | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -139,7 +146,14 @@ export function GanttBar({
 
   const handlePointerDown = useCallback(
     (mode: BarDragMode) => (event: React.PointerEvent<HTMLElement>) => {
-      if (event.button !== 0 || saving || summary) return;
+      if (event.button !== 0 || saving) return;
+
+      // A summary bar still takes the pointer, but only so a click on it can
+      // open the task. It is never dragged or resized: its dates come from its
+      // children, so a drag could only write dates the chart would ignore.
+      const readOnly = summary;
+      if (readOnly && mode !== "move") return;
+
       event.preventDefault();
       event.stopPropagation();
 
@@ -150,8 +164,9 @@ export function GanttBar({
         days: 0,
         pointerId: event.pointerId,
         vertical: false,
+        readOnly,
       };
-      setDragging(true);
+      if (!readOnly) setDragging(true);
       barRef.current?.setPointerCapture(event.pointerId);
     },
     [saving, summary]
@@ -160,7 +175,7 @@ export function GanttBar({
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
       const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!drag || drag.pointerId !== event.pointerId || drag.readOnly) return;
 
       const dx = event.clientX - drag.startX;
       const dy = event.clientY - drag.startY;
@@ -201,6 +216,12 @@ export function GanttBar({
       setDragging(false);
       barRef.current?.releasePointerCapture(event.pointerId);
 
+      // A summary bar never moved, so this is always a click
+      if (drag.readOnly) {
+        onOpen(task.id);
+        return;
+      }
+
       if (drag.vertical) {
         onVerticalPreview(null);
         onVerticalDrop(task.id, event.clientY);
@@ -209,11 +230,20 @@ export function GanttBar({
 
       const { mode, days } = drag;
 
-      // A click with no movement still counts as a click, not an edit. An
-      // inferred bar is the exception: committing it as-is turns the proposed
-      // dates into real ones.
-      if (days === 0 && !(mode === "move" && inferred)) {
+      // A click with no movement is not an edit — it opens the task.
+      //
+      // This used to be where an *inferred* bar committed its suggested dates
+      // straight to the note, and that is deliberately not gone: the editor
+      // opens with those suggested dates already filled in, so accepting them
+      // is still this one click plus the save button, only now with the dates
+      // visible before they are written. The toolbar's "apply suggested dates"
+      // is untouched and remains the way to accept them in bulk.
+      //
+      // Only a click on the bar's body opens the task. One that landed on a
+      // resize handle was a grab that went nowhere, and means nothing.
+      if (days === 0) {
         applyPreview(mode, 0);
+        if (mode === "move") onOpen(task.id);
         return;
       }
 
@@ -228,8 +258,8 @@ export function GanttBar({
     },
     [
       applyPreview,
-      inferred,
       onCommit,
+      onOpen,
       onVerticalDrop,
       onVerticalPreview,
       spanDays,
@@ -270,6 +300,7 @@ export function GanttBar({
         : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
     percent === null ? null : t("gantt.tooltip_progress", { n: percent }),
     slack,
+    t("gantt.tooltip_click_edit"),
   ]
     .filter(Boolean)
     .join("\n");
