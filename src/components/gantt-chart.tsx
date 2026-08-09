@@ -78,7 +78,15 @@ export const GANTT_SCALES: GanttScale[] = [
   { id: "months", dayWidth: 5 },
 ];
 
-export type RowPlacement = "before" | "after";
+export type RowPlacement = "before" | "after" | "inside";
+
+/**
+ * How much of a row's height reads as "drop it inside me" rather than as an
+ * insertion above or below. The edges stay wide enough to hit comfortably —
+ * reordering is the commoner move and must not become fiddly to pay for
+ * nesting.
+ */
+const NEST_BAND = 0.4;
 
 export interface RowReorder {
   movedId: string;
@@ -118,6 +126,10 @@ interface GanttChartProps {
   /** A click on a bar that moved nothing opens that task for editing. */
   onOpenTask: (_taskId: string) => void;
   onReorder: (_reorder: RowReorder) => void;
+  /** Whether dropping one task into another would be a legal nesting. */
+  canNestInto: (_movedId: string, _targetId: string) => boolean;
+  /** A task dropped into the middle of another becomes its child. */
+  onNestInto: (_movedId: string, _targetId: string) => void;
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
   onShowInMap: (_taskId: string) => void;
@@ -334,6 +346,8 @@ export function GanttChart({
   onCommit,
   onOpenTask,
   onReorder,
+  canNestInto,
+  onNestInto,
   onAddTaskAfter,
   onStartLink,
   onShowInMap,
@@ -379,9 +393,19 @@ export function GanttChart({
   const headerRows =
     laneFlags.length > 0 ? BASE_HEADER_ROWS + 1 : BASE_HEADER_ROWS;
 
-  /** Which line the pointer is over, and which side of it. */
+  /**
+   * Which line the pointer is over, and what dropping there would mean.
+   *
+   * The middle of a task row nests the dragged task inside it; the edges keep
+   * their old meaning of an insertion above or below. `movedId` is needed
+   * because whether nesting is even offered depends on what is being dragged —
+   * nothing can go inside itself or inside its own descendants.
+   */
   const resolveDropTarget = useCallback(
-    (clientY: number): { id: string; placement: RowPlacement } | null => {
+    (
+      clientY: number,
+      movedId: string
+    ): { id: string; placement: RowPlacement } | null => {
       const container = labelsRef.current;
       if (!container) return null;
 
@@ -407,18 +431,33 @@ export function GanttChart({
       if (!line?.orderId) return null;
 
       const withinRow = offset - clamped * ROW_HEIGHT;
+      const edge = (ROW_HEIGHT * (1 - NEST_BAND)) / 2;
+
+      // Only a task can hold another task. A milestone marks a date and owns
+      // nothing, so its middle goes on meaning "drop after this one".
+      const nestable =
+        line.kind === "row" &&
+        line.orderId !== movedId &&
+        canNestInto(movedId, line.orderId);
+
+      if (nestable && withinRow >= edge && withinRow <= ROW_HEIGHT - edge) {
+        return { id: line.orderId, placement: "inside" };
+      }
+
       return {
         id: line.orderId,
         placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
       };
     },
-    [headerRows, lines]
+    [canNestInto, headerRows, lines]
   );
 
   /** A bar dragged up or down shows the same drop indicator as a row drag. */
   const handleVerticalPreview = useCallback(
-    (clientY: number | null) => {
-      setDropTarget(clientY === null ? null : resolveDropTarget(clientY));
+    (clientY: number | null, movedId: string) => {
+      setDropTarget(
+        clientY === null ? null : resolveDropTarget(clientY, movedId)
+      );
     },
     [resolveDropTarget]
   );
@@ -426,11 +465,17 @@ export function GanttChart({
   const handleVerticalDrop = useCallback(
     (movedId: string, clientY: number) => {
       setDropTarget(null);
-      const target = resolveDropTarget(clientY);
+      const target = resolveDropTarget(clientY, movedId);
       if (!target || target.id === movedId) return;
+
+      if (target.placement === "inside") {
+        onNestInto(movedId, target.id);
+        return;
+      }
+
       onReorder({ movedId, targetId: target.id, placement: target.placement });
     },
-    [onReorder, resolveDropTarget]
+    [onNestInto, onReorder, resolveDropTarget]
   );
 
   const handleReorderDown = useCallback(
@@ -449,7 +494,7 @@ export function GanttChart({
     (event: React.PointerEvent<HTMLElement>) => {
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
-      setDropTarget(resolveDropTarget(event.clientY));
+      setDropTarget(resolveDropTarget(event.clientY, drag.movedId));
     },
     [resolveDropTarget]
   );
@@ -463,9 +508,14 @@ export function GanttChart({
       event.currentTarget.releasePointerCapture(event.pointerId);
       setDraggingId(null);
 
-      const target = resolveDropTarget(event.clientY);
+      const target = resolveDropTarget(event.clientY, drag.movedId);
       setDropTarget(null);
       if (!target || target.id === drag.movedId) return;
+
+      if (target.placement === "inside") {
+        onNestInto(drag.movedId, target.id);
+        return;
+      }
 
       onReorder({
         movedId: drag.movedId,
@@ -473,7 +523,7 @@ export function GanttChart({
         placement: target.placement,
       });
     },
-    [onReorder, resolveDropTarget]
+    [onNestInto, onReorder, resolveDropTarget]
   );
 
   const totalDays = inclusiveDayCount(timelineStart, timelineEnd);

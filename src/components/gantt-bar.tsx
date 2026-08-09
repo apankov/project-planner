@@ -53,7 +53,7 @@ interface GanttBarProps {
   /** A click that moved nothing: open this task for editing. */
   onOpen: (_taskId: string) => void;
   /** Dragging a bar up or down reorders it, like dragging its row. */
-  onVerticalPreview: (_clientY: number | null) => void;
+  onVerticalPreview: (_clientY: number | null, _taskId: string) => void;
   onVerticalDrop: (_taskId: string, _clientY: number) => void;
   selected: boolean;
   saving: boolean;
@@ -195,7 +195,7 @@ export function GanttBar({
       }
 
       if (drag.vertical) {
-        onVerticalPreview(event.clientY);
+        onVerticalPreview(event.clientY, task.id);
         return;
       }
 
@@ -205,7 +205,7 @@ export function GanttBar({
       drag.days = days;
       applyPreview(drag.mode, days);
     },
-    [applyPreview, dayWidth, onVerticalPreview]
+    [applyPreview, dayWidth, onVerticalPreview, task.id]
   );
 
   const endDrag = useCallback(
@@ -224,7 +224,7 @@ export function GanttBar({
       }
 
       if (drag.vertical) {
-        onVerticalPreview(null);
+        onVerticalPreview(null, task.id);
         onVerticalDrop(task.id, event.clientY);
         return;
       }

@@ -626,6 +626,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
    */
   const handleReorder = useCallback(
     ({ movedId, targetId, placement }: RowReorder) => {
+      // Nesting is a change of parent, not of order, and the chart routes it
+      // to `onNestInto` instead. Guarded rather than assumed, so the ordering
+      // code is never handed a placement it has no meaning for.
+      if (placement === "inside") return;
+
       const next = moveWithinParent(
         order,
         movedId,
@@ -1046,43 +1051,21 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   /**
-   * Asks which task this one should sit inside, and writes it.
+   * Writes a task's parent and reports it, whichever way it was asked for.
    *
-   * The candidate list leaves out the task itself and everything already
-   * nested under it — both would make a loop, and while the chart survives one
-   * (see `task-hierarchy`) it is not worth letting the user write one from the
-   * UI. Descendants are worked out over every row rather than over the current
-   * group, because a child filed under a different heading is still a child.
+   * Shared by the picker and by dragging a row into another, so a nesting made
+   * either way lands in the vault the same and undoes the same.
    */
-  const handleSetParent = useCallback(
-    async (taskId: string) => {
+  const applyParentChange = useCallback(
+    async (taskId: string, parentId: string | null) => {
       const task = tasks.find((candidate) => candidate.id === taskId);
       if (!task) return;
 
-      const descendants = collectDescendantIds(resolveParentIds(rows), taskId);
-
-      const choices = rows
-        .filter(
-          (row) => row.task.id !== taskId && !descendants.has(row.task.id)
-        )
-        .map((row) => ({
-          id: row.task.id,
-          label: plainTaskText(row.task.summary),
-        }));
-
-      const result = await promptForParent(app, {
-        taskLabel: plainTaskText(task.summary),
-        choices,
-      });
-      if (!result) return;
-
       const previous = task.parentId;
-      if (result.parentId === previous) return;
+      if (parentId === previous) return;
 
       const parentRow =
-        result.parentId === null
-          ? null
-          : rows.find((row) => row.task.id === result.parentId);
+        parentId === null ? null : rows.find((row) => row.task.id === parentId);
 
       let updated: BaseTask | null;
       try {
@@ -1095,7 +1078,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         // an ID that no longer exists after the next reload
         if (parentRow) await stampTaskId(parentRow.task);
 
-        updated = await task.setParent(result.parentId, app);
+        updated = await task.setParent(parentId, app);
       } catch (error) {
         // Stamping an ID touches two files before the parent is even written,
         // so there is more here than the write itself that can fail. Without
@@ -1136,6 +1119,74 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       );
     },
     [app, applyTaskUpdate, plugin, rows, stampTaskId, tasks]
+  );
+
+  /**
+   * Asks which task this one should sit inside, and writes it.
+   *
+   * The candidate list leaves out the task itself and everything already
+   * nested under it — both would make a loop, and while the chart survives one
+   * (see `task-hierarchy`) it is not worth letting the user write one from the
+   * UI. Descendants are worked out over every row rather than over the current
+   * group, because a child filed under a different heading is still a child.
+   */
+  const handleSetParent = useCallback(
+    async (taskId: string) => {
+      const task = tasks.find((candidate) => candidate.id === taskId);
+      if (!task) return;
+
+      const descendants = collectDescendantIds(resolveParentIds(rows), taskId);
+
+      const choices = rows
+        .filter(
+          (row) => row.task.id !== taskId && !descendants.has(row.task.id)
+        )
+        .map((row) => ({
+          id: row.task.id,
+          label: plainTaskText(row.task.summary),
+        }));
+
+      const result = await promptForParent(app, {
+        taskLabel: plainTaskText(task.summary),
+        choices,
+      });
+      if (!result) return;
+
+      await applyParentChange(taskId, result.parentId);
+    },
+    [app, applyParentChange, rows, tasks]
+  );
+
+  /**
+   * Whether one task could be dropped inside another.
+   *
+   * Asked while a drag is in flight, so it has to be cheap and it has to
+   * answer for the structure on screen: a milestone holds nothing, a task
+   * cannot go inside itself or inside its own descendants, and a drop that
+   * would only restate the parent it already has is not worth offering.
+   */
+  const canNestInto = useCallback(
+    (movedId: string, targetId: string) => {
+      if (movedId === targetId) return false;
+
+      const moved = rows.find((row) => row.task.id === movedId);
+      const target = rows.find((row) => row.task.id === targetId);
+      if (!moved || !target) return false;
+      if (moved.task.parentId === targetId) return false;
+
+      return !collectDescendantIds(resolveParentIds(rows), movedId).has(
+        targetId
+      );
+    },
+    [rows]
+  );
+
+  const handleNestInto = useCallback(
+    (movedId: string, targetId: string) => {
+      if (!canNestInto(movedId, targetId)) return;
+      void applyParentChange(movedId, targetId);
+    },
+    [applyParentChange, canNestInto]
   );
 
   /**
@@ -1511,6 +1562,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onCommit={(result) => void handleCommit(result)}
           onOpenTask={(taskId) => void handleOpenTask(taskId)}
           onReorder={handleReorder}
+          canNestInto={canNestInto}
+          onNestInto={handleNestInto}
           onAddTaskAfter={(taskId) => void addTask(taskId)}
           onStartLink={handleStartLink}
           onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}

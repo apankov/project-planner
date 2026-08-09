@@ -3322,6 +3322,19 @@ If your plugin does not need CSS, delete this file.
   box-shadow: inset 0 -2px 0 0 var(--interactive-accent);
 }
 
+/* Dropping into the middle of a row nests the dragged task inside it. Marked
+   as a filled target rather than as an insertion line, because the answer to
+   "where does it land" is this whole row, not a gap at one of its edges. */
+.tasks-map-gantt__label--drop-inside,
+.tasks-map-gantt__row--drop-inside {
+  box-shadow: inset 0 0 0 2px var(--interactive-accent);
+  background-color: color-mix(
+    in srgb,
+    var(--interactive-accent) 16%,
+    var(--background-primary)
+  );
+}
+
 .tasks-map-gantt__group-header {
   display: flex;
   align-items: center;
