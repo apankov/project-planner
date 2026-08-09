@@ -1,5 +1,6 @@
 import { diffDays } from "./date-utils";
 import { GanttRow } from "./gantt-rows";
+import { collectDescendantIds } from "./task-hierarchy";
 
 /**
  * Row ordering and grouping for the Gantt.
@@ -8,6 +9,12 @@ import { GanttRow } from "./gantt-rows";
  * Rows are drawn in that order, so dragging a row is only ever a change to
  * the list, and sorting by date is just one particular list the user can ask
  * for (and undo) rather than something the chart does on its own.
+ *
+ * The list stays flat even though the chart nests. Nesting is applied when the
+ * rows are drawn (`task-hierarchy`), which is what keeps a child inside its
+ * parent whatever the list says: the list only ever decides the order of
+ * siblings. Dragging is the one place the two meet, and `moveWithinParent` is
+ * where that is worked out.
  */
 
 export type GanttGroupBy = "none" | "tag" | "status" | "file" | "project";
@@ -86,6 +93,71 @@ export function moveRelativeTo(
 
   const insertAt = placement === "before" ? targetIndex : targetIndex + 1;
   without.splice(insertAt, 0, movedId);
+  return without;
+}
+
+/**
+ * Moves `movedId` next to `targetId`, without letting it leave its parent.
+ *
+ * Two rules, both of which fall out of the chart nesting rows it is given a
+ * flat order for:
+ *
+ * - A row can only be dropped among its own siblings. Dropping onto a row
+ *   deeper in the tree means "next to the ancestor of yours that I landed in",
+ *   which is what makes dragging a task onto a collapsed parent's neighbour do
+ *   what it looks like it does. A drop with no such ancestor — the pointer was
+ *   over another parent's subtree entirely — is refused rather than quietly
+ *   put somewhere else, because reparenting is a separate, deliberate action.
+ * - A parent takes its children with it, so a subtree moves as one block.
+ *
+ * `parentById` must be the resolved map from `task-hierarchy`, i.e. the
+ * structure actually on screen, not the raw `parentId` the tasks carry: a row
+ * whose parent was filtered out of view is a root here, and is draggable like
+ * one. The ancestor walk is capped anyway, so a caller that passes a map with
+ * a loop still left in it gets a refused drop rather than a hung view.
+ */
+export function moveWithinParent(
+  order: string[],
+  movedId: string,
+  targetId: string,
+  placement: "before" | "after",
+  parentById: ReadonlyMap<string, string | null>
+): string[] {
+  if (movedId === targetId) return [...order];
+
+  const movedParent = parentById.get(movedId) ?? null;
+
+  let sibling: string | null = targetId;
+  for (let steps = 0; steps <= parentById.size; steps++) {
+    if (sibling === null) break;
+    if ((parentById.get(sibling) ?? null) === movedParent) break;
+    sibling = parentById.get(sibling) ?? null;
+  }
+
+  // No sibling to land beside, or the target sits inside the row being moved
+  if (sibling === null || sibling === movedId) return [...order];
+  if ((parentById.get(sibling) ?? null) !== movedParent) return [...order];
+
+  const moving = collectDescendantIds(parentById, movedId);
+  const block = order.filter((id) => id === movedId || moving.has(id));
+  if (block.length === 0) return [...order];
+
+  const without = order.filter((id) => id !== movedId && !moving.has(id));
+  const targetIndex = without.indexOf(sibling);
+  if (targetIndex === -1) return [...order];
+
+  let insertAt = targetIndex;
+  if (placement === "after") {
+    // Past the sibling's own children: "after" means after the whole of it,
+    // not wedged between it and the first row nested underneath
+    const siblingSubtree = collectDescendantIds(parentById, sibling);
+    insertAt = targetIndex + 1;
+    while (insertAt < without.length && siblingSubtree.has(without[insertAt])) {
+      insertAt += 1;
+    }
+  }
+
+  without.splice(insertAt, 0, ...block);
   return without;
 }
 

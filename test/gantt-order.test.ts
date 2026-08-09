@@ -5,6 +5,7 @@ import {
   groupRows,
   isGanttGroupBy,
   moveRelativeTo,
+  moveWithinParent,
   normalizeOrder,
   orderByDate,
 } from "../src/lib/gantt-order";
@@ -153,6 +154,119 @@ describe("moveRelativeTo", () => {
       const original = [...order];
       moveRelativeTo(order, "a", "d", "after");
       expect(order).toEqual(original);
+    });
+  });
+});
+
+describe("moveWithinParent", () => {
+  /*
+   * redesign
+   *   logo
+   *   copy
+   * invoicing
+   */
+  const NESTED: ReadonlyMap<string, string | null> = new Map<
+    string,
+    string | null
+  >([
+    ["redesign", null],
+    ["logo", "redesign"],
+    ["copy", "redesign"],
+    ["invoicing", null],
+  ]);
+  const nestedOrder = ["redesign", "logo", "copy", "invoicing"];
+
+  const FLAT: ReadonlyMap<string, string | null> = new Map<
+    string,
+    string | null
+  >([
+    ["a", null],
+    ["b", null],
+    ["c", null],
+    ["d", null],
+  ]);
+
+  it("reorders siblings inside their parent", () => {
+    expect(
+      moveWithinParent(nestedOrder, "copy", "logo", "before", NESTED)
+    ).toEqual(["redesign", "copy", "logo", "invoicing"]);
+  });
+
+  it("refuses to move a child outside its parent's subtree", () => {
+    expect(
+      moveWithinParent(nestedOrder, "logo", "invoicing", "after", NESTED)
+    ).toEqual(nestedOrder);
+  });
+
+  it("takes a parent's children along when the parent moves", () => {
+    expect(
+      moveWithinParent(nestedOrder, "redesign", "invoicing", "after", NESTED)
+    ).toEqual(["invoicing", "redesign", "logo", "copy"]);
+  });
+
+  it("lands after a sibling's whole subtree, not inside it", () => {
+    const order = ["redesign", "logo", "copy", "invoicing"];
+
+    expect(
+      moveWithinParent(order, "invoicing", "redesign", "after", NESTED)
+    ).toEqual(["redesign", "logo", "copy", "invoicing"]);
+  });
+
+  it("treats a drop onto a nested row as a drop next to its ancestor", () => {
+    expect(
+      moveWithinParent(nestedOrder, "invoicing", "logo", "before", NESTED)
+    ).toEqual(["invoicing", "redesign", "logo", "copy"]);
+  });
+
+  it("behaves like a flat move when nothing is nested", () => {
+    const order = ["a", "b", "c", "d"];
+
+    expect(moveWithinParent(order, "d", "b", "before", FLAT)).toEqual(
+      moveRelativeTo(order, "d", "b", "before")
+    );
+    expect(moveWithinParent(order, "a", "c", "after", FLAT)).toEqual(
+      moveRelativeTo(order, "a", "c", "after")
+    );
+  });
+
+  describe("edge cases", () => {
+    it("is a no-op when dropped on itself", () => {
+      expect(
+        moveWithinParent(nestedOrder, "logo", "logo", "before", NESTED)
+      ).toEqual(nestedOrder);
+    });
+
+    it("refuses to drop a parent inside its own subtree", () => {
+      expect(
+        moveWithinParent(nestedOrder, "redesign", "logo", "after", NESTED)
+      ).toEqual(nestedOrder);
+    });
+
+    it("is a no-op for a target nothing knows about", () => {
+      expect(
+        moveWithinParent(nestedOrder, "logo", "missing", "after", NESTED)
+      ).toEqual(nestedOrder);
+    });
+
+    it("does not mutate the input", () => {
+      const original = [...nestedOrder];
+      moveWithinParent(nestedOrder, "copy", "logo", "before", NESTED);
+      expect(nestedOrder).toEqual(original);
+    });
+
+    it("refuses rather than hangs on a map that still loops", () => {
+      const looped: ReadonlyMap<string, string | null> = new Map<
+        string,
+        string | null
+      >([
+        ["a", "b"],
+        ["b", "a"],
+        ["c", null],
+      ]);
+
+      expect(
+        moveWithinParent(["a", "b", "c"], "c", "a", "after", looped)
+      ).toEqual(["a", "b", "c"]);
     });
   });
 });

@@ -61,6 +61,26 @@ export const PROGRESS_FIELD_REMOVAL = new RegExp(
 // sign. Deliberately strict — "40 percent" and "nearly done" are not numbers.
 export const PROGRESS_VALUE_PATTERN = /^[+-]?\d+(?:\.\d+)?\s*%?$/;
 
+// Parent field names recognized on a task line and in frontmatter. A child
+// names its parent, never the other way round, so one edit can never leave two
+// tasks disagreeing about who owns whom. The first entry is canonical: it is
+// the only spelling ever written back.
+export const PARENT_FIELD_NAMES = "parent|parentId|parent-id|parentid";
+
+// Dataview parent field: [parent:: abc123], (parent:: abc123)
+// Capturing, for reading the value (no 'g' flag, for .match())
+export const PARENT_FIELD_PATTERN = new RegExp(
+  `[[(]{1,2}(?:${PARENT_FIELD_NAMES})::\\s*([^\\])]*)[\\])]{1,2}`,
+  "i"
+);
+
+// The same field, for stripping it out of a displayed summary and out of a
+// line before rewriting it
+export const PARENT_FIELD_REMOVAL = new RegExp(
+  `[[(]{1,2}(?:${PARENT_FIELD_NAMES})::\\s*[^\\])]*[\\])]{1,2}`,
+  "gi"
+);
+
 // Cleaning patterns - for removing metadata (no capture groups)
 export const EMOJI_ID_REMOVAL = /🆔\s+\S+/g;
 export const DATAVIEW_BRACKET_ID_REMOVAL = /\[id::\s*\S+\]/g;

@@ -129,7 +129,18 @@
     "tooltip_progress": "已完成 {{n}}%",
     "risk_overdue": "已逾期",
     "risk_late_start": "本应已经开始",
-    "risk_conflict": "在“{{blocker}}”完成之前就开始"
+    "risk_conflict": "在“{{blocker}}”完成之前就开始",
+    "collapse": "折叠其中的子任务",
+    "expand": "展开其中的子任务",
+    "set_parent": "将此任务放入另一任务",
+    "parent_modal_none": "无上级任务 — 保持独立",
+    "parent_modal_placeholder": "选择“{{task}}”所属的任务",
+    "parent_set": "“{{task}}”现在属于“{{parent}}”",
+    "parent_cleared": "“{{task}}”不再属于任何任务",
+    "parent_failed": "无法更改此任务的上级任务",
+    "undo_set_parent": "更改了“{{task}}”的上级任务",
+    "bar_summary_tooltip": "{{start}} 至 {{end}} — 其中所有子任务的跨度",
+    "legend_summary": "子任务汇总"
   },
   "task_create": {
     "add_task_here": "在此添加任务",

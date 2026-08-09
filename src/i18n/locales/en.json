@@ -129,7 +129,18 @@
     "tooltip_progress": "{{n}}% complete",
     "risk_overdue": "Overdue",
     "risk_late_start": "Should have started by now",
-    "risk_conflict": "Starts before \"{{blocker}}\" finishes"
+    "risk_conflict": "Starts before \"{{blocker}}\" finishes",
+    "collapse": "Collapse the tasks inside this one",
+    "expand": "Show the tasks inside this one",
+    "set_parent": "Put this task inside another",
+    "parent_modal_none": "No parent — leave this task on its own",
+    "parent_modal_placeholder": "Pick the task \"{{task}}\" should sit inside",
+    "parent_set": "\"{{task}}\" now sits inside \"{{parent}}\"",
+    "parent_cleared": "\"{{task}}\" no longer sits inside another task",
+    "parent_failed": "Could not change which task this one sits inside",
+    "undo_set_parent": "changed what \"{{task}}\" sits inside",
+    "bar_summary_tooltip": "{{start}} to {{end}} — the span of the tasks inside this one",
+    "legend_summary": "Summary of nested tasks"
   },
   "task_create": {
     "add_task_here": "Add task here",

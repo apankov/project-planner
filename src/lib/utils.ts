@@ -18,6 +18,7 @@ import {
 import { getFrontmatterDateProperties } from "./task-dates";
 import { FINANCE_FIELD_REMOVAL, getFrontmatterFinance } from "./task-finance";
 import { getFrontmatterProgress } from "./task-progress";
+import { getFrontmatterParentId } from "./task-parent";
 import {
   ConnectionHighlight,
   EMPTY_HIGHLIGHT,
@@ -1629,6 +1630,10 @@ function parseTaskNote(
     task.dates = getFrontmatterDateProperties(frontmatter);
     task.finance = getFrontmatterFinance(frontmatter);
     task.progress = getFrontmatterProgress(frontmatter);
+    // Read here as well as in the factory: a note task's metadata lives in
+    // frontmatter, and a parent written to a note but never read back would
+    // quietly vanish on the next reload
+    task.parentId = getFrontmatterParentId(frontmatter);
 
     // Collect all incoming links from various sources
     const allIncomingLinks: string[] = [];

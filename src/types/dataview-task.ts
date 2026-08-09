@@ -21,6 +21,7 @@ import {
 } from "../lib/task-regex";
 import { TaskFinance, writeFinanceToTaskLine } from "../lib/task-finance";
 import { clampProgress, writeProgressToTaskLine } from "../lib/task-progress";
+import { normalizeParentId, writeParentToTaskLine } from "../lib/task-parent";
 
 /**
  * Dataview-style task that stores metadata inline in the task text
@@ -182,6 +183,46 @@ export class DataviewTask extends BaseTask {
       if (taskLineIdx === -1) return fileContent;
 
       const line = writeProgressToTaskLine(lines[taskLineIdx], { percent });
+      lines[taskLineIdx] = line;
+      written.line = line;
+      return lines.join("\n");
+    });
+
+    const updatedLine = written.line;
+    if (!updatedLine) return null;
+
+    const updatedTask = parseTaskLine(updatedLine, this.link);
+    if (!updatedTask) return null;
+
+    // The line keeps its ID, but re-parsing a line without one would mint a
+    // random replacement and orphan the task's dependencies.
+    if (!updatedLine.includes(updatedTask.id)) {
+      updatedTask.id = this.id;
+    }
+    updatedTask.projects = this.projects;
+    return updatedTask;
+  }
+
+  async setParent(parentId: string | null, app: App): Promise<BaseTask | null> {
+    if (!this.link || !this.text) return null;
+    const vault = app?.vault;
+    if (!vault) return null;
+    const file = vault.getFileByPath(this.link);
+    if (!file) return null;
+
+    const id = normalizeParentId(parentId);
+
+    // Held in an object so the assignment inside the callback survives
+    // TypeScript's control-flow narrowing
+    const written: { line: string | null } = { line: null };
+
+    await vault.process(file, (fileContent) => {
+      const lines = fileContent.split(/\r?\n/);
+      const taskLineIdx = findTaskLineByIdOrText(lines, this.id, this.text);
+
+      if (taskLineIdx === -1) return fileContent;
+
+      const line = writeParentToTaskLine(lines[taskLineIdx], id);
       lines[taskLineIdx] = line;
       written.line = line;
       return lines.join("\n");

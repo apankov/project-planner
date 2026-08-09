@@ -45,9 +45,20 @@ import {
   applyOrder,
   groupRows,
   moveRelativeTo,
+  moveWithinParent,
   normalizeOrder,
   orderByDate,
 } from "src/lib/gantt-order";
+import {
+  HierarchyGroup,
+  buildHierarchy,
+  collectDescendantIds,
+  parentTaskIds,
+  resolveParentIds,
+  toggleCollapsed,
+} from "src/lib/task-hierarchy";
+import { promptForParent } from "src/components/gantt-parent-modal";
+import { plainTaskText } from "src/lib/task-text";
 import {
   GANTT_SCALES,
   GanttChart,
@@ -197,6 +208,57 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [rows, groupBy]
   );
 
+  const collapsedIds = useMemo(
+    () => new Set(settings.ganttCollapsedTaskIds),
+    [settings.ganttCollapsedTaskIds]
+  );
+
+  /**
+   * Each group nested on its own, so a parent and a child that land under
+   * different headings are each drawn where their own metadata puts them
+   * rather than one dragging the other out of its group.
+   */
+  const hierarchy = useMemo(
+    () =>
+      groups.map((group) => ({
+        group,
+        ...buildHierarchy(group.rows, collapsedIds),
+      })),
+    [collapsedIds, groups]
+  );
+
+  const hierarchyGroups: HierarchyGroup[] = useMemo(
+    () =>
+      hierarchy.map(({ group, lines }) => ({
+        key: group.key,
+        label: group.label,
+        // The whole group, including rows folded away inside a collapsed
+        // parent: the heading counts tasks, not visible lines
+        count: group.rows.length,
+        lines,
+      })),
+    [hierarchy]
+  );
+
+  /**
+   * The nesting as drawn: within a group, and with loops and dangling parents
+   * already broken. Row dragging reads this rather than the raw `parentId`, so
+   * what a drag is allowed to do matches what is on screen.
+   */
+  const visibleParentById = useMemo(() => {
+    const merged = new Map<string, string | null>();
+    for (const { parentById } of hierarchy) {
+      for (const [id, parentId] of parentById) merged.set(id, parentId);
+    }
+    return merged;
+  }, [hierarchy]);
+
+  /** Tasks drawn as a summary of the rows beneath them. */
+  const summaryTaskIds = useMemo(
+    () => parentTaskIds(visibleParentById),
+    [visibleParentById]
+  );
+
   const dependencies = useMemo(() => getDependencies(rows), [rows]);
 
   // Selecting a row lights up everything it depends on and everything waiting
@@ -205,7 +267,14 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     () => getConnectionHighlight(selectedTaskId, visibleTasks),
     [selectedTaskId, visibleTasks]
   );
-  const inferredRows = useMemo(() => getInferredRows(rows), [rows]);
+  // A summary row's bar comes from its children, so there is nothing on it to
+  // apply: writing its own suggested dates would put dates in the note that
+  // the chart then ignores.
+  const inferredRows = useMemo(
+    () =>
+      getInferredRows(rows).filter((row) => !summaryTaskIds.has(row.task.id)),
+    [rows, summaryTaskIds]
+  );
 
   // Milestones belong to the chart rather than the vault, so they come from
   // settings — and the timeline has to stretch to reach them
@@ -478,12 +547,30 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const handleReorder = useCallback(
     ({ movedId, targetId, placement }: RowReorder) => {
       const current = normalizeOrder(rows, settings.ganttTaskOrder);
-      commitOrder(
-        moveRelativeTo(current, movedId, targetId, placement),
-        t("gantt.undo_reorder")
+      const next = moveWithinParent(
+        current,
+        movedId,
+        targetId,
+        placement,
+        visibleParentById
+      );
+
+      // A drop outside the row's own parent is refused, and a refused drop is
+      // not an edit worth pushing onto the undo stack
+      if (next.join("\n") === current.join("\n")) return;
+
+      commitOrder(next, t("gantt.undo_reorder"));
+    },
+    [commitOrder, rows, settings.ganttTaskOrder, visibleParentById]
+  );
+
+  const handleToggleCollapse = useCallback(
+    (taskId: string) => {
+      void plugin.setGanttCollapsedTaskIds(
+        toggleCollapsed(settings.ganttCollapsedTaskIds, taskId)
       );
     },
-    [commitOrder, rows, settings.ganttTaskOrder]
+    [plugin, settings.ganttCollapsedTaskIds]
   );
 
   const handleSortByDate = useCallback(() => {
@@ -695,6 +782,88 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       settings.ganttSkipWeekends,
       stampTaskId,
     ]
+  );
+
+  /**
+   * Asks which task this one should sit inside, and writes it.
+   *
+   * The candidate list leaves out the task itself and everything already
+   * nested under it — both would make a loop, and while the chart survives one
+   * (see `task-hierarchy`) it is not worth letting the user write one from the
+   * UI. Descendants are worked out over every row rather than over the current
+   * group, because a child filed under a different heading is still a child.
+   */
+  const handleSetParent = useCallback(
+    async (taskId: string) => {
+      const task = tasks.find((candidate) => candidate.id === taskId);
+      if (!task) return;
+
+      const descendants = collectDescendantIds(resolveParentIds(rows), taskId);
+
+      const choices = rows
+        .filter(
+          (row) => row.task.id !== taskId && !descendants.has(row.task.id)
+        )
+        .map((row) => ({
+          id: row.task.id,
+          label: plainTaskText(row.task.summary),
+        }));
+
+      const result = await promptForParent(app, {
+        taskLabel: plainTaskText(task.summary),
+        choices,
+      });
+      if (!result) return;
+
+      const previous = task.parentId;
+      if (result.parentId === previous) return;
+
+      const parentRow =
+        result.parentId === null
+          ? null
+          : rows.find((row) => row.task.id === result.parentId);
+
+      // An inline task with no ID in its line is found by its text, which is
+      // ambiguous when two tasks read the same
+      await stampTaskId(task);
+
+      // And the parent needs its ID written down too: without one in the file
+      // its ID was minted at parse time, so the child would be naming an ID
+      // that no longer exists after the next reload
+      if (parentRow) await stampTaskId(parentRow.task);
+
+      const updated = await task.setParent(result.parentId, app);
+      if (!updated) {
+        new Notice(t("gantt.parent_failed"));
+        return;
+      }
+
+      applyTaskUpdate(taskId, updated);
+
+      plugin.undoHistory.push({
+        label: t("gantt.undo_set_parent", {
+          task: plainTaskText(task.summary),
+        }),
+        undo: async () => {
+          // Read the task afresh: the line has moved on since the edit
+          const current =
+            tasksRef.current.find((candidate) => candidate.id === taskId) ??
+            updated;
+          const reverted = await current.setParent(previous, app);
+          if (reverted) applyTaskUpdate(taskId, reverted);
+        },
+      });
+
+      new Notice(
+        parentRow
+          ? t("gantt.parent_set", {
+              task: plainTaskText(task.summary),
+              parent: plainTaskText(parentRow.task.summary),
+            })
+          : t("gantt.parent_cleared", { task: plainTaskText(task.summary) })
+      );
+    },
+    [app, applyTaskUpdate, plugin, rows, stampTaskId, tasks]
   );
 
   /**
@@ -1072,7 +1241,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         </div>
       ) : (
         <GanttChart
-          groups={groups}
+          groups={hierarchyGroups}
           rows={rows}
           dependencies={dependencies}
           timelineStart={timeline.start}
@@ -1097,6 +1266,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onAddTaskAfter={(taskId) => void addTask(taskId)}
           onStartLink={handleStartLink}
           onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}
+          onToggleCollapse={handleToggleCollapse}
+          onSetParent={(taskId) => void handleSetParent(taskId)}
           onEditFinance={
             settings.financeEnabled
               ? (taskId) => void handleEditFinance(taskId)

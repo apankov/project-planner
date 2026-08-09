@@ -3,6 +3,7 @@ import { BaseTask } from "src/types/base-task";
 import { getTaskDateProperties } from "./task-dates";
 import { FINANCE_FIELD_REMOVAL, getTaskFinance } from "./task-finance";
 import { getTaskProgress } from "./task-progress";
+import { getTaskParentId } from "./task-parent";
 import { DataviewTask } from "src/types/dataview-task";
 import { NoteTask } from "src/types/note-task";
 
@@ -24,6 +25,7 @@ import {
   STAR_PATTERN,
   STAR_PATTERN_GLOBAL,
   PROGRESS_FIELD_REMOVAL,
+  PARENT_FIELD_REMOVAL,
 } from "./task-regex";
 
 const ID_MATCH_PATTERNS = [
@@ -53,6 +55,7 @@ export class TaskFactory {
       dates: getTaskDateProperties(text),
       finance: getTaskFinance(text),
       progress: getTaskProgress(text),
+      parentId: getTaskParentId(text),
     };
 
     // Return the appropriate subclass based on type
@@ -189,6 +192,7 @@ export class TaskFactory {
       .replace(TEXT_DATE_FIELD_REMOVAL, "") // Remove plain-text dates: due:2025-01-01
       .replace(FINANCE_FIELD_REMOVAL, "") // Remove finance fields: [people:: Alice 60%]
       .replace(PROGRESS_FIELD_REMOVAL, "") // Remove progress fields: [progress:: 40]
+      .replace(PARENT_FIELD_REMOVAL, "") // Remove parent fields: [parent:: a1b2c3]
       .replace(STAR_PATTERN_GLOBAL, "") // Remove star emoji: ⭐
       .replace(/([\p{Extended_Pictographic}]+(\s*[#a-zA-Z0-9_-]+)?)/gu, "") // Remove other emojis
       .replace(/([\p{Extended_Pictographic}]+)/gu, "") // Remove remaining emojis

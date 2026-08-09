@@ -40,6 +40,12 @@ interface GanttBarProps {
   /** First day of the chart, used as the origin for bar offsets. */
   timelineStart: string;
   dayWidth: number;
+  /**
+   * A rollup of the task's children rather than work in its own right. Drawn
+   * slimmer and end-capped, and not draggable: its dates are its children's,
+   * so a drag could only write dates the chart would then ignore.
+   */
+  summary?: boolean;
   onCommit: (_result: BarDragResult) => void;
   /** Dragging a bar up or down reorders it, like dragging its row. */
   onVerticalPreview: (_clientY: number | null) => void;
@@ -64,6 +70,7 @@ export function GanttBar({
   analysis,
   timelineStart,
   dayWidth,
+  summary = false,
   onCommit,
   onVerticalPreview,
   onVerticalDrop,
@@ -132,7 +139,7 @@ export function GanttBar({
 
   const handlePointerDown = useCallback(
     (mode: BarDragMode) => (event: React.PointerEvent<HTMLElement>) => {
-      if (event.button !== 0 || saving) return;
+      if (event.button !== 0 || saving || summary) return;
       event.preventDefault();
       event.stopPropagation();
 
@@ -147,7 +154,7 @@ export function GanttBar({
       setDragging(true);
       barRef.current?.setPointerCapture(event.pointerId);
     },
-    [saving]
+    [saving, summary]
   );
 
   const handlePointerMove = useCallback(
@@ -233,7 +240,8 @@ export function GanttBar({
   const classNames = [
     "tasks-map-gantt-bar",
     `tasks-map-gantt-bar--${task.status}`,
-    inferred ? "tasks-map-gantt-bar--inferred" : "",
+    summary ? "tasks-map-gantt-bar--summary" : "",
+    inferred && !summary ? "tasks-map-gantt-bar--inferred" : "",
     dragging ? "tasks-map-gantt-bar--dragging" : "",
     selected ? "tasks-map-gantt-bar--selected" : "",
     saving ? "tasks-map-gantt-bar--saving" : "",
@@ -255,9 +263,11 @@ export function GanttBar({
           : t("gantt.tooltip_slack", { n: analysis.slackDays });
 
   const tooltip = [
-    inferred
-      ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
-      : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
+    summary
+      ? t("gantt.bar_summary_tooltip", { start: bar.start, end: bar.end })
+      : inferred
+        ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
+        : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
     percent === null ? null : t("gantt.tooltip_progress", { n: percent }),
     slack,
   ]
@@ -275,18 +285,24 @@ export function GanttBar({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
-      {percent === null ? null : (
+      {percent === null || summary ? null : (
         <span ref={progressRef} className="tasks-map-gantt-bar__progress" />
       )}
-      <span
-        className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
-        onPointerDown={handlePointerDown("resize-start")}
-      />
+      {/* A summary spans its children rather than holding dates of its own,
+          so there is nothing for a resize handle to write */}
+      {!summary && (
+        <span
+          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
+          onPointerDown={handlePointerDown("resize-start")}
+        />
+      )}
       <span className="tasks-map-gantt-bar__label">{label}</span>
-      <span
-        className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
-        onPointerDown={handlePointerDown("resize-end")}
-      />
+      {!summary && (
+        <span
+          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
+          onPointerDown={handlePointerDown("resize-end")}
+        />
+      )}
     </div>
   );
 }

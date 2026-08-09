@@ -3016,6 +3016,13 @@ If your plugin does not need CSS, delete this file.
   border: 1px dashed var(--text-muted);
 }
 
+/* The same thin rail the summary bars are drawn as */
+.tasks-map-gantt-legend__swatch--summary {
+  height: 5px;
+  border-radius: 2px;
+  background: var(--text-muted);
+}
+
 .tasks-map-gantt-legend__swatch--upstream {
   background: var(--color-purple, #7c5cbf);
 }
@@ -3115,11 +3122,43 @@ If your plugin does not need CSS, delete this file.
   align-items: center;
   gap: 6px;
   height: var(--gantt-row-height);
-  padding: 0 6px 0 8px;
+  /* `--gantt-depth` is set per row through a ref: a task nested two deep sits
+     two steps in from the column's edge. Only the padding moves, so the row's
+     backdrop, its hover target and the action strip still run the full width. */
+  padding: 0 6px 0 calc(8px + var(--gantt-depth, 0) * 14px);
   box-sizing: border-box;
   cursor: pointer;
   background-color: var(--background-primary);
   border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+/* A task holding other tasks reads as a heading for them */
+.tasks-map-gantt__label--summary .tasks-map-gantt__label-text {
+  font-weight: 600;
+}
+
+/* The fold control. The empty variant keeps the slot on childless rows, so
+   names at the same depth line up whether or not they have children. */
+.tasks-map-gantt__twisty {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tasks-map-gantt__twisty:hover {
+  color: var(--text-normal);
+}
+
+.tasks-map-gantt__twisty--empty {
+  cursor: default;
 }
 
 /* A solid-colour gradient, not `background`, so the opaque colour above
@@ -3661,6 +3700,47 @@ If your plugin does not need CSS, delete this file.
   background: transparent;
   border: 1px dashed var(--text-muted);
   color: var(--text-muted);
+}
+
+/* A task holding other tasks does not draw work of its own: its bar is the
+   span of everything beneath it. Drawn the way every other Gantt draws a
+   rollup — a thin rail with a cap turned down at each end — so it reads as a
+   bracket over the rows below rather than as another job to be done. It is not
+   draggable, hence no grab cursor: the dates belong to the children.
+
+   Sits after the status colours on purpose; it shares their specificity and is
+   meant to win. */
+.tasks-map-gantt-bar--summary {
+  top: calc(var(--gantt-row-height) / 2 - 6px);
+  height: 6px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  cursor: default;
+}
+
+/* No room for a name in a 6px rail, and the label column already says it */
+.tasks-map-gantt-bar--summary .tasks-map-gantt-bar__label {
+  display: none;
+}
+
+.tasks-map-gantt-bar--summary::before,
+.tasks-map-gantt-bar--summary::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  width: 0;
+  height: 0;
+  border-top: 6px solid var(--text-muted);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+.tasks-map-gantt-bar--summary::before {
+  left: 0;
+}
+
+.tasks-map-gantt-bar--summary::after {
+  right: 0;
 }
 
 .tasks-map-gantt-bar--dragging {

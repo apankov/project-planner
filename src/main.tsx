@@ -272,6 +272,12 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists which Gantt parents are folded away. */
+  async setGanttCollapsedTaskIds(taskIds: string[]): Promise<void> {
+    this.settings.ganttCollapsedTaskIds = taskIds;
+    await this.saveSettings();
+  }
+
   /** Persists the Gantt's working-days toggle. */
   async setGanttSkipWeekends(skip: boolean): Promise<void> {
     this.settings.ganttSkipWeekends = skip;

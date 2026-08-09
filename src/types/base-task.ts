@@ -38,6 +38,12 @@ export abstract class BaseTask {
   finance: TaskFinance;
   /** How far along the task is, from the task line or from frontmatter. */
   progress: TaskProgress;
+  /**
+   * The task this one sits inside, named by ID, or null when it stands alone.
+   * Held on the child so there is only ever one place saying who owns whom;
+   * whether the ID resolves, or loops, is `task-hierarchy`'s problem.
+   */
+  parentId: string | null;
 
   constructor(data: {
     id: string;
@@ -53,6 +59,7 @@ export abstract class BaseTask {
     dates?: TaskDateProperty[];
     finance?: TaskFinance;
     progress?: TaskProgress;
+    parentId?: string | null;
   }) {
     this.id = data.id;
     this.summary = data.summary;
@@ -67,6 +74,7 @@ export abstract class BaseTask {
     this.dates = data.dates ?? [];
     this.finance = data.finance ?? EMPTY_TASK_FINANCE;
     this.progress = data.progress ?? EMPTY_TASK_PROGRESS;
+    this.parentId = data.parentId ?? null;
   }
 
   /**
@@ -138,6 +146,16 @@ export abstract class BaseTask {
   ): Promise<BaseTask | null>;
 
   /**
+   * Name the task this one sits inside, returning the updated task. `null`
+   * clears the field entirely, so one call can also lift a task back out to
+   * standing on its own.
+   */
+  abstract setParent(
+    _parentId: string | null,
+    _app: App
+  ): Promise<BaseTask | null>;
+
+  /**
    * Add link metadata to this task (for creating dependencies)
    */
   abstract addLinkMetadata(
@@ -170,6 +188,7 @@ export abstract class BaseTask {
       dates: this.dates,
       finance: this.finance,
       progress: this.progress,
+      parentId: this.parentId,
     };
   }
 }

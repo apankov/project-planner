@@ -8,8 +8,11 @@ import React, {
 import { App } from "obsidian";
 import {
   AlertTriangle,
+  ChevronDown,
+  ChevronRight,
   Coins,
   GripVertical,
+  IndentIncrease,
   Link2,
   Network,
   Plus,
@@ -25,7 +28,7 @@ import {
 } from "src/lib/date-utils";
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
 import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
-import { GanttGroup } from "src/lib/gantt-order";
+import { HierarchyGroup } from "src/lib/task-hierarchy";
 import {
   ConnectionHighlight,
   connectionKey,
@@ -76,9 +79,30 @@ export interface RowReorder {
 /** A rendered line is either a group heading or a task row. */
 type ChartLine =
   | { kind: "header"; key: string; label: string; count: number }
-  | { kind: "row"; key: string; row: GanttRow };
+  | {
+      kind: "row";
+      key: string;
+      row: GanttRow;
+      /** How far the label indents: 0 for a top-level task. */
+      depth: number;
+      hasChildren: boolean;
+      collapsed: boolean;
+    };
 
-function buildLines(groups: GanttGroup[]): ChartLine[] {
+/**
+ * Every group's heading and its visible rows, in one flat list.
+ *
+ * The nesting is already done by the time this runs — each group arrives with
+ * its own subtree flattened, rows hidden inside a collapsed parent already
+ * gone. That is deliberate: hierarchy applies *within* a group, never across
+ * one. If a parent and a child end up under different headings (they carry
+ * different tags, say) each is drawn where its own metadata puts it, as a
+ * top-level row. Indenting a child under a heading its parent is not filed
+ * under would claim a relationship the grouping has just denied, and moving
+ * the child to its parent's group would quietly overrule the grouping the user
+ * asked for.
+ */
+function buildLines(groups: HierarchyGroup[]): ChartLine[] {
   const lines: ChartLine[] = [];
 
   for (const group of groups) {
@@ -87,11 +111,18 @@ function buildLines(groups: GanttGroup[]): ChartLine[] {
         kind: "header",
         key: `group:${group.key}`,
         label: group.label,
-        count: group.rows.length,
+        count: group.count,
       });
     }
-    for (const row of group.rows) {
-      lines.push({ kind: "row", key: row.task.id, row });
+    for (const line of group.lines) {
+      lines.push({
+        kind: "row",
+        key: line.row.task.id,
+        row: line.row,
+        depth: line.depth,
+        hasChildren: line.hasChildren,
+        collapsed: line.collapsed,
+      });
     }
   }
 
@@ -99,7 +130,8 @@ function buildLines(groups: GanttGroup[]): ChartLine[] {
 }
 
 interface GanttChartProps {
-  groups: GanttGroup[];
+  /** Headings and their rows, already nested and folded. */
+  groups: HierarchyGroup[];
   rows: GanttRow[];
   dependencies: GanttDependency[];
   timelineStart: string;
@@ -130,6 +162,10 @@ interface GanttChartProps {
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
   onShowInMap: (_taskId: string) => void;
+  /** Folds a parent's subtree away, or opens it again. */
+  onToggleCollapse: (_taskId: string) => void;
+  /** Opens the picker for which task this one should sit inside. */
+  onSetParent: (_taskId: string) => void;
   /** Absent when finance is switched off, which hides the button. */
   onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
@@ -333,6 +369,8 @@ export function GanttChart({
   onAddTaskAfter,
   onStartLink,
   onShowInMap,
+  onToggleCollapse,
+  onSetParent,
   onEditFinance,
   onAddTag,
   onRemoveTag,
@@ -357,6 +395,12 @@ export function GanttChart({
   const [taggingId, setTaggingId] = useState<string | null>(null);
 
   const lines = useMemo(() => buildLines(groups), [groups]);
+
+  /** Rows the arrow layer can reach: the ones actually on screen. */
+  const visibleRows = useMemo(
+    () => lines.flatMap((line) => (line.kind === "row" ? [line.row] : [])),
+    [lines]
+  );
 
   // Milestone flags get a lane of their own, but only once there is one to
   // draw — an empty band above every chart would be a strange default
@@ -540,6 +584,17 @@ export function GanttChart({
     []
   );
 
+  // How far a child's name sits in from the column's edge. A custom property
+  // set through a ref, because inline `style` props are an ESLint error and a
+  // class per depth would cap the nesting at however many were written.
+  const setDepthRef = useCallback(
+    (depth: number) => (el: HTMLDivElement | null) => {
+      if (!el) return;
+      el.style.setProperty("--gantt-depth", String(depth));
+    },
+    []
+  );
+
   // Arrows are positioned by rendered line, so group headings push them down
   const lineIndexById = useMemo(() => {
     const index = new Map<string, number>();
@@ -549,11 +604,19 @@ export function GanttChart({
     return index;
   }, [lines]);
 
+  /**
+   * Built from the rendered lines rather than from every row, for two reasons:
+   * a summary row's bar is the rolled-up one, and a row folded away inside a
+   * collapsed parent is not here at all. The second is what keeps the arrow
+   * layer honest — a link to a hidden row is dropped rather than drawn to
+   * whichever row happens to have taken its place, the same way a link to a
+   * filtered-out task is already dropped in `getDependencies`.
+   */
   const rowByTaskId = useMemo(() => {
     const map = new Map<string, GanttRow>();
-    rows.forEach((row) => map.set(row.task.id, row));
+    visibleRows.forEach((row) => map.set(row.task.id, row));
     return map;
-  }, [rows]);
+  }, [visibleRows]);
 
   // Blocker names for the conflict messages, without the metadata a task line
   // carries around with it
@@ -608,9 +671,10 @@ export function GanttChart({
 
   const highlighting = isHighlightActive(highlight);
 
-  const rowClassName = (row: GanttRow, base: string) =>
+  const rowClassName = (row: GanttRow, base: string, extra = "") =>
     [
       base,
+      extra,
       selectedTaskIds.has(row.task.id) ? `${base}--selected` : "",
       draggingId === row.task.id ? `${base}--dragging` : "",
       dropTarget?.id === row.task.id
@@ -663,7 +727,12 @@ export function GanttChart({
             ) : (
               <div
                 key={line.key}
-                className={rowClassName(line.row, "tasks-map-gantt__label")}
+                ref={setDepthRef(line.depth)}
+                className={rowClassName(
+                  line.row,
+                  "tasks-map-gantt__label",
+                  line.hasChildren ? "tasks-map-gantt__label--summary" : ""
+                )}
                 onClick={(event) =>
                   onSelect(
                     line.row.task.id,
@@ -682,6 +751,35 @@ export function GanttChart({
                 >
                   <GripVertical size={12} />
                 </span>
+                {/* A fixed-width slot either way, so the names of a parent and
+                    of a childless task at the same depth still line up */}
+                {line.hasChildren ? (
+                  <button
+                    className="tasks-map-gantt__twisty"
+                    title={
+                      line.collapsed ? t("gantt.expand") : t("gantt.collapse")
+                    }
+                    aria-label={
+                      line.collapsed ? t("gantt.expand") : t("gantt.collapse")
+                    }
+                    aria-expanded={!line.collapsed}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggleCollapse(line.row.task.id);
+                    }}
+                  >
+                    {line.collapsed ? (
+                      <ChevronRight size={12} />
+                    ) : (
+                      <ChevronDown size={12} />
+                    )}
+                  </button>
+                ) : (
+                  <span
+                    className="tasks-map-gantt__twisty tasks-map-gantt__twisty--empty"
+                    aria-hidden="true"
+                  />
+                )}
                 {taggingId === line.row.task.id ? (
                   <span
                     className="tasks-map-gantt__tag-input"
@@ -754,6 +852,17 @@ export function GanttChart({
                     }}
                   >
                     <Link2 size={12} />
+                  </button>
+                  <button
+                    className="tasks-map-gantt__row-action"
+                    title={t("gantt.set_parent")}
+                    aria-label={t("gantt.set_parent")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSetParent(line.row.task.id);
+                    }}
+                  >
+                    <IndentIncrease size={12} />
                   </button>
                   {onEditFinance && (
                     <button
@@ -891,6 +1000,7 @@ export function GanttChart({
                     task={line.row.task}
                     bar={line.row.bar}
                     inferred={line.row.inferred}
+                    summary={line.hasChildren}
                     analysis={analysisFor(line.row.task.id)}
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
