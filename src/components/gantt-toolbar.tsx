@@ -2,6 +2,7 @@ import React from "react";
 import {
   ArrowDownWideNarrow,
   CalendarCheck,
+  Flag,
   Plus,
   RefreshCw,
   Search,
@@ -37,6 +38,7 @@ interface GanttToolbarProps {
   onGroupByChange: (_groupBy: GanttGroupBy) => void;
   onSortByDate: () => void;
   onAddTask: () => void;
+  onAddMilestone: () => void;
   onUndoOrder: () => void;
   canUndoOrder: boolean;
   /** What pressing undo would reverse, for the tooltip. */
@@ -64,6 +66,7 @@ export function GanttToolbar({
   onGroupByChange,
   onSortByDate,
   onAddTask,
+  onAddMilestone,
   onUndoOrder,
   canUndoOrder,
   undoLabel,
@@ -102,6 +105,15 @@ export function GanttToolbar({
       >
         <Plus size={14} />
         <span>{t("gantt.add_task")}</span>
+      </button>
+
+      <button
+        className="tasks-map-gantt-toolbar__button"
+        onClick={onAddMilestone}
+        title={t("gantt.add_milestone_desc")}
+      >
+        <Flag size={14} />
+        <span>{t("gantt.add_milestone")}</span>
       </button>
 
       <button

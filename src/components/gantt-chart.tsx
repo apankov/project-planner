@@ -32,9 +32,11 @@ import {
   highlightDirection,
   isHighlightActive,
 } from "src/lib/connection-highlight";
+import { GanttMilestone, milestoneStatus } from "src/lib/gantt-milestones";
 import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
 import { GanttBar, BarDragResult } from "./gantt-bar";
+import { GanttMilestoneMarker, MilestoneDragResult } from "./gantt-milestone";
 import { TagInput } from "./tag-input";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
@@ -45,6 +47,9 @@ export const ROW_HEIGHT = 34;
 
 /** Stable empty set, so switching the critical path off is not a new prop. */
 const EMPTY_KEYS: Set<string> = new Set();
+
+/** Header lanes above the rows: the month band and the day ticks. */
+const BASE_HEADER_ROWS = 2;
 
 export const MIN_LABEL_WIDTH = 140;
 export const MAX_LABEL_WIDTH = 720;
@@ -129,6 +134,10 @@ interface GanttChartProps {
   onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
   onRemoveTag: (_taskId: string, _tag: string) => void;
+  /** Named days marked across the timeline. */
+  milestones: GanttMilestone[];
+  onMoveMilestone: (_result: MilestoneDragResult) => void;
+  onEditMilestone: (_milestoneId: string) => void;
   /** Every tag in use, most common first, for the tag picker. */
   allTags: string[];
   /** Task a link is being drawn from, if any. */
@@ -327,6 +336,9 @@ export function GanttChart({
   onEditFinance,
   onAddTag,
   onRemoveTag,
+  milestones,
+  onMoveMilestone,
+  onEditMilestone,
   allTags,
   linkingFromId,
   scrollRef,
@@ -346,14 +358,19 @@ export function GanttChart({
 
   const lines = useMemo(() => buildLines(groups), [groups]);
 
+  // Milestone flags get a lane of their own, but only once there is one to
+  // draw — an empty band above every chart would be a strange default
+  const headerRows =
+    milestones.length > 0 ? BASE_HEADER_ROWS + 1 : BASE_HEADER_ROWS;
+
   /** Which row the pointer is over, and which side of it. */
   const resolveDropTarget = useCallback(
     (clientY: number): { id: string; placement: RowPlacement } | null => {
       const container = labelsRef.current;
       if (!container) return null;
 
-      // The label header spans two timeline header rows plus its border
-      const headerHeight = ROW_HEIGHT * 2 + 1;
+      // The label header spans the timeline header lanes plus its border
+      const headerHeight = ROW_HEIGHT * headerRows + 1;
       const offset =
         clientY - container.getBoundingClientRect().top - headerHeight;
       const index = Math.floor(offset / ROW_HEIGHT);
@@ -378,7 +395,7 @@ export function GanttChart({
         placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
       };
     },
-    [lines]
+    [headerRows, lines]
   );
 
   /** A bar dragged up or down shows the same drop indicator as a row drag. */
@@ -463,7 +480,8 @@ export function GanttChart({
     el.style.setProperty("--gantt-total-days", String(totalDays));
     el.style.setProperty("--gantt-row-height", `${ROW_HEIGHT}px`);
     el.style.setProperty("--gantt-today-offset", String(todayOffset));
-  }, [scale.dayWidth, totalDays, todayOffset]);
+    el.style.setProperty("--gantt-header-rows", String(headerRows));
+  }, [headerRows, scale.dayWidth, totalDays, todayOffset]);
 
   // Written separately from the geometry above so a resize drag can update it
   // without disturbing anything else
@@ -794,6 +812,12 @@ export function GanttChart({
                 </div>
               ))}
             </div>
+            {milestones.length > 0 && (
+              <div
+                className="tasks-map-gantt__milestone-lane"
+                aria-hidden="true"
+              />
+            )}
           </div>
 
           <div className="tasks-map-gantt__body">
@@ -871,6 +895,24 @@ export function GanttChart({
               )
             )}
           </div>
+
+          {/* Above both the header and the rows, so a milestone's flag stays
+              in its lane while its guide line runs the length of the chart. */}
+          {milestones.length > 0 && (
+            <div className="tasks-map-gantt__milestones">
+              {milestones.map((milestone) => (
+                <GanttMilestoneMarker
+                  key={milestone.id}
+                  milestone={milestone}
+                  status={milestoneStatus(milestone, today)}
+                  offsetDays={diffDays(timelineStart, milestone.date)}
+                  dayWidth={scale.dayWidth}
+                  onMove={onMoveMilestone}
+                  onEdit={onEditMilestone}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

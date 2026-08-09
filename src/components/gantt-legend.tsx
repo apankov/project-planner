@@ -40,6 +40,10 @@ export function GanttLegend({ showCriticalPath }: GanttLegendProps) {
         {t("gantt.legend_at_risk")}
       </span>
       <span className="tasks-map-gantt-legend__item">
+        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--milestone" />
+        {t("gantt.legend_milestone")}
+      </span>
+      <span className="tasks-map-gantt-legend__item">
         <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--upstream" />
         {t("gantt.legend_upstream")}
       </span>

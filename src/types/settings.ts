@@ -2,6 +2,7 @@ import { Language } from "../i18n";
 import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverrides } from "../lib/edge-style-manager";
+import { GanttMilestone } from "../lib/gantt-milestones";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 import { DEFAULT_RATE_NOTE_PATH } from "../lib/rate-book-note";
 
@@ -34,6 +35,8 @@ export interface TasksMapSettings {
   ganttTaskOrder: string[];
   // Measure Gantt durations in working days and keep bars off weekends
   ganttSkipWeekends: boolean;
+  // Named days marked across the Gantt timeline
+  ganttMilestones: GanttMilestone[];
   // Pick out the chain of tasks that decides the finish date, in both views
   showCriticalPath: boolean;
 
@@ -81,6 +84,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
   ganttSkipWeekends: false,
+  ganttMilestones: [],
   showCriticalPath: false,
 
   financeEnabled: false,

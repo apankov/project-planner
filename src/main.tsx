@@ -39,6 +39,7 @@ import { requestTaskFocus } from "./lib/view-focus";
 import { UndoHistory } from "./lib/undo-history";
 import { ensureRateNote } from "./lib/rate-book-note";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
+import { GanttMilestone } from "./lib/gantt-milestones";
 
 const EMBED_CODE_BLOCK = "tasks-map";
 
@@ -274,6 +275,12 @@ export default class TasksMapPlugin extends Plugin {
   /** Persists the Gantt's working-days toggle. */
   async setGanttSkipWeekends(skip: boolean): Promise<void> {
     this.settings.ganttSkipWeekends = skip;
+    await this.saveSettings();
+  }
+
+  /** Persists the Gantt's milestones; they belong to no note. */
+  async setGanttMilestones(milestones: GanttMilestone[]): Promise<void> {
+    this.settings.ganttMilestones = milestones;
     await this.saveSettings();
   }
 
