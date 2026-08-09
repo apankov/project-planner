@@ -8,15 +8,19 @@
  * one `TaskProgress` so the rest of the plugin does not care where it came
  * from.
  *
- * Progress is deliberately independent of status. A task can be marked done
- * without ever carrying a percentage, and a task sitting at 100% is not
- * silently promoted to done — the two are different claims and the plugin
- * never invents one from the other.
+ * Progress and status stay separate on disk, but one reading is derived from
+ * the other for display: a task somebody has put work into is underway
+ * whatever its checkbox still says, so any percentage above zero shows as in
+ * progress. See `effectiveTaskStatus` for what that does and does not cover —
+ * in particular, 100% is still not promoted to done, because finishing the
+ * work and declaring the task closed are different claims and only the second
+ * is the user's to make.
  *
  * Out-of-range values are clamped rather than rejected. Someone who typed 120
  * meant "finished", not "throw"; dropping the field would lose that entirely.
  */
 
+import { TaskStatus } from "../types/task";
 import {
   PROGRESS_FIELD_NAMES,
   PROGRESS_FIELD_PATTERN,
@@ -89,6 +93,28 @@ export function getTaskProgress(taskText: string): TaskProgress {
 
 export function hasProgressData(progress: TaskProgress): boolean {
   return progress.percent !== null;
+}
+
+/**
+ * The status a task reads as once its progress is taken into account.
+ *
+ * Work having started is something the percentage already tells us, so a task
+ * left on `todo` while carrying progress is shown as in progress rather than
+ * as untouched. This is a display reading only: nothing here writes to the
+ * vault, so a chart never quietly rewrites the checkboxes in someone's notes.
+ *
+ * Only `todo` is overridden. `done` and `canceled` are decisions the user has
+ * made about the task as a whole and outrank a number — a task closed at 60%
+ * is closed, not still running — and `in_progress` is already the answer.
+ * A percentage of exactly 0 means "not started yet", so it changes nothing.
+ */
+export function effectiveTaskStatus(
+  status: TaskStatus,
+  progress: TaskProgress
+): TaskStatus {
+  const percent = clampProgress(progress.percent);
+  if (status !== "todo" || percent === null || percent === 0) return status;
+  return "in_progress";
 }
 
 /**

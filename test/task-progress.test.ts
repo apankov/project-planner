@@ -2,6 +2,7 @@ import { PROGRESS_FIELD_REMOVAL } from "../src/lib/task-regex";
 import {
   EMPTY_TASK_PROGRESS,
   clampProgress,
+  effectiveTaskStatus,
   formatProgress,
   getFrontmatterProgress,
   getTaskProgress,
@@ -359,5 +360,53 @@ describe("edge cases", () => {
     getTaskProgress(makeTask("[progress:: 40]"));
 
     expect(EMPTY_TASK_PROGRESS).toEqual({ percent: null });
+  });
+});
+
+describe("effectiveTaskStatus", () => {
+  it.each([1, 40, 99, 100])(
+    "reads a todo task carrying %i%% as in progress",
+    (percent) => {
+      expect(effectiveTaskStatus("todo", { percent })).toBe("in_progress");
+    }
+  );
+
+  it("leaves a todo task with no progress alone", () => {
+    expect(effectiveTaskStatus("todo", EMPTY_TASK_PROGRESS)).toBe("todo");
+  });
+
+  it("treats zero as not started rather than as underway", () => {
+    expect(effectiveTaskStatus("todo", { percent: 0 })).toBe("todo");
+  });
+
+  it.each(["done", "canceled"] as const)(
+    "does not drag a %s task back to in progress",
+    (status) => {
+      expect(effectiveTaskStatus(status, { percent: 60 })).toBe(status);
+    }
+  );
+
+  it("leaves an in-progress task as it is", () => {
+    expect(effectiveTaskStatus("in_progress", { percent: 10 })).toBe(
+      "in_progress"
+    );
+  });
+
+  it("does not promote a finished percentage to done", () => {
+    expect(effectiveTaskStatus("todo", { percent: 100 })).toBe("in_progress");
+  });
+
+  describe("edge cases", () => {
+    it("clamps before deciding, so an over-range value still counts", () => {
+      expect(effectiveTaskStatus("todo", { percent: 250 })).toBe("in_progress");
+    });
+
+    it("treats a negative percentage as not started", () => {
+      expect(effectiveTaskStatus("todo", { percent: -20 })).toBe("todo");
+    });
+
+    it("ignores a value that is not a number at all", () => {
+      expect(effectiveTaskStatus("todo", { percent: Number.NaN })).toBe("todo");
+    });
   });
 });

@@ -43,6 +43,7 @@ import {
 } from "src/lib/gantt-milestones";
 import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
+import { effectiveTaskStatus } from "src/lib/task-progress";
 import { GanttBar, BarDragResult } from "./gantt-bar";
 import {
   GanttMilestoneMarker,
@@ -210,7 +211,10 @@ function RowLabel({
   return (
     <>
       <span
-        className={`tasks-map-gantt__status tasks-map-gantt__status--${row.task.status}`}
+        className={`tasks-map-gantt__status tasks-map-gantt__status--${effectiveTaskStatus(
+          row.task.status,
+          row.task.progress
+        )}`}
       />
       {riskMessages.length > 0 && <RiskBadge messages={riskMessages} />}
       <GanttLabelText summary={row.task.summary} app={app} />

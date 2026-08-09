@@ -3843,13 +3843,14 @@ If your plugin does not need CSS, delete this file.
 
 /* How much of the task is done, filled from the left edge.
 
-   The wash is mixed from the bar's own text colour rather than a fixed white
-   or a fixed accent, which is what lets one rule read against every variant:
-   on the solid status colours the text is white, so the fill lightens them;
-   on the dashed inferred bar the text is muted dark on the page background,
-   so the same rule darkens instead of vanishing. The right edge is a hard
-   inset line because at a low percentage the wash alone is too thin to spot,
-   and it stays legible under the critical outline and the at-risk border. */
+   The same green a finished bar is drawn in, so the fill means one thing
+   everywhere: this part is done. A task carrying any progress reads as in
+   progress (see `effectiveTaskStatus`), so the bar under it is the orange one
+   and the row divides into the share finished and the share still to do.
+
+   Solid rather than a wash, because it is now sitting against a known colour
+   rather than having to work over every status in turn. No right-hand edge
+   line either: green against orange is already a hard boundary. */
 .tasks-map-gantt-bar__progress {
   position: absolute;
   top: 0;
@@ -3858,10 +3859,16 @@ If your plugin does not need CSS, delete this file.
   width: var(--bar-progress, 0%);
   max-width: 100%;
   border-radius: 4px 0 0 4px;
-  background: color-mix(in srgb, currentcolor 30%, transparent);
-  box-shadow: inset -2px 0 0 color-mix(in srgb, currentcolor 65%, transparent);
+  background: var(--color-green, #4caf62);
   pointer-events: none;
   z-index: 0;
+}
+
+/* An inferred bar is an outline, not a filled shape — a solid green block
+   inside it would read as a real bar. Kept as a wash so the suggestion still
+   looks like a suggestion. */
+.tasks-map-gantt-bar--inferred .tasks-map-gantt-bar__progress {
+  background: color-mix(in srgb, var(--color-green, #4caf62) 35%, transparent);
 }
 
 /* Both sit above the fill: without a position they would paint underneath it,

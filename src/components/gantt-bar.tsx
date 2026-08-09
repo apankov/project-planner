@@ -3,6 +3,7 @@ import { BaseTask } from "src/types/base-task";
 import { diffDays, inclusiveDayCount } from "src/lib/date-utils";
 import { ScheduledBar } from "src/lib/gantt-schedule";
 import { plainTaskText } from "src/lib/task-text";
+import { effectiveTaskStatus } from "src/lib/task-progress";
 import { t } from "../i18n";
 
 export type BarDragMode = "move" | "resize-start" | "resize-end";
@@ -269,7 +270,7 @@ export function GanttBar({
 
   const classNames = [
     "tasks-map-gantt-bar",
-    `tasks-map-gantt-bar--${task.status}`,
+    `tasks-map-gantt-bar--${effectiveTaskStatus(task.status, task.progress)}`,
     summary ? "tasks-map-gantt-bar--summary" : "",
     inferred && !summary ? "tasks-map-gantt-bar--inferred" : "",
     dragging ? "tasks-map-gantt-bar--dragging" : "",

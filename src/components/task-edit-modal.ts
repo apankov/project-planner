@@ -1,6 +1,10 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, DropdownComponent, Modal, Setting } from "obsidian";
 import { toEpochDay } from "src/lib/date-utils";
-import { MAX_PROGRESS, MIN_PROGRESS } from "src/lib/task-progress";
+import {
+  MAX_PROGRESS,
+  MIN_PROGRESS,
+  effectiveTaskStatus,
+} from "src/lib/task-progress";
 import { TaskStatus } from "src/types/task";
 import { t } from "../i18n";
 
@@ -78,6 +82,8 @@ export class TaskEditModal extends Modal {
   private readonly resolve: (_result: TaskEditModalResult) => void;
   private resolved = false;
   private errorEl: HTMLElement | null = null;
+  /** Held so a change to the percentage can move the status with it. */
+  private statusDropdown: DropdownComponent | null = null;
 
   constructor(
     app: App,
@@ -144,6 +150,7 @@ export class TaskEditModal extends Modal {
     new Setting(container)
       .setName(t("task_edit.status"))
       .addDropdown((dropdown) => {
+        this.statusDropdown = dropdown;
         STATUSES.forEach((status) =>
           dropdown.addOption(status, t(`gantt.legend_${status}`))
         );
@@ -201,8 +208,27 @@ export class TaskEditModal extends Modal {
         input.setValue(this.progress === null ? "" : String(this.progress));
         input.onChange((value) => {
           this.progress = readProgressInput(value);
+          this.followProgressWithStatus();
         });
       });
+  }
+
+  /**
+   * Typing a percentage moves a `todo` task to in progress.
+   *
+   * The chart already reads it that way, so leaving the dropdown behind would
+   * mean saving a task that shows as underway while its checkbox still says it
+   * has not been started. The dropdown is moved rather than the value being
+   * forced at save time, so the change is on screen before the user commits to
+   * it — and they can put it back, which is why this never runs twice over the
+   * same edit.
+   */
+  private followProgressWithStatus(): void {
+    const next = effectiveTaskStatus(this.status, { percent: this.progress });
+    if (next === this.status) return;
+
+    this.status = next;
+    this.statusDropdown?.setValue(next);
   }
 
   private renderButtons(container: HTMLElement): void {
