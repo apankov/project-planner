@@ -56,6 +56,8 @@ import {
   RowReorder,
 } from "src/components/gantt-chart";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
+import { findCriticalPath } from "src/lib/critical-path";
+import { findScheduleRisks } from "src/lib/schedule-risk";
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { TasksMapSettings } from "src/types/settings";
@@ -190,6 +192,40 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [selectedTaskId, visibleTasks]
   );
   const inferredRows = useMemo(() => getInferredRows(rows), [rows]);
+
+  // Which tasks decide the finish date, and how much room the rest have. Run
+  // over the rows on screen, so filtering the chart re-asks the question of the
+  // plan you can actually see rather than of the whole vault.
+  const criticalPath = useMemo(
+    () =>
+      findCriticalPath(
+        rows.map((row) => ({
+          id: row.task.id,
+          incomingLinks: row.task.incomingLinks,
+          start: row.bar.start,
+          end: row.bar.end,
+        })),
+        { skipWeekends: settings.ganttSkipWeekends }
+      ),
+    [rows, settings.ganttSkipWeekends]
+  );
+
+  const risksByTaskId = useMemo(
+    () =>
+      findScheduleRisks(
+        rows.map((row) => ({
+          id: row.task.id,
+          incomingLinks: row.task.incomingLinks,
+          status: row.task.status,
+          start: row.bar.start,
+          end: row.bar.end,
+          startInferred: row.bar.startInferred,
+          endInferred: row.bar.endInferred,
+        })),
+        { today }
+      ),
+    [rows, today]
+  );
 
   const timeline = useMemo(
     () =>
@@ -899,6 +935,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         onHideCompletedChange={setHideCompleted}
         skipWeekends={settings.ganttSkipWeekends}
         onSkipWeekendsChange={(skip) => void plugin.setGanttSkipWeekends(skip)}
+        showCriticalPath={settings.showCriticalPath}
+        onShowCriticalPathChange={(show) =>
+          void plugin.setShowCriticalPath(show)
+        }
         taskCount={rows.length}
         groupBy={groupBy}
         onGroupByChange={setGroupBy}
@@ -942,6 +982,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           palette={settings.tagColorPalette}
           colorOverrides={settings.tagColorOverrides}
           showTags={settings.showTags}
+          criticalIds={criticalPath.criticalIds}
+          criticalEdgeKeys={criticalPath.criticalEdgeKeys}
+          floatByTaskId={criticalPath.floatByTaskId}
+          showCriticalPath={settings.showCriticalPath}
+          risksByTaskId={risksByTaskId}
           selectedTaskIds={selectedTaskIds}
           highlight={highlight}
           savingTaskIds={savingTaskIds}
@@ -967,7 +1012,20 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       )}
 
       <div className="tasks-map-gantt-footer">
-        <GanttLegend />
+        <GanttLegend showCriticalPath={settings.showCriticalPath} />
+        {settings.showCriticalPath && criticalPath.projectFinish && (
+          <div className="tasks-map-gantt-hint">
+            {t("gantt.critical_path_hint", {
+              finish: criticalPath.projectFinish,
+              n: criticalPath.criticalIds.size,
+            })}
+          </div>
+        )}
+        {risksByTaskId.size > 0 && (
+          <div className="tasks-map-gantt-hint tasks-map-gantt-hint--warning">
+            {t("gantt.at_risk_hint", { n: risksByTaskId.size })}
+          </div>
+        )}
         {selectedTaskIds.size > 1 && (
           <div className="tasks-map-gantt-hint">
             {t("gantt.moved_together_hint", { n: selectedTaskIds.size })}

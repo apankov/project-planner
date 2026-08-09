@@ -37,6 +37,7 @@ import { promptForTaskFinance } from "src/components/task-finance-modal";
 import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
 import { readRateBook } from "src/lib/rate-book-note";
 import { buildGanttRows } from "src/lib/gantt-rows";
+import { EMPTY_CRITICAL_PATH, findCriticalPath } from "src/lib/critical-path";
 import { barLength } from "src/lib/gantt-schedule";
 import { withCompanionNote } from "src/lib/companion-note";
 import { BaseTask } from "src/types/task";
@@ -421,6 +422,32 @@ export default function TaskMapGraphView({
     [highlightedTaskId, graphTasks]
   );
 
+  /**
+   * The chain of tasks deciding the finish date.
+   *
+   * The map has no timeline, so the bars are scheduled here the same way the
+   * Gantt schedules them — through `buildGanttRows` — and the answer is the
+   * one the chart would give. Skipped entirely when the toggle is off, since
+   * nothing on screen would change.
+   */
+  const criticalPath = useMemo(() => {
+    if (!settings.showCriticalPath) return EMPTY_CRITICAL_PATH;
+
+    const rows = buildGanttRows(graphTasks, {
+      skipWeekends: settings.ganttSkipWeekends,
+    });
+
+    return findCriticalPath(
+      rows.map((row) => ({
+        id: row.task.id,
+        incomingLinks: row.task.incomingLinks,
+        start: row.bar.start,
+        end: row.bar.end,
+      })),
+      { skipWeekends: settings.ganttSkipWeekends }
+    );
+  }, [graphTasks, settings.showCriticalPath, settings.ganttSkipWeekends]);
+
   // Undo runs long after its action, so it reads tasks through a ref
   const tasksRef = useRef<BaseTask[]>([]);
   useEffect(() => {
@@ -673,9 +700,13 @@ export default function TaskMapGraphView({
       handleTaskEdited,
       handleTaskCreated,
       connectionHighlight,
-      undefined,
-      undefined,
-      settings.financeEnabled ? handleEditFinance : undefined
+      {
+        enabled: settings.createCompanionNotes,
+        folder: settings.companionNoteFolder,
+      },
+      deleteTaskAndHealChain,
+      settings.financeEnabled ? handleEditFinance : undefined,
+      criticalPath.criticalIds
     );
     let newEdges = createEdgesFromTasks(
       graphTasks,
@@ -684,7 +715,8 @@ export default function TaskMapGraphView({
       settings.edgeStyle,
       settings.smoothStepRadius,
       connectionHighlight,
-      settings.edgeStyleOverrides
+      settings.edgeStyleOverrides,
+      criticalPath.criticalEdgeKeys
     );
 
     if (dropEdgeId) {
@@ -755,6 +787,7 @@ export default function TaskMapGraphView({
     droppedTaskIds,
     groupByProject,
     connectionHighlight,
+    criticalPath,
     dropEdgeId,
     deleteTaskAndHealChain,
     handleEditFinance,
@@ -1989,6 +2022,10 @@ export default function TaskMapGraphView({
                 showGroupByProject={showGroupByProject}
                 groupByProject={groupByProject}
                 setGroupByProject={setGroupByProject}
+                showCriticalPath={settings.showCriticalPath}
+                setShowCriticalPath={(show) =>
+                  void plugin.setShowCriticalPath(show)
+                }
                 onOpenGantt={embedConfig ? undefined : handleOpenGantt}
                 onUndo={() => void handleUndo()}
                 canUndo={canUndo}

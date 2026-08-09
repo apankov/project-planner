@@ -524,44 +524,108 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Tag palette: rainbow */
-.tasks-map-tag--rainbow-0 { background-color: #e05c5c; }
-.tasks-map-tag--rainbow-1 { background-color: #e07c3a; }
-.tasks-map-tag--rainbow-2 { background-color: #c9a827; }
-.tasks-map-tag--rainbow-3 { background-color: #4caf62; }
-.tasks-map-tag--rainbow-4 { background-color: #2674b5; }
-.tasks-map-tag--rainbow-5 { background-color: #7c5cbf; }
-.tasks-map-tag--rainbow-6 { background-color: #d45fa0; }
-.tasks-map-tag--rainbow-7 { background-color: #3ab8b8; }
+.tasks-map-tag--rainbow-0 {
+  background-color: #e05c5c;
+}
+.tasks-map-tag--rainbow-1 {
+  background-color: #e07c3a;
+}
+.tasks-map-tag--rainbow-2 {
+  background-color: #c9a827;
+}
+.tasks-map-tag--rainbow-3 {
+  background-color: #4caf62;
+}
+.tasks-map-tag--rainbow-4 {
+  background-color: #2674b5;
+}
+.tasks-map-tag--rainbow-5 {
+  background-color: #7c5cbf;
+}
+.tasks-map-tag--rainbow-6 {
+  background-color: #d45fa0;
+}
+.tasks-map-tag--rainbow-7 {
+  background-color: #3ab8b8;
+}
 
 /* Tag palette: ocean */
-.tasks-map-tag--ocean-0 { background-color: #1a6e8a; }
-.tasks-map-tag--ocean-1 { background-color: #2187a8; }
-.tasks-map-tag--ocean-2 { background-color: #1f9eb5; }
-.tasks-map-tag--ocean-3 { background-color: #2ab5c4; }
-.tasks-map-tag--ocean-4 { background-color: #3abfaa; }
-.tasks-map-tag--ocean-5 { background-color: #2e9e8c; }
-.tasks-map-tag--ocean-6 { background-color: #1d7e7e; }
-.tasks-map-tag--ocean-7 { background-color: #256e9e; }
+.tasks-map-tag--ocean-0 {
+  background-color: #1a6e8a;
+}
+.tasks-map-tag--ocean-1 {
+  background-color: #2187a8;
+}
+.tasks-map-tag--ocean-2 {
+  background-color: #1f9eb5;
+}
+.tasks-map-tag--ocean-3 {
+  background-color: #2ab5c4;
+}
+.tasks-map-tag--ocean-4 {
+  background-color: #3abfaa;
+}
+.tasks-map-tag--ocean-5 {
+  background-color: #2e9e8c;
+}
+.tasks-map-tag--ocean-6 {
+  background-color: #1d7e7e;
+}
+.tasks-map-tag--ocean-7 {
+  background-color: #256e9e;
+}
 
 /* Tag palette: forest */
-.tasks-map-tag--forest-0 { background-color: #2d7a3a; }
-.tasks-map-tag--forest-1 { background-color: #3a8c45; }
-.tasks-map-tag--forest-2 { background-color: #4a9e50; }
-.tasks-map-tag--forest-3 { background-color: #6aaa45; }
-.tasks-map-tag--forest-4 { background-color: #8ab035; }
-.tasks-map-tag--forest-5 { background-color: #7a9e2d; }
-.tasks-map-tag--forest-6 { background-color: #5c8c38; }
-.tasks-map-tag--forest-7 { background-color: #3d6b2d; }
+.tasks-map-tag--forest-0 {
+  background-color: #2d7a3a;
+}
+.tasks-map-tag--forest-1 {
+  background-color: #3a8c45;
+}
+.tasks-map-tag--forest-2 {
+  background-color: #4a9e50;
+}
+.tasks-map-tag--forest-3 {
+  background-color: #6aaa45;
+}
+.tasks-map-tag--forest-4 {
+  background-color: #8ab035;
+}
+.tasks-map-tag--forest-5 {
+  background-color: #7a9e2d;
+}
+.tasks-map-tag--forest-6 {
+  background-color: #5c8c38;
+}
+.tasks-map-tag--forest-7 {
+  background-color: #3d6b2d;
+}
 
 /* Tag palette: sunset */
-.tasks-map-tag--sunset-0 { background-color: #c0392b; }
-.tasks-map-tag--sunset-1 { background-color: #d45a2a; }
-.tasks-map-tag--sunset-2 { background-color: #e07030; }
-.tasks-map-tag--sunset-3 { background-color: #e09030; }
-.tasks-map-tag--sunset-4 { background-color: #c97040; }
-.tasks-map-tag--sunset-5 { background-color: #b84060; }
-.tasks-map-tag--sunset-6 { background-color: #a03070; }
-.tasks-map-tag--sunset-7 { background-color: #d04080; }
+.tasks-map-tag--sunset-0 {
+  background-color: #c0392b;
+}
+.tasks-map-tag--sunset-1 {
+  background-color: #d45a2a;
+}
+.tasks-map-tag--sunset-2 {
+  background-color: #e07030;
+}
+.tasks-map-tag--sunset-3 {
+  background-color: #e09030;
+}
+.tasks-map-tag--sunset-4 {
+  background-color: #c97040;
+}
+.tasks-map-tag--sunset-5 {
+  background-color: #b84060;
+}
+.tasks-map-tag--sunset-6 {
+  background-color: #a03070;
+}
+.tasks-map-tag--sunset-7 {
+  background-color: #d04080;
+}
 
 /* Tag palette: mono */
 .tasks-map-tag--mono-0,
@@ -571,19 +635,41 @@ If your plugin does not need CSS, delete this file.
 .tasks-map-tag--mono-4,
 .tasks-map-tag--mono-5,
 .tasks-map-tag--mono-6,
-.tasks-map-tag--mono-7 { background-color: #2674b5; }
+.tasks-map-tag--mono-7 {
+  background-color: #2674b5;
+}
 
 /* Manual per-tag colors (override the palette) */
-.tasks-map-tag--custom-red { background-color: #e05c5c; }
-.tasks-map-tag--custom-orange { background-color: #e07c3a; }
-.tasks-map-tag--custom-yellow { background-color: #c9a827; }
-.tasks-map-tag--custom-green { background-color: #4caf62; }
-.tasks-map-tag--custom-teal { background-color: #3ab8b8; }
-.tasks-map-tag--custom-blue { background-color: #2674b5; }
-.tasks-map-tag--custom-indigo { background-color: #4b5bbf; }
-.tasks-map-tag--custom-purple { background-color: #7c5cbf; }
-.tasks-map-tag--custom-pink { background-color: #d45fa0; }
-.tasks-map-tag--custom-gray { background-color: #6e7681; }
+.tasks-map-tag--custom-red {
+  background-color: #e05c5c;
+}
+.tasks-map-tag--custom-orange {
+  background-color: #e07c3a;
+}
+.tasks-map-tag--custom-yellow {
+  background-color: #c9a827;
+}
+.tasks-map-tag--custom-green {
+  background-color: #4caf62;
+}
+.tasks-map-tag--custom-teal {
+  background-color: #3ab8b8;
+}
+.tasks-map-tag--custom-blue {
+  background-color: #2674b5;
+}
+.tasks-map-tag--custom-indigo {
+  background-color: #4b5bbf;
+}
+.tasks-map-tag--custom-purple {
+  background-color: #7c5cbf;
+}
+.tasks-map-tag--custom-pink {
+  background-color: #d45fa0;
+}
+.tasks-map-tag--custom-gray {
+  background-color: #6e7681;
+}
 
 .tasks-map-graph-container.tasks-map--hide-tags .tasks-map-tag-list,
 .tasks-map-graph-container.tasks-map--hide-tags .tasks-map-task-node-footer {
@@ -882,7 +968,8 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-filter-panel.tasks-map-filter-panel--minimized .tasks-map-filter-panel__header {
+.tasks-map-filter-panel.tasks-map-filter-panel--minimized
+  .tasks-map-filter-panel__header {
   border-bottom: none;
 }
 
@@ -919,7 +1006,9 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-graph-container .tasks-map-filter-panel.tasks-map-filter-panel--minimized .tasks-map-filter-panel__header-icon {
+.tasks-map-graph-container
+  .tasks-map-filter-panel.tasks-map-filter-panel--minimized
+  .tasks-map-filter-panel__header-icon {
   border-radius: 0 8px 8px 0;
   padding: 10px;
 }
@@ -1890,7 +1979,9 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-graph-container .tasks-map-unlinked-panel--collapsed .tasks-map-unlinked-panel__header-icon {
+.tasks-map-graph-container
+  .tasks-map-unlinked-panel--collapsed
+  .tasks-map-unlinked-panel__header-icon {
   border-radius: 0 8px 8px 0;
   padding: 10px;
 }
@@ -2165,7 +2256,9 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-graph-container .tasks-map-presets-panel--collapsed .tasks-map-presets-panel__header-icon {
+.tasks-map-graph-container
+  .tasks-map-presets-panel--collapsed
+  .tasks-map-presets-panel__header-icon {
   border-radius: 0 8px 8px 0;
   padding: 10px;
 }
@@ -2315,7 +2408,8 @@ If your plugin does not need CSS, delete this file.
   border: none;
   border-radius: var(--radius-m, 8px);
   background: color-mix(in srgb, var(--interactive-accent) 6%, transparent);
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--interactive-accent) 6%, transparent);
+  box-shadow: 0 0 0 6px
+    color-mix(in srgb, var(--interactive-accent) 6%, transparent);
   outline: 2px dashed var(--interactive-accent);
   outline-offset: 6px;
 }
@@ -3181,10 +3275,18 @@ If your plugin does not need CSS, delete this file.
   background: var(--text-faint);
 }
 
-.tasks-map-gantt__status--todo { background: var(--color-blue, #2674b5); }
-.tasks-map-gantt__status--in_progress { background: var(--color-orange, #e07c3a); }
-.tasks-map-gantt__status--done { background: var(--color-green, #4caf62); }
-.tasks-map-gantt__status--canceled { background: var(--text-faint); }
+.tasks-map-gantt__status--todo {
+  background: var(--color-blue, #2674b5);
+}
+.tasks-map-gantt__status--in_progress {
+  background: var(--color-orange, #e07c3a);
+}
+.tasks-map-gantt__status--done {
+  background: var(--color-green, #4caf62);
+}
+.tasks-map-gantt__status--canceled {
+  background: var(--text-faint);
+}
 
 .tasks-map-gantt__timeline {
   position: relative;
@@ -3347,9 +3449,15 @@ If your plugin does not need CSS, delete this file.
   z-index: 2;
 }
 
-.tasks-map-gantt-bar--in_progress { background: var(--color-orange, #e07c3a); }
-.tasks-map-gantt-bar--done { background: var(--color-green, #4caf62); }
-.tasks-map-gantt-bar--canceled { background: var(--text-faint); }
+.tasks-map-gantt-bar--in_progress {
+  background: var(--color-orange, #e07c3a);
+}
+.tasks-map-gantt-bar--done {
+  background: var(--color-green, #4caf62);
+}
+.tasks-map-gantt-bar--canceled {
+  background: var(--text-faint);
+}
 
 .tasks-map-gantt-bar--inferred {
   background: transparent;
@@ -3391,4 +3499,72 @@ If your plugin does not need CSS, delete this file.
 
 .tasks-map-gantt-bar__handle:hover {
   background: rgba(255, 255, 255, 0.35);
+}
+
+/* ==========================================================================
+   Critical path and schedule risk
+
+   The critical path is the chain with no slack: slipping any of it slips the
+   whole plan, so it is drawn in red and deliberately survives the dimming a
+   selection applies to everything else. Schedule risks — overdue, never
+   started, or scheduled before the work they wait on — are amber, and marked
+   on the row rather than the bar so the reason can be read from the tooltip.
+   These rules sit last in the file on purpose: they share specificity with the
+   highlight rules above and are meant to win.
+   ========================================================================== */
+
+.tasks-map-gantt-bar--critical {
+  outline: 2px solid var(--color-red, #c0554d);
+  outline-offset: 1px;
+}
+
+.tasks-map-gantt-bar--at-risk {
+  border-left: 3px solid var(--color-yellow, #d9a441);
+}
+
+.tasks-map-gantt__arrow--critical {
+  stroke: var(--color-red, #c0554d);
+  stroke-width: 2.5;
+  opacity: 1;
+}
+
+.tasks-map-gantt__label--critical {
+  box-shadow: inset 3px 0 0 var(--color-red, #c0554d);
+}
+
+.tasks-map-gantt__label--at-risk {
+  background: color-mix(in srgb, var(--color-yellow, #d9a441) 10%, transparent);
+}
+
+.tasks-map-gantt__risk {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-yellow, #d9a441);
+  cursor: help;
+}
+
+.tasks-map-gantt-hint--warning {
+  color: var(--color-yellow, #d9a441);
+}
+
+.tasks-map-gantt-legend__swatch--critical {
+  background: transparent;
+  border: 2px solid var(--color-red, #c0554d);
+}
+
+.tasks-map-gantt-legend__swatch--at-risk {
+  background: var(--color-yellow, #d9a441);
+}
+
+/* The same chain, on the map */
+.tasks-map-task-node-root--critical {
+  box-shadow: 0 0 0 2px var(--color-red, #c0554d);
+  border-radius: var(--radius-m, 8px);
+}
+
+.tasks-map-hash-edge-path--critical {
+  stroke: var(--color-red, #c0554d);
+  stroke-width: 2.5;
+  opacity: 1;
 }

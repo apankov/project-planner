@@ -13,6 +13,8 @@ interface ControlsPanelProps {
   showGroupByProject: boolean;
   groupByProject: boolean;
   setGroupByProject: (_val: boolean) => void;
+  showCriticalPath: boolean;
+  setShowCriticalPath: (_val: boolean) => void;
   /** Omitted in embeds, where opening another view would be surprising. */
   onOpenGantt?: () => void;
   onUndo: () => void;
@@ -32,6 +34,8 @@ export default function ControlsPanel({
   showGroupByProject,
   groupByProject,
   setGroupByProject,
+  showCriticalPath,
+  setShowCriticalPath,
   onOpenGantt,
   onUndo,
   canUndo,
@@ -113,6 +117,23 @@ export default function ControlsPanel({
                 </label>
               </div>
             )}
+
+            <div className="tasks-map-filter-item">
+              <label
+                className="tasks-map-gui-overlay-checkbox-label"
+                title={t("gantt.critical_path_desc")}
+              >
+                <input
+                  type="checkbox"
+                  checked={showCriticalPath}
+                  onChange={(e) => setShowCriticalPath(e.target.checked)}
+                  className="tasks-map-gui-overlay-checkbox-input"
+                />
+                <span className="tasks-map-gui-overlay-checkbox-text">
+                  {t("gantt.critical_path")}
+                </span>
+              </label>
+            </div>
           </div>
 
           <div className="tasks-map-filter-actions">

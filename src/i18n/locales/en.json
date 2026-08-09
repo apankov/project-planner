@@ -97,7 +97,19 @@
     "undo_tag_added": "added #{{tag}}",
     "undo_tag_removed": "removed #{{tag}}",
     "undo_link": "linked {{from}} to {{to}}",
-    "undo_create": "added \"{{task}}\""
+    "undo_create": "added \"{{task}}\"",
+    "critical_path": "Critical path",
+    "critical_path_desc": "Pick out the chain of tasks that decides the finish date, and show how much slack the rest have",
+    "critical_path_hint": "Plan finishes {{finish}} — {{n}} tasks on the critical path have no slack.",
+    "legend_critical": "Critical path",
+    "legend_at_risk": "Needs attention",
+    "at_risk_hint": "{{n}} tasks need attention: overdue, never started, or scheduled before what they wait on.",
+    "tooltip_critical": "On the critical path — no slack",
+    "tooltip_slack": "{{n}} days of slack",
+    "tooltip_behind": "{{n}} days later than the plan allows",
+    "risk_overdue": "Overdue",
+    "risk_late_start": "Should have started by now",
+    "risk_conflict": "Starts before \"{{blocker}}\" finishes"
   },
   "task_create": {
     "add_task_here": "Add task here",

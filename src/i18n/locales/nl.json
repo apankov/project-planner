@@ -97,7 +97,19 @@
     "undo_tag_added": "#{{tag}} toegevoegd",
     "undo_tag_removed": "#{{tag}} verwijderd",
     "undo_link": "{{from}} aan {{to}} gekoppeld",
-    "undo_create": "\"{{task}}\" toegevoegd"
+    "undo_create": "\"{{task}}\" toegevoegd",
+    "critical_path": "Kritiek pad",
+    "critical_path_desc": "Licht de keten taken uit die de einddatum bepaalt, en toon hoeveel speling de rest heeft",
+    "critical_path_hint": "Plan eindigt {{finish}} — {{n}} taken op het kritieke pad hebben geen speling.",
+    "legend_critical": "Kritiek pad",
+    "legend_at_risk": "Vraagt aandacht",
+    "at_risk_hint": "{{n}} taken vragen aandacht: te laat, nooit begonnen, of ingepland vóór waar ze op wachten.",
+    "tooltip_critical": "Op het kritieke pad — geen speling",
+    "tooltip_slack": "{{n}} dagen speling",
+    "tooltip_behind": "{{n}} dagen later dan het plan toestaat",
+    "risk_overdue": "Te laat",
+    "risk_late_start": "Had inmiddels moeten beginnen",
+    "risk_conflict": "Begint voordat \"{{blocker}}\" klaar is"
   },
   "task_create": {
     "add_task_here": "Hier een taak toevoegen",

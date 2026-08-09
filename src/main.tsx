@@ -277,6 +277,12 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists the critical-path toggle, which the map and Gantt share. */
+  async setShowCriticalPath(show: boolean): Promise<void> {
+    this.settings.showCriticalPath = show;
+    await this.saveSettings();
+  }
+
   /** Persists per-connection line styles. */
   async setEdgeStyleOverrides(overrides: EdgeStyleOverrides): Promise<void> {
     this.settings.edgeStyleOverrides = overrides;

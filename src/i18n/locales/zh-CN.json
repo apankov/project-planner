@@ -97,7 +97,19 @@
     "undo_tag_added": "添加了 #{{tag}}",
     "undo_tag_removed": "移除了 #{{tag}}",
     "undo_link": "将 {{from}} 链接到 {{to}}",
-    "undo_create": "添加了“{{task}}”"
+    "undo_create": "添加了“{{task}}”",
+    "critical_path": "关键路径",
+    "critical_path_desc": "突出显示决定完成日期的任务链，并显示其余任务的宽余时间",
+    "critical_path_hint": "计划于 {{finish}} 完成 — 关键路径上的 {{n}} 个任务没有宽余时间。",
+    "legend_critical": "关键路径",
+    "legend_at_risk": "需要关注",
+    "at_risk_hint": "{{n}} 个任务需要关注：已逾期、尚未开始，或安排在其依赖项完成之前。",
+    "tooltip_critical": "位于关键路径 — 没有宽余时间",
+    "tooltip_slack": "宽余 {{n}} 天",
+    "tooltip_behind": "比计划允许的晚 {{n}} 天",
+    "risk_overdue": "已逾期",
+    "risk_late_start": "本应已经开始",
+    "risk_conflict": "在“{{blocker}}”完成之前就开始"
   },
   "task_create": {
     "add_task_here": "在此添加任务",

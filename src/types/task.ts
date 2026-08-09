@@ -30,6 +30,8 @@ export interface TaskNodeData {
   connected?: boolean;
   /** Off the chain while some other task is selected. */
   dimmed?: boolean;
+  /** On the chain of tasks with no slack, when that is being shown. */
+  critical?: boolean;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onDeleteTask?: (taskId: string) => void;
   onRequestDelete?: (_task: BaseTask) => Promise<void>;
@@ -47,6 +49,8 @@ export interface TaskEdgeData {
   smoothStepRadius?: number;
   connected?: boolean;
   dimmed?: boolean;
+  /** Joins two tasks with no slack between them. */
+  critical?: boolean;
   /** Which side of the selected task this connection sits on. */
   direction?: "upstream" | "downstream" | null;
   /** A dragged task is hovering here, ready to be spliced in. */

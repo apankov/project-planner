@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { App } from "obsidian";
 import {
+  AlertTriangle,
   Coins,
   GripVertical,
   Link2,
@@ -31,6 +32,8 @@ import {
   highlightDirection,
   isHighlightActive,
 } from "src/lib/connection-highlight";
+import { ScheduleRisk } from "src/lib/schedule-risk";
+import { plainTaskText } from "src/lib/task-text";
 import { GanttBar, BarDragResult } from "./gantt-bar";
 import { TagInput } from "./tag-input";
 import { LinkButton } from "./link-button";
@@ -39,6 +42,9 @@ import { TagColorOverrides, TagColorPalette } from "src/lib/tag-color-manager";
 import { t } from "../i18n";
 
 export const ROW_HEIGHT = 34;
+
+/** Stable empty set, so switching the critical path off is not a new prop. */
+const EMPTY_KEYS: Set<string> = new Set();
 
 export const MIN_LABEL_WIDTH = 140;
 export const MAX_LABEL_WIDTH = 720;
@@ -99,6 +105,14 @@ interface GanttChartProps {
   palette: TagColorPalette;
   colorOverrides: TagColorOverrides;
   showTags: boolean;
+  /** Tasks with no slack, and the links joining them, from the analysis. */
+  criticalIds: Set<string>;
+  criticalEdgeKeys: Set<string>;
+  floatByTaskId: Map<string, number>;
+  /** Whether the user has asked to see the critical path at all. */
+  showCriticalPath: boolean;
+  /** Tasks whose dates do not add up, keyed by task ID. */
+  risksByTaskId: Map<string, ScheduleRisk[]>;
   /** Every selected task; dragging one bar moves all of them. */
   selectedTaskIds: Set<string>;
   highlight: ConnectionHighlight;
@@ -136,6 +150,37 @@ function GanttLabelText({ summary, app }: { summary: string; app: App }) {
   );
 }
 
+/**
+ * One line per problem, naming the blocker a conflict is with so the message
+ * says which of several links is the broken one.
+ */
+function describeRisks(
+  risks: ScheduleRisk[],
+  nameById: Map<string, string>
+): string[] {
+  return risks.map((risk) => {
+    if (risk.kind !== "conflict") return t(`gantt.risk_${risk.kind}`);
+    return t("gantt.risk_conflict", {
+      blocker: (risk.blockerId && nameById.get(risk.blockerId)) ?? "",
+    });
+  });
+}
+
+/** The warning marker on a row whose dates do not add up. */
+function RiskBadge({ messages }: { messages: string[] }) {
+  const title = messages.join("\n");
+  return (
+    <span
+      className="tasks-map-gantt__risk"
+      title={title}
+      aria-label={title}
+      role="img"
+    >
+      <AlertTriangle size={12} />
+    </span>
+  );
+}
+
 /** The contents of a task row in the left column. */
 function RowLabel({
   row,
@@ -143,6 +188,7 @@ function RowLabel({
   palette,
   colorOverrides,
   showTags,
+  riskMessages,
   onRemoveTag,
 }: {
   row: GanttRow;
@@ -150,6 +196,7 @@ function RowLabel({
   palette: TagColorPalette;
   colorOverrides: TagColorOverrides;
   showTags: boolean;
+  riskMessages: string[];
   onRemoveTag: (_taskId: string, _tag: string) => void;
 }) {
   return (
@@ -157,6 +204,7 @@ function RowLabel({
       <span
         className={`tasks-map-gantt__status tasks-map-gantt__status--${row.task.status}`}
       />
+      {riskMessages.length > 0 && <RiskBadge messages={riskMessages} />}
       <GanttLabelText summary={row.task.summary} app={app} />
       {showTags && row.task.tags.length > 0 && (
         <span className="tasks-map-gantt__label-tags">
@@ -262,6 +310,11 @@ export function GanttChart({
   palette,
   colorOverrides,
   showTags,
+  criticalIds,
+  criticalEdgeKeys,
+  floatByTaskId,
+  showCriticalPath,
+  risksByTaskId,
   selectedTaskIds,
   highlight,
   savingTaskIds,
@@ -484,6 +537,24 @@ export function GanttChart({
     return map;
   }, [rows]);
 
+  // Blocker names for the conflict messages, without the metadata a task line
+  // carries around with it
+  const nameByTaskId = useMemo(() => {
+    const map = new Map<string, string>();
+    rows.forEach((row) =>
+      map.set(row.task.id, plainTaskText(row.task.summary))
+    );
+    return map;
+  }, [rows]);
+
+  const riskMessagesByTaskId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    risksByTaskId.forEach((risks, taskId) =>
+      map.set(taskId, describeRisks(risks, nameByTaskId))
+    );
+    return map;
+  }, [risksByTaskId, nameByTaskId]);
+
   const arrowPaths = useMemo(
     () =>
       buildArrowPaths(
@@ -492,7 +563,8 @@ export function GanttChart({
         dependencies,
         timelineStart,
         scale.dayWidth,
-        highlight
+        highlight,
+        showCriticalPath ? criticalEdgeKeys : EMPTY_KEYS
       ),
     [
       rowByTaskId,
@@ -501,7 +573,19 @@ export function GanttChart({
       timelineStart,
       scale.dayWidth,
       highlight,
+      showCriticalPath,
+      criticalEdgeKeys,
     ]
+  );
+
+  /** What the analysis says about one row, for the bar to draw. */
+  const analysisFor = useCallback(
+    (taskId: string) => ({
+      critical: showCriticalPath && criticalIds.has(taskId),
+      slackDays: showCriticalPath ? (floatByTaskId.get(taskId) ?? null) : null,
+      atRisk: risksByTaskId.has(taskId),
+    }),
+    [showCriticalPath, criticalIds, floatByTaskId, risksByTaskId]
   );
 
   const highlighting = isHighlightActive(highlight);
@@ -530,6 +614,10 @@ export function GanttChart({
       linkingFromId && linkingFromId !== row.task.id
         ? `${base}--link-target`
         : "",
+      showCriticalPath && criticalIds.has(row.task.id)
+        ? `${base}--critical`
+        : "",
+      risksByTaskId.has(row.task.id) ? `${base}--at-risk` : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -598,6 +686,9 @@ export function GanttChart({
                     palette={palette}
                     colorOverrides={colorOverrides}
                     showTags={showTags}
+                    riskMessages={
+                      riskMessagesByTaskId.get(line.row.task.id) ?? []
+                    }
                     onRemoveTag={onRemoveTag}
                   />
                 )}
@@ -767,6 +858,7 @@ export function GanttChart({
                     task={line.row.task}
                     bar={line.row.bar}
                     inferred={line.row.inferred}
+                    analysis={analysisFor(line.row.task.id)}
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
@@ -801,7 +893,8 @@ function buildArrowPaths(
   dependencies: GanttDependency[],
   timelineStart: string,
   dayWidth: number,
-  highlight: ConnectionHighlight
+  highlight: ConnectionHighlight,
+  criticalEdgeKeys: Set<string>
 ): ArrowPath[] {
   const highlighting = isHighlightActive(highlight);
   return dependencies.flatMap((dependency) => {
@@ -829,13 +922,22 @@ function buildArrowPaths(
       dependency.fromId,
       dependency.toId
     );
-    const className = !highlighting
+    const highlightClass = !highlighting
       ? ""
       : direction
         ? `tasks-map-gantt__arrow--${direction}`
         : highlight.edgeKeys.has(key)
           ? "tasks-map-gantt__arrow--connected"
           : "tasks-map-gantt__arrow--dimmed";
+
+    // The critical marking survives a selection dimming the rest of the chart:
+    // it is the one thing worth seeing whatever else is going on
+    const className = [
+      highlightClass,
+      criticalEdgeKeys.has(key) ? "tasks-map-gantt__arrow--critical" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     return [{ key, d, className }];
   });

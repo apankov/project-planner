@@ -4,8 +4,13 @@ import { t } from "../i18n";
 
 const STATUSES: TaskStatus[] = ["todo", "in_progress", "done", "canceled"];
 
+interface GanttLegendProps {
+  /** The critical entry only earns its place when the path is being drawn. */
+  showCriticalPath: boolean;
+}
+
 /** Explains what the bar colours and the dashed outline mean. */
-export function GanttLegend() {
+export function GanttLegend({ showCriticalPath }: GanttLegendProps) {
   return (
     <div className="tasks-map-gantt-legend">
       {STATUSES.map((status) => (
@@ -23,6 +28,16 @@ export function GanttLegend() {
       <span className="tasks-map-gantt-legend__item">
         <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--today" />
         {t("gantt.legend_today")}
+      </span>
+      {showCriticalPath && (
+        <span className="tasks-map-gantt-legend__item">
+          <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--critical" />
+          {t("gantt.legend_critical")}
+        </span>
+      )}
+      <span className="tasks-map-gantt-legend__item">
+        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--at-risk" />
+        {t("gantt.legend_at_risk")}
       </span>
       <span className="tasks-map-gantt-legend__item">
         <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--upstream" />
