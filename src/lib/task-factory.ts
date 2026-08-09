@@ -1,6 +1,7 @@
 import { TaskStatus, RawTask } from "src/types/task";
 import { BaseTask } from "src/types/base-task";
 import { getTaskDateProperties } from "./task-dates";
+import { FINANCE_FIELD_REMOVAL, getTaskFinance } from "./task-finance";
 import { DataviewTask } from "src/types/dataview-task";
 import { NoteTask } from "src/types/note-task";
 
@@ -48,6 +49,7 @@ export class TaskFactory {
       incomingLinks: this.parseIncomingLinks(text),
       starred: this.parseStarred(text),
       dates: getTaskDateProperties(text),
+      finance: getTaskFinance(text),
     };
 
     // Return the appropriate subclass based on type
@@ -182,6 +184,7 @@ export class TaskFactory {
       .replace(DATAVIEW_PARENTHESES_DEPENDS_PATTERN, "") // Remove Dataview dependencies: (dependsOn:: abc123,def456)
       .replace(DATAVIEW_DATE_FIELD_REMOVAL, "") // Remove Dataview dates: [due:: 2025-01-01]
       .replace(TEXT_DATE_FIELD_REMOVAL, "") // Remove plain-text dates: due:2025-01-01
+      .replace(FINANCE_FIELD_REMOVAL, "") // Remove finance fields: [people:: Alice 60%]
       .replace(STAR_PATTERN_GLOBAL, "") // Remove star emoji: ⭐
       .replace(/([\p{Extended_Pictographic}]+(\s*[#a-zA-Z0-9_-]+)?)/gu, "") // Remove other emojis
       .replace(/([\p{Extended_Pictographic}]+)/gu, "") // Remove remaining emojis

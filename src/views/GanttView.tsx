@@ -23,9 +23,17 @@ import {
   resolveDefaultTaskFile,
 } from "src/lib/utils";
 import { promptForTaskLine } from "src/components/task-line-modal";
+import { promptForTaskFinance } from "src/components/task-finance-modal";
+import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
+import { readRateBook } from "src/lib/rate-book-note";
 import { withCompanionNote } from "src/lib/companion-note";
 import { diffDays, todayIso } from "src/lib/date-utils";
-import { getTimelineRange, resizeBar, shiftBar } from "src/lib/gantt-schedule";
+import {
+  barLength,
+  getTimelineRange,
+  resizeBar,
+  shiftBar,
+} from "src/lib/gantt-schedule";
 import {
   GanttRow,
   buildGanttRows,
@@ -477,6 +485,83 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   /**
+   * Opens the finance modal for a row and writes what comes back.
+   *
+   * The row already knows its bar, so unlike the map this does not have to
+   * schedule anything — the days the modal quotes are the days on screen.
+   */
+  const handleEditFinance = useCallback(
+    async (taskId: string) => {
+      const row = rows.find((candidate) => candidate.task.id === taskId);
+      if (!row) return;
+
+      const { task } = row;
+      const { book } = await readRateBook(app, settings.financeRateNotePath);
+
+      const result = await promptForTaskFinance(app, {
+        initial: task.finance,
+        summary: task.summary,
+        days: barLength(row.bar.start, row.bar.end, settings.ganttSkipWeekends),
+        inferred: row.inferred,
+        defaultHoursPerDay: settings.financeDefaultHoursPerDay,
+        book,
+        currency: settings.financeCurrency,
+        inline: task.type === "dataview",
+      });
+
+      if (!result) return;
+
+      const finance =
+        result.action === "clear" ? EMPTY_TASK_FINANCE : result.finance;
+      const previous = task.finance;
+
+      // An inline task with no ID in its line is found by its text, which is
+      // ambiguous when two tasks read the same
+      await stampTaskId(task);
+
+      const updated = await task.setFinance(finance, app);
+      if (!updated) {
+        new Notice(t("finance.write_failed"));
+        return;
+      }
+
+      setTasks((previousTasks) =>
+        previousTasks.map((candidate) =>
+          candidate.id === taskId ? updated : candidate
+        )
+      );
+
+      plugin.undoHistory.push({
+        label: t("finance.undo_edit", { task: task.summary }),
+        undo: async () => {
+          // Read the task afresh: the line has moved on since the edit
+          const current =
+            tasksRef.current.find((candidate) => candidate.id === taskId) ??
+            updated;
+          const reverted = await current.setFinance(previous, app);
+          if (!reverted) return;
+
+          setTasks((previousTasks) =>
+            previousTasks.map((candidate) =>
+              candidate.id === taskId ? reverted : candidate
+            )
+          );
+        },
+      });
+    },
+    [
+      app,
+      plugin,
+      rows,
+      settings.financeRateNotePath,
+      settings.financeDefaultHoursPerDay,
+      settings.financeCurrency,
+      settings.ganttSkipWeekends,
+      stampTaskId,
+    ]
+  );
+
+  /**
    * Adds a task to the chart. With an anchor the line is written just below
    * it and the new row takes the next position; without one the task goes to
    * the end of the list.
@@ -866,6 +951,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onAddTaskAfter={(taskId) => void addTask(taskId)}
           onStartLink={handleStartLink}
           onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}
+          onEditFinance={
+            settings.financeEnabled
+              ? (taskId) => void handleEditFinance(taskId)
+              : undefined
+          }
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
           onRemoveTag={(taskId, tag) => void changeTag(taskId, tag, false)}
           allTags={allTags}

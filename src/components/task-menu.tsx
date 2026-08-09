@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MoreVertical, Trash2 } from "lucide-react";
+import { Coins, MoreVertical, Trash2 } from "lucide-react";
 import { App, Notice } from "obsidian";
 import { BaseTask } from "src/types/task";
 import { CirclePlus, SquarePen } from "lucide-react";
@@ -23,6 +23,8 @@ interface TaskMenuProps {
   onRequestDelete?: (_task: BaseTask) => Promise<void>;
   onTaskCreated?: (_newTask: BaseTask) => void;
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;
+  /** Provided by the view, which holds the rate book and the undo history. */
+  onEditFinance?: (_task: BaseTask) => Promise<void>;
 }
 
 const TaskMenu = ({
@@ -33,6 +35,7 @@ const TaskMenu = ({
   onRequestDelete,
   onTaskCreated,
   onTaskEdited,
+  onEditFinance,
 }: TaskMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -122,6 +125,14 @@ const TaskMenu = ({
     }
   };
 
+  const handleFinance = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsOpen(false);
+    await onEditFinance?.(task);
+  };
+
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -168,6 +179,15 @@ const TaskMenu = ({
             <SquarePen size={12} />
             <span>Edit task</span>
           </button>
+          {onEditFinance && (
+            <button
+              className="tasks-map-task-menu-item"
+              onClick={(e) => void handleFinance(e)}
+            >
+              <Coins size={12} />
+              <span>{t("finance.menu_item")}</span>
+            </button>
+          )}
           <button
             className="tasks-map-task-menu-item tasks-map-task-menu-item--danger"
             onClick={(e) => void handleDelete(e)}

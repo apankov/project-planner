@@ -2327,6 +2327,419 @@ If your plugin does not need CSS, delete this file.
   flex-wrap: wrap;
 }
 
+/* Read-only report under a setting, e.g. what the rates note yielded */
+.tasks-map-setting-status {
+  margin-top: 12px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-setting-status--warning {
+  color: var(--text-warning, var(--color-orange));
+}
+
+/* ==========================================================================
+   Finance dashboard
+
+   The charts are divs with percentage widths and heights, matching the
+   hand-rolled Gantt rather than pulling in a charting library. Geometry
+   arrives as a custom property set from a ref, since inline styles are not
+   allowed; colours come from Obsidian's theme variables only.
+   ========================================================================== */
+
+.tasks-map-finance {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tasks-map-finance__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 40px;
+}
+
+.tasks-map-finance__section {
+  margin-top: 28px;
+}
+
+.tasks-map-finance__section h3 {
+  margin: 0 0 4px;
+  font-size: var(--font-ui-medium, 15px);
+}
+
+.tasks-map-finance__note,
+.tasks-map-finance__empty {
+  margin: 0 0 8px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance__callout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius-m, 8px);
+  background: color-mix(in srgb, var(--color-orange) 12%, transparent);
+}
+
+/* Toolbar */
+.tasks-map-finance-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+
+.tasks-map-finance-toolbar__icon {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tasks-map-finance-toolbar__icon:hover {
+  color: var(--text-normal);
+}
+
+.tasks-map-finance-toolbar__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-toolbar__search input {
+  width: 12em;
+}
+
+.tasks-map-finance-toolbar__field,
+.tasks-map-finance-toolbar__toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-toolbar__chip {
+  padding: 2px 8px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-modifier-border);
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-toolbar__total {
+  margin-left: auto;
+  font-weight: var(--font-medium, 500);
+}
+
+/* KPI tiles */
+.tasks-map-finance-kpis {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tasks-map-finance-kpi {
+  flex: 1 1 140px;
+  min-width: 140px;
+  padding: 10px 14px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+}
+
+.tasks-map-finance-kpi__label {
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-kpi__value {
+  margin-top: 2px;
+  font-size: var(--font-ui-large, 20px);
+  font-weight: var(--font-medium, 500);
+}
+
+.tasks-map-finance-kpi__caveat {
+  margin-top: 4px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+/* A total resting on suggested dates says so, every time */
+.tasks-map-finance-kpi__caveat--warning {
+  color: var(--text-warning, var(--color-orange));
+}
+
+/* Bar list */
+.tasks-map-finance-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tasks-map-finance-bars__button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 3px 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  text-align: left;
+  font-size: var(--font-ui-small, 13px);
+  cursor: default;
+}
+
+.tasks-map-finance-bars__button:not(:disabled) {
+  cursor: pointer;
+}
+
+.tasks-map-finance-bars__button:not(:disabled):hover
+  .tasks-map-finance-bars__label {
+  color: var(--text-accent);
+}
+
+.tasks-map-finance-bars__label {
+  flex: 0 0 30%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tasks-map-finance-bars__detail {
+  margin-left: 8px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-bars__track {
+  flex: 1;
+  height: 10px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.tasks-map-finance-bars__fill {
+  display: block;
+  height: 100%;
+  width: var(--tasks-map-finance-bar, 0%);
+  background: var(--interactive-accent);
+}
+
+.tasks-map-finance-bars__value {
+  flex: 0 0 auto;
+  min-width: 6em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cost over time */
+.tasks-map-finance-timeline__plot {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 180px;
+  padding-top: 8px;
+  overflow-x: auto;
+}
+
+.tasks-map-finance-timeline__slot {
+  flex: 1 1 0;
+  min-width: 28px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tasks-map-finance-timeline__column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+}
+
+.tasks-map-finance-timeline__labour,
+.tasks-map-finance-timeline__materials {
+  width: 100%;
+  height: var(--tasks-map-finance-column, 0%);
+}
+
+.tasks-map-finance-timeline__labour {
+  background: var(--interactive-accent);
+}
+
+.tasks-map-finance-timeline__materials {
+  background: var(--color-orange);
+}
+
+.tasks-map-finance-timeline__tick {
+  flex: 0 0 auto;
+  padding-top: 4px;
+  font-size: var(--font-ui-smaller, 11px);
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tasks-map-finance-timeline__key {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-timeline__key-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tasks-map-finance-timeline__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.tasks-map-finance-timeline__swatch--labour {
+  background: var(--interactive-accent);
+}
+
+.tasks-map-finance-timeline__swatch--materials {
+  background: var(--color-orange);
+}
+
+/* Problems */
+.tasks-map-finance-issues,
+.tasks-map-finance-issues__details {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tasks-map-finance-issues__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  text-align: left;
+  font-size: var(--font-ui-small, 13px);
+  cursor: pointer;
+}
+
+.tasks-map-finance-issues__details {
+  padding: 2px 0 8px 22px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-issues__detail-button {
+  padding: 1px 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Finance modal. Rows are dense on purpose: a task with four people on it
+   should still fit without scrolling. */
+.tasks-map-finance-modal__task {
+  margin: 0;
+  font-weight: var(--font-medium, 500);
+}
+
+.tasks-map-finance-modal__schedule,
+.tasks-map-finance-modal__hint {
+  margin: 2px 0 0;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.tasks-map-finance-modal h4 {
+  margin: 18px 0 4px;
+}
+
+.tasks-map-finance-modal__row {
+  padding: 4px 0;
+  border-top: none;
+}
+
+.tasks-map-finance-modal__row-info {
+  display: none;
+}
+
+.tasks-map-finance-modal__row-control {
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.tasks-map-finance-modal__share,
+.tasks-map-finance-modal__amount {
+  width: 5.5em;
+}
+
+.tasks-map-finance-modal__readout {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tasks-map-finance-modal__chip {
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-modifier-border);
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+/* Shares that do not add up are shown, never quietly scaled to fit */
+.tasks-map-finance-modal__chip--warning {
+  background: color-mix(
+    in srgb,
+    var(--color-orange) 20%,
+    var(--background-modifier-border)
+  );
+  color: var(--text-normal);
+}
+
+.tasks-map-finance-modal__summary {
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+  font-weight: var(--font-medium, 500);
+}
+
 .tasks-map-tag-color-list {
   max-height: 320px;
   overflow-y: auto;

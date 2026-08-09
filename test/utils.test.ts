@@ -95,7 +95,41 @@ describe("task line tags in Tasks editor", () => {
     expect(result).toEqual({
       taskLine: "  - [ ] Write docs [id:: abc123]",
       tags: ["work", "project/docs"],
+      financeFields: [],
     });
+  });
+
+  it("carries finance fields out of the line and back in", () => {
+    const stripped = stripTaskLineTags(
+      "- [ ] Write docs #work [hours:: 12] [people:: Alice 60%, Bob 40%]"
+    );
+
+    expect(stripped.taskLine).toBe("- [ ] Write docs");
+    expect(stripped.financeFields).toEqual([
+      "[hours:: 12]",
+      "[people:: Alice 60%, Bob 40%]",
+    ]);
+
+    // What the Tasks modal hands back: reworded, with the fields gone
+    const restored = restoreTaskLineTags(
+      "- [ ] Write the docs 📅 2026-03-06",
+      stripped.tags,
+      stripped.financeFields
+    );
+
+    expect(restored).toBe(
+      "- [ ] Write the docs 📅 2026-03-06 #work [hours:: 12] [people:: Alice 60%, Bob 40%]"
+    );
+  });
+
+  it("does not duplicate a finance field the editor left alone", () => {
+    const restored = restoreTaskLineTags(
+      "- [ ] Write docs [hours:: 12]",
+      [],
+      ["[hours:: 12]"]
+    );
+
+    expect(restored).toBe("- [ ] Write docs [hours:: 12]");
   });
 
   it("restores original tags and keeps tags added in the Tasks editor", () => {

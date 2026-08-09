@@ -6,7 +6,14 @@ import React, {
   useState,
 } from "react";
 import { App } from "obsidian";
-import { GripVertical, Link2, Network, Plus, TagIcon } from "lucide-react";
+import {
+  Coins,
+  GripVertical,
+  Link2,
+  Network,
+  Plus,
+  TagIcon,
+} from "lucide-react";
 import {
   addDays,
   diffDays,
@@ -104,6 +111,8 @@ interface GanttChartProps {
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
   onShowInMap: (_taskId: string) => void;
+  /** Absent when finance is switched off, which hides the button. */
+  onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
   onRemoveTag: (_taskId: string, _tag: string) => void;
   /** Every tag in use, most common first, for the tag picker. */
@@ -262,6 +271,7 @@ export function GanttChart({
   onAddTaskAfter,
   onStartLink,
   onShowInMap,
+  onEditFinance,
   onAddTag,
   onRemoveTag,
   allTags,
@@ -627,6 +637,19 @@ export function GanttChart({
                   >
                     <Link2 size={12} />
                   </button>
+                  {onEditFinance && (
+                    <button
+                      className="tasks-map-gantt__row-action"
+                      title={t("finance.menu_item")}
+                      aria-label={t("finance.menu_item")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEditFinance(line.row.task.id);
+                      }}
+                    >
+                      <Coins size={12} />
+                    </button>
+                  )}
                   <button
                     className="tasks-map-gantt__row-action"
                     title={t("gantt.add_task_after")}

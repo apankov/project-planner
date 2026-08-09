@@ -92,6 +92,7 @@ interface TaskNodeData {
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onTaskCreated?: (_newTask: BaseTask) => void;
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;
+  onEditFinance?: (_task: BaseTask) => Promise<void>;
 }
 
 export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
@@ -111,6 +112,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     onDeleteTask,
     onTaskCreated,
     onTaskEdited,
+    onEditFinance,
   } = data;
 
   const { allTags, updateTaskTags } = useContext(TagsContext);
@@ -305,6 +307,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
             onRequestDelete={onRequestDelete}
             onTaskCreated={onTaskCreated}
             onTaskEdited={onTaskEdited}
+            onEditFinance={onEditFinance}
           />
         </div>
 

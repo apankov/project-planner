@@ -7,6 +7,7 @@ import {
   TaskDateType,
   frontmatterKeyForDate,
 } from "../lib/task-dates";
+import { TaskFinance, financeFrontmatterPatch } from "../lib/task-finance";
 
 interface DependencyEntry {
   uid: string;
@@ -125,17 +126,19 @@ export class NoteTask extends BaseTask {
     );
   }
 
-  async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {
-    if (!this.link) return null;
+  /**
+   * Reads the note's frontmatter, hands it to `mutate`, and writes back what
+   * that leaves behind. Returns false when there was nothing to write to.
+   */
+  private async updateFrontmatter(
+    app: App,
+    mutate: (_frontmatter: Record<string, unknown>) => void
+  ): Promise<boolean> {
+    if (!this.link) return false;
     const vault = app?.vault;
-    if (!vault) return null;
+    if (!vault) return false;
     const file = vault.getFileByPath(this.link);
-    if (!file) return null;
-
-    const entries = Object.entries(dates).filter(
-      ([, date]) => date !== undefined
-    ) as Array<[TaskDateType, string | null]>;
-    if (entries.length === 0) return null;
+    if (!file) return false;
 
     let wrote = false;
 
@@ -153,22 +156,72 @@ export class NoteTask extends BaseTask {
       const bodyContent = lines.slice(frontmatterEnd + 1).join("\n");
       const frontmatterData = parseYaml(frontmatterYaml) || {};
 
-      for (const [type, date] of entries) {
-        const key = frontmatterKeyForDate(type);
-        if (date === null) {
-          delete frontmatterData[key];
-        } else {
-          frontmatterData[key] = date;
-        }
-      }
+      mutate(frontmatterData);
 
       wrote = true;
       return `---\n${stringifyYaml(frontmatterData)}---\n${bodyContent}`;
     });
 
+    return wrote;
+  }
+
+  async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {
+    const entries = Object.entries(dates).filter(
+      ([, date]) => date !== undefined
+    ) as Array<[TaskDateType, string | null]>;
+    if (entries.length === 0) return null;
+
+    const wrote = await this.updateFrontmatter(app, (frontmatter) => {
+      for (const [type, date] of entries) {
+        const key = frontmatterKeyForDate(type);
+        if (date === null) {
+          delete frontmatter[key];
+        } else {
+          frontmatter[key] = date;
+        }
+      }
+    });
+
     if (!wrote) return null;
 
     return this.withDates(entries);
+  }
+
+  async setFinance(finance: TaskFinance, app: App): Promise<BaseTask | null> {
+    const { set, remove } = financeFrontmatterPatch(finance);
+
+    const wrote = await this.updateFrontmatter(app, (frontmatter) => {
+      // Every accepted spelling goes, so switching from `estimatedHours` to
+      // `hours` cannot leave the old key behind contradicting the new one
+      for (const key of remove) delete frontmatter[key];
+      Object.assign(frontmatter, set);
+    });
+
+    if (!wrote) return null;
+
+    return this.copyWith({ finance });
+  }
+
+  /** A copy of this task with a few fields swapped and the rest carried over. */
+  private copyWith(changes: {
+    dates?: TaskDateProperty[];
+    finance?: TaskFinance;
+  }): NoteTask {
+    return new NoteTask({
+      id: this.id,
+      summary: this.summary,
+      text: this.text,
+      tags: this.tags,
+      status: this.status,
+      priority: this.priority,
+      link: this.link,
+      incomingLinks: this.incomingLinks,
+      starred: this.starred,
+      projects: this.projects,
+      dates: this.dates,
+      finance: this.finance,
+      ...changes,
+    });
   }
 
   /** A copy of this task carrying the updated dates. */
@@ -181,19 +234,7 @@ export class NoteTask extends BaseTask {
       if (date !== null) nextDates.push({ type, date });
     }
 
-    return new NoteTask({
-      id: this.id,
-      summary: this.summary,
-      text: this.text,
-      tags: this.tags,
-      status: this.status,
-      priority: this.priority,
-      link: this.link,
-      incomingLinks: this.incomingLinks,
-      starred: this.starred,
-      projects: this.projects,
-      dates: nextDates,
-    });
+    return this.copyWith({ dates: nextDates });
   }
 
   async delete(app: App): Promise<void> {

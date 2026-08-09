@@ -36,6 +36,7 @@ export interface TaskNodeData {
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onTaskCreated?: (_newTask: BaseTask) => void;
   onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;
+  onEditFinance?: (_task: BaseTask) => Promise<void>;
 }
 
 export interface TaskEdgeData {

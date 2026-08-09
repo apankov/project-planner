@@ -16,6 +16,7 @@ import {
   TaskDateUpdate,
 } from "src/types/base-task";
 import { getFrontmatterDateProperties } from "./task-dates";
+import { FINANCE_FIELD_REMOVAL, getFrontmatterFinance } from "./task-finance";
 import {
   ConnectionHighlight,
   EMPTY_HIGHLIGHT,
@@ -311,10 +312,23 @@ export function parseTaskLine(
   });
 }
 
+/**
+ * Takes the metadata the Tasks plugin does not understand off a line before
+ * handing it to that plugin's edit modal, so it comes back intact.
+ *
+ * Tags were the original reason; finance fields are the same problem. The
+ * modal treats `[people:: Alice 60%]` as description text and is free to move
+ * or reword it, which would quietly corrupt a task's costing every time
+ * somebody edited it the normal way.
+ */
 export function stripTaskLineTags(taskLine: string): {
   taskLine: string;
   tags: string[];
+  financeFields: string[];
 } {
+  const financeFields = taskLine.match(FINANCE_FIELD_REMOVAL) ?? [];
+  taskLine = taskLine.replace(FINANCE_FIELD_REMOVAL, "");
+
   const tagPattern = /(?:^|\s)#(\S+)/g;
   const seenTags = new Set<string>();
   const tags = Array.from(taskLine.matchAll(tagPattern))
@@ -335,12 +349,15 @@ export function stripTaskLineTags(taskLine: string): {
   return {
     taskLine: leadingWhitespace + content,
     tags,
+    financeFields,
   };
 }
 
+/** Puts back what `stripTaskLineTags` took off, minus anything already there. */
 export function restoreTaskLineTags(
   taskLine: string,
-  originalTags: string[]
+  originalTags: string[],
+  financeFields: string[] = []
 ): string {
   const existingTags = new Set(
     Array.from(taskLine.matchAll(/(?:^|\s)#(\S+)/g)).map((match) =>
@@ -354,11 +371,18 @@ export function restoreTaskLineTags(
     return true;
   });
 
-  if (tagsToRestore.length === 0) return taskLine;
+  // The modal may have kept a field it did not understand; do not double it up
+  const fieldsToRestore = financeFields.filter(
+    (field) => !taskLine.includes(field)
+  );
 
-  return `${taskLine.trimEnd()} ${tagsToRestore
-    .map((tag) => `#${tag}`)
-    .join(" ")}`;
+  const additions = [
+    ...tagsToRestore.map((tag) => `#${tag}`),
+    ...fieldsToRestore,
+  ];
+  if (additions.length === 0) return taskLine;
+
+  return `${taskLine.trimEnd()} ${additions.join(" ")}`;
 }
 
 export async function editTaskWithTasksModal(
@@ -392,7 +416,11 @@ export async function editTaskWithTasksModal(
     );
     if (!editedTaskLine?.trim()) return null;
 
-    const newTaskLine = restoreTaskLineTags(editedTaskLine, preparedTask.tags);
+    const newTaskLine = restoreTaskLineTags(
+      editedTaskLine,
+      preparedTask.tags,
+      preparedTask.financeFields
+    );
 
     lines[taskLineIdx] = newTaskLine;
     await app.vault.modify(file, lines.join("\n"));
@@ -415,6 +443,10 @@ export async function editTaskWithTasksModal(
 // import cycle; re-exported here because callers already import it from utils.
 export type { TaskDateType, TaskDateProperty } from "./task-dates";
 export { getTaskDateProperties, findTaskDate } from "./task-dates";
+
+// Finance parsing lives in `task-finance` for the same reason.
+export type { TaskFinance, TaskAllocation, TaskExpense } from "./task-finance";
+export { getTaskFinance, hasFinanceData } from "./task-finance";
 
 /**
  * Writes start/due dates to a task and returns the refreshed task. Both task
@@ -1594,6 +1626,7 @@ function parseTaskNote(
 
     // Note tasks keep their dates in frontmatter rather than in the task text
     task.dates = getFrontmatterDateProperties(frontmatter);
+    task.finance = getFrontmatterFinance(frontmatter);
 
     // Collect all incoming links from various sources
     const allIncomingLinks: string[] = [];
@@ -1752,7 +1785,8 @@ export function createNodesFromTasks(
     enabled: false,
     folder: DEFAULT_COMPANION_FOLDER,
   },
-  onRequestDelete?: (_task: BaseTask) => Promise<void>
+  onRequestDelete?: (_task: BaseTask) => Promise<void>,
+  onEditFinance?: (_task: BaseTask) => Promise<void>
 ): TaskNode[] {
   const highlighting = isHighlightActive(highlight);
   const isVertical = layoutDirection === "Vertical";
@@ -1778,6 +1812,7 @@ export function createNodesFromTasks(
       onDeleteTask,
       onTaskEdited,
       onTaskCreated,
+      onEditFinance,
     },
     type: "task" as const,
     sourcePosition,

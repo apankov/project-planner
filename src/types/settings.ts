@@ -3,6 +3,7 @@ import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverrides } from "../lib/edge-style-manager";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
+import { DEFAULT_RATE_NOTE_PATH } from "../lib/rate-book-note";
 
 export interface FilterPreset {
   id: string;
@@ -33,6 +34,17 @@ export interface TasksMapSettings {
   ganttTaskOrder: string[];
   // Measure Gantt durations in working days and keep bars off weekends
   ganttSkipWeekends: boolean;
+
+  // Finance: hides the view, command, ribbon and menu entries when off
+  financeEnabled: boolean;
+  // Note holding the grade-to-rate and person-to-grade tables
+  financeRateNotePath: string;
+  // Hours a person works in a day when a task does not say otherwise
+  financeDefaultHoursPerDay: number;
+  // ISO currency code, formatted with Intl.NumberFormat
+  financeCurrency: string;
+  // Count tasks whose bar dates were suggested rather than written
+  financeIncludeInferred: boolean;
 
   // Per-connection line styles, keyed "sourceId->targetId"
   edgeStyleOverrides: EdgeStyleOverrides;
@@ -67,6 +79,12 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
   ganttSkipWeekends: false,
+
+  financeEnabled: false,
+  financeRateNotePath: DEFAULT_RATE_NOTE_PATH,
+  financeDefaultHoursPerDay: 8,
+  financeCurrency: "USD",
+  financeIncludeInferred: true,
 
   edgeStyleOverrides: {},
 

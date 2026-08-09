@@ -67,6 +67,18 @@ export class Notice {
 }
 
 /**
+ * Obsidian's normalizePath: forward slashes, no doubled or edge slashes, and
+ * Unicode composed so two spellings of the same name resolve to one path.
+ */
+export function normalizePath(path: string): string {
+  return path
+    .replace(/([\\/])+/g, "/")
+    .replace(/(^\/+|\/+$)/g, "")
+    .trim()
+    .normalize("NFC");
+}
+
+/**
  * Wrapper around yaml for Obsidian's parseYaml API
  * Matches Obsidian's behavior
  */
