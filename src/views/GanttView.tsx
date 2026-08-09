@@ -1084,16 +1084,27 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           ? null
           : rows.find((row) => row.task.id === result.parentId);
 
-      // An inline task with no ID in its line is found by its text, which is
-      // ambiguous when two tasks read the same
-      await stampTaskId(task);
+      let updated: BaseTask | null;
+      try {
+        // An inline task with no ID in its line is found by its text, which is
+        // ambiguous when two tasks read the same
+        await stampTaskId(task);
 
-      // And the parent needs its ID written down too: without one in the file
-      // its ID was minted at parse time, so the child would be naming an ID
-      // that no longer exists after the next reload
-      if (parentRow) await stampTaskId(parentRow.task);
+        // And the parent needs its ID written down too: without one in the
+        // file its ID was minted at parse time, so the child would be naming
+        // an ID that no longer exists after the next reload
+        if (parentRow) await stampTaskId(parentRow.task);
 
-      const updated = await task.setParent(result.parentId, app);
+        updated = await task.setParent(result.parentId, app);
+      } catch (error) {
+        // Stamping an ID touches two files before the parent is even written,
+        // so there is more here than the write itself that can fail. Without
+        // this the whole thing failed mutely and the button looked broken.
+        console.error("Failed to set the task's parent", error);
+        new Notice(t("gantt.parent_failed"));
+        return;
+      }
+
       if (!updated) {
         new Notice(t("gantt.parent_failed"));
         return;

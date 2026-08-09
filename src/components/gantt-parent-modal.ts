@@ -52,13 +52,30 @@ export class GanttParentModal extends FuzzySuggestModal<ParentChoice> {
   }
 
   onChooseItem(choice: ParentChoice): void {
-    this.resolved = true;
-    this.resolve({ parentId: choice.id });
+    this.settle({ parentId: choice.id });
   }
 
+  /**
+   * Closing settles as a cancel, but only if a choice has not beaten it to it,
+   * and only after the current task has run.
+   *
+   * A suggest modal closes itself around the moment it hands the choice back,
+   * and the two do not arrive in a guaranteed order — resolving the cancel
+   * inline meant a pick could be thrown away by the close that the pick itself
+   * caused, which looked from the outside like the button doing nothing at
+   * all. Deferring by a tick lets `onChooseItem` land first whichever way the
+   * ordering falls; a real cancel has nothing to lose the race to.
+   */
   onClose(): void {
     super.onClose();
-    if (!this.resolved) this.resolve(null);
+    window.setTimeout(() => this.settle(null), 0);
+  }
+
+  /** The promise is settled once; whatever gets here first wins. */
+  private settle(result: ParentModalResult): void {
+    if (this.resolved) return;
+    this.resolved = true;
+    this.resolve(result);
   }
 }
 
