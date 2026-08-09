@@ -272,6 +272,12 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists which Gantt parents are folded away. */
+  async setGanttCollapsedTaskIds(taskIds: string[]): Promise<void> {
+    this.settings.ganttCollapsedTaskIds = taskIds;
+    await this.saveSettings();
+  }
+
   /** Persists the Gantt's working-days toggle. */
   async setGanttSkipWeekends(skip: boolean): Promise<void> {
     this.settings.ganttSkipWeekends = skip;
@@ -287,6 +293,12 @@ export default class TasksMapPlugin extends Plugin {
   /** Persists the critical-path toggle, which the map and Gantt share. */
   async setShowCriticalPath(show: boolean): Promise<void> {
     this.settings.showCriticalPath = show;
+    await this.saveSettings();
+  }
+
+  /** Persists the Gantt's schedule-warning toggle. */
+  async setGanttShowWarnings(show: boolean): Promise<void> {
+    this.settings.ganttShowWarnings = show;
     await this.saveSettings();
   }
 

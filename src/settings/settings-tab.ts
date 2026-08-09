@@ -322,6 +322,18 @@ export class TasksMapSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl)
+      .setName(t("settings.gantt_show_warnings"))
+      .setDesc(t("settings.gantt_show_warnings_desc"))
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.ganttShowWarnings)
+          .onChange(async (value) => {
+            this.plugin.settings.ganttShowWarnings = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     new Setting(containerEl).setHeading().setName(t("settings.layout"));
 
     new Setting(containerEl)

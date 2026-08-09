@@ -3,6 +3,7 @@ import { BaseTask } from "src/types/base-task";
 import { diffDays, inclusiveDayCount } from "src/lib/date-utils";
 import { ScheduledBar } from "src/lib/gantt-schedule";
 import { plainTaskText } from "src/lib/task-text";
+import { effectiveTaskStatus } from "src/lib/task-progress";
 import { t } from "../i18n";
 
 export type BarDragMode = "move" | "resize-start" | "resize-end";
@@ -40,9 +41,19 @@ interface GanttBarProps {
   /** First day of the chart, used as the origin for bar offsets. */
   timelineStart: string;
   dayWidth: number;
+  /**
+   * A rollup of the task's children rather than work in its own right. Drawn
+   * slimmer and end-capped, and neither draggable nor resizable: its dates are
+   * its children's, so a drag could only write dates the chart would then
+   * ignore. It is still clickable — a parent is a task, and its words, its
+   * status and its progress are all still its own.
+   */
+  summary?: boolean;
   onCommit: (_result: BarDragResult) => void;
+  /** A click that moved nothing: open this task for editing. */
+  onOpen: (_taskId: string) => void;
   /** Dragging a bar up or down reorders it, like dragging its row. */
-  onVerticalPreview: (_clientY: number | null) => void;
+  onVerticalPreview: (_clientY: number | null, _taskId: string) => void;
   onVerticalDrop: (_taskId: string, _clientY: number) => void;
   selected: boolean;
   saving: boolean;
@@ -64,13 +75,16 @@ export function GanttBar({
   analysis,
   timelineStart,
   dayWidth,
+  summary = false,
   onCommit,
+  onOpen,
   onVerticalPreview,
   onVerticalDrop,
   selected,
   saving,
 }: GanttBarProps) {
   const barRef = useRef<HTMLDivElement | null>(null);
+  const progressRef = useRef<HTMLSpanElement | null>(null);
   const dragRef = useRef<{
     mode: BarDragMode;
     startX: number;
@@ -78,12 +92,16 @@ export function GanttBar({
     days: number;
     pointerId: number;
     vertical: boolean;
+    /** A summary bar: it can be clicked, but it cannot be moved. */
+    readOnly: boolean;
   } | null>(null);
   const [dragging, setDragging] = useState(false);
 
   const label = plainTaskText(task.summary);
   const offsetDays = diffDays(timelineStart, bar.start);
   const spanDays = inclusiveDayCount(bar.start, bar.end);
+  /** How much of the task is done, or null when it carries no progress. */
+  const percent = task.progress.percent;
 
   // Positioned before paint so a bar never flashes at the timeline origin
   useLayoutEffect(() => {
@@ -92,6 +110,14 @@ export function GanttBar({
     el.style.setProperty("--bar-offset", String(offsetDays));
     el.style.setProperty("--bar-span", String(spanDays));
   }, [offsetDays, spanDays]);
+
+  // The fill is its own element, so a task with no progress renders nothing
+  // extra at all — the ref is null and this does not run
+  useLayoutEffect(() => {
+    const el = progressRef.current;
+    if (!el) return;
+    el.style.setProperty("--bar-progress", `${percent ?? 0}%`);
+  }, [percent]);
 
   const applyPreview = useCallback(
     (mode: BarDragMode, days: number) => {
@@ -122,6 +148,13 @@ export function GanttBar({
   const handlePointerDown = useCallback(
     (mode: BarDragMode) => (event: React.PointerEvent<HTMLElement>) => {
       if (event.button !== 0 || saving) return;
+
+      // A summary bar still takes the pointer, but only so a click on it can
+      // open the task. It is never dragged or resized: its dates come from its
+      // children, so a drag could only write dates the chart would ignore.
+      const readOnly = summary;
+      if (readOnly && mode !== "move") return;
+
       event.preventDefault();
       event.stopPropagation();
 
@@ -132,17 +165,18 @@ export function GanttBar({
         days: 0,
         pointerId: event.pointerId,
         vertical: false,
+        readOnly,
       };
-      setDragging(true);
+      if (!readOnly) setDragging(true);
       barRef.current?.setPointerCapture(event.pointerId);
     },
-    [saving]
+    [saving, summary]
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
       const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!drag || drag.pointerId !== event.pointerId || drag.readOnly) return;
 
       const dx = event.clientX - drag.startX;
       const dy = event.clientY - drag.startY;
@@ -161,7 +195,7 @@ export function GanttBar({
       }
 
       if (drag.vertical) {
-        onVerticalPreview(event.clientY);
+        onVerticalPreview(event.clientY, task.id);
         return;
       }
 
@@ -171,7 +205,7 @@ export function GanttBar({
       drag.days = days;
       applyPreview(drag.mode, days);
     },
-    [applyPreview, dayWidth, onVerticalPreview]
+    [applyPreview, dayWidth, onVerticalPreview, task.id]
   );
 
   const endDrag = useCallback(
@@ -183,19 +217,34 @@ export function GanttBar({
       setDragging(false);
       barRef.current?.releasePointerCapture(event.pointerId);
 
+      // A summary bar never moved, so this is always a click
+      if (drag.readOnly) {
+        onOpen(task.id);
+        return;
+      }
+
       if (drag.vertical) {
-        onVerticalPreview(null);
+        onVerticalPreview(null, task.id);
         onVerticalDrop(task.id, event.clientY);
         return;
       }
 
       const { mode, days } = drag;
 
-      // A click with no movement still counts as a click, not an edit. An
-      // inferred bar is the exception: committing it as-is turns the proposed
-      // dates into real ones.
-      if (days === 0 && !(mode === "move" && inferred)) {
+      // A click with no movement is not an edit — it opens the task.
+      //
+      // This used to be where an *inferred* bar committed its suggested dates
+      // straight to the note, and that is deliberately not gone: the editor
+      // opens with those suggested dates already filled in, so accepting them
+      // is still this one click plus the save button, only now with the dates
+      // visible before they are written. The toolbar's "apply suggested dates"
+      // is untouched and remains the way to accept them in bulk.
+      //
+      // Only a click on the bar's body opens the task. One that landed on a
+      // resize handle was a grab that went nowhere, and means nothing.
+      if (days === 0) {
         applyPreview(mode, 0);
+        if (mode === "move") onOpen(task.id);
         return;
       }
 
@@ -210,8 +259,8 @@ export function GanttBar({
     },
     [
       applyPreview,
-      inferred,
       onCommit,
+      onOpen,
       onVerticalDrop,
       onVerticalPreview,
       spanDays,
@@ -221,8 +270,9 @@ export function GanttBar({
 
   const classNames = [
     "tasks-map-gantt-bar",
-    `tasks-map-gantt-bar--${task.status}`,
-    inferred ? "tasks-map-gantt-bar--inferred" : "",
+    `tasks-map-gantt-bar--${effectiveTaskStatus(task.status, task.progress)}`,
+    summary ? "tasks-map-gantt-bar--summary" : "",
+    inferred && !summary ? "tasks-map-gantt-bar--inferred" : "",
     dragging ? "tasks-map-gantt-bar--dragging" : "",
     selected ? "tasks-map-gantt-bar--selected" : "",
     saving ? "tasks-map-gantt-bar--saving" : "",
@@ -244,10 +294,14 @@ export function GanttBar({
           : t("gantt.tooltip_slack", { n: analysis.slackDays });
 
   const tooltip = [
-    inferred
-      ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
-      : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
+    summary
+      ? t("gantt.bar_summary_tooltip", { start: bar.start, end: bar.end })
+      : inferred
+        ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
+        : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
+    percent === null ? null : t("gantt.tooltip_progress", { n: percent }),
     slack,
+    t("gantt.tooltip_click_edit"),
   ]
     .filter(Boolean)
     .join("\n");
@@ -263,15 +317,24 @@ export function GanttBar({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
-      <span
-        className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
-        onPointerDown={handlePointerDown("resize-start")}
-      />
+      {percent === null || summary ? null : (
+        <span ref={progressRef} className="tasks-map-gantt-bar__progress" />
+      )}
+      {/* A summary spans its children rather than holding dates of its own,
+          so there is nothing for a resize handle to write */}
+      {!summary && (
+        <span
+          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
+          onPointerDown={handlePointerDown("resize-start")}
+        />
+      )}
       <span className="tasks-map-gantt-bar__label">{label}</span>
-      <span
-        className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
-        onPointerDown={handlePointerDown("resize-end")}
-      />
+      {!summary && (
+        <span
+          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
+          onPointerDown={handlePointerDown("resize-end")}
+        />
+      )}
     </div>
   );
 }

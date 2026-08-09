@@ -21,9 +21,14 @@ import {
   getTasksApi,
   parseTaskLine,
   resolveDefaultTaskFile,
+  setTaskTextInVault,
 } from "src/lib/utils";
 import { promptForTaskLine } from "src/components/task-line-modal";
 import { promptForTaskFinance } from "src/components/task-finance-modal";
+import {
+  TaskEditDraft,
+  promptForTaskEdit,
+} from "src/components/task-edit-modal";
 import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
 import { readRateBook } from "src/lib/rate-book-note";
 import { withCompanionNote } from "src/lib/companion-note";
@@ -45,9 +50,20 @@ import {
   applyOrder,
   groupRows,
   moveRelativeTo,
-  normalizeOrder,
-  orderByDate,
+  moveWithinParent,
+  normalizeOrderIds,
+  orderEntriesByDate,
 } from "src/lib/gantt-order";
+import {
+  HierarchyGroup,
+  buildHierarchy,
+  collectDescendantIds,
+  parentTaskIds,
+  resolveParentIds,
+  toggleCollapsed,
+} from "src/lib/task-hierarchy";
+import { promptForParent } from "src/components/gantt-parent-modal";
+import { plainTaskText, taskTextDescription } from "src/lib/task-text";
 import {
   GANTT_SCALES,
   GanttChart,
@@ -59,14 +75,16 @@ import {
   GanttMilestone,
   addMilestone,
   findMilestone,
+  milestoneOrderKey,
   readMilestones,
   removeMilestone,
+  rowMilestones,
   shiftMilestone,
   updateMilestone,
 } from "src/lib/gantt-milestones";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { findCriticalPath } from "src/lib/critical-path";
-import { findScheduleRisks } from "src/lib/schedule-risk";
+import { ScheduleRisk, findScheduleRisks } from "src/lib/schedule-risk";
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { MilestoneDragResult } from "src/components/gantt-milestone";
@@ -74,7 +92,9 @@ import { promptForMilestone } from "src/components/gantt-milestone-modal";
 import { TasksMapSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import { useUndoHistory } from "src/hooks/use-undo-history";
-import { findTaskDate } from "src/lib/task-dates";
+import { TaskDateProperty, findTaskDate } from "src/lib/task-dates";
+import { TaskProgress } from "src/lib/task-progress";
+import { TaskStatus } from "src/types/task";
 import TasksMapPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
@@ -86,6 +106,47 @@ import { t } from "../i18n";
 interface GanttViewProps {
   settings: TasksMapSettings;
   plugin: TasksMapPlugin;
+}
+
+/** Stable empty map, so switching the warnings off is not a new prop. */
+const NO_RISKS: Map<string, ScheduleRisk[]> = new Map();
+
+/** Fields a view can swap on a task without re-reading it from the vault. */
+interface TaskFieldChanges {
+  summary?: string;
+  status?: TaskStatus;
+  tags?: string[];
+  dates?: TaskDateProperty[];
+  progress?: TaskProgress;
+  incomingLinks?: string[];
+}
+
+/**
+ * A copy of a task with a few fields swapped.
+ *
+ * An optimistic redraw needs a new object — React compares by identity — that
+ * is still a real `DataviewTask` or `NoteTask` with all its methods, so the
+ * prototype is carried over rather than spread away.
+ */
+function withTaskChanges(task: BaseTask, changes: TaskFieldChanges): BaseTask {
+  return Object.assign(
+    Object.create(Object.getPrototypeOf(task)),
+    task,
+    changes
+  ) as BaseTask;
+}
+
+/** The dates a task carries, with start and due replaced by a draft's. */
+function datesFromDraft(
+  dates: TaskDateProperty[],
+  draft: TaskEditDraft
+): TaskDateProperty[] {
+  const next = dates.filter(
+    (entry) => entry.type !== "start" && entry.type !== "due"
+  );
+  if (draft.start) next.push({ type: "start", date: draft.start });
+  if (draft.due) next.push({ type: "due", date: draft.due });
+  return next;
 }
 
 export default function GanttView({ settings, plugin }: GanttViewProps) {
@@ -194,6 +255,57 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [rows, groupBy]
   );
 
+  const collapsedIds = useMemo(
+    () => new Set(settings.ganttCollapsedTaskIds),
+    [settings.ganttCollapsedTaskIds]
+  );
+
+  /**
+   * Each group nested on its own, so a parent and a child that land under
+   * different headings are each drawn where their own metadata puts them
+   * rather than one dragging the other out of its group.
+   */
+  const hierarchy = useMemo(
+    () =>
+      groups.map((group) => ({
+        group,
+        ...buildHierarchy(group.rows, collapsedIds),
+      })),
+    [collapsedIds, groups]
+  );
+
+  const hierarchyGroups: HierarchyGroup[] = useMemo(
+    () =>
+      hierarchy.map(({ group, lines }) => ({
+        key: group.key,
+        label: group.label,
+        // The whole group, including rows folded away inside a collapsed
+        // parent: the heading counts tasks, not visible lines
+        count: group.rows.length,
+        lines,
+      })),
+    [hierarchy]
+  );
+
+  /**
+   * The nesting as drawn: within a group, and with loops and dangling parents
+   * already broken. Row dragging reads this rather than the raw `parentId`, so
+   * what a drag is allowed to do matches what is on screen.
+   */
+  const visibleParentById = useMemo(() => {
+    const merged = new Map<string, string | null>();
+    for (const { parentById } of hierarchy) {
+      for (const [id, parentId] of parentById) merged.set(id, parentId);
+    }
+    return merged;
+  }, [hierarchy]);
+
+  /** Tasks drawn as a summary of the rows beneath them. */
+  const summaryTaskIds = useMemo(
+    () => parentTaskIds(visibleParentById),
+    [visibleParentById]
+  );
+
   const dependencies = useMemo(() => getDependencies(rows), [rows]);
 
   // Selecting a row lights up everything it depends on and everything waiting
@@ -202,13 +314,45 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     () => getConnectionHighlight(selectedTaskId, visibleTasks),
     [selectedTaskId, visibleTasks]
   );
-  const inferredRows = useMemo(() => getInferredRows(rows), [rows]);
+  // A summary row's bar comes from its children, so there is nothing on it to
+  // apply: writing its own suggested dates would put dates in the note that
+  // the chart then ignores.
+  const inferredRows = useMemo(
+    () =>
+      getInferredRows(rows).filter((row) => !summaryTaskIds.has(row.task.id)),
+    [rows, summaryTaskIds]
+  );
 
   // Milestones belong to the chart rather than the vault, so they come from
   // settings — and the timeline has to stretch to reach them
   const milestones = useMemo(
     () => readMilestones(settings.ganttMilestones),
     [settings.ganttMilestones]
+  );
+
+  /**
+   * Every slot the manual order has to account for.
+   *
+   * A milestone the user asked to see as a row needs a place among the tasks,
+   * so it takes a slot under its own namespaced key (see
+   * `MILESTONE_ORDER_PREFIX`). Keeping both kinds in the one flat list is what
+   * lets a single drag handler, a single undo entry and a single settings key
+   * cover them: nothing downstream has to know which slots are tasks.
+   */
+  const orderSlots = useMemo(
+    () => [
+      ...rows.map((row) => row.task.id),
+      ...rowMilestones(milestones).map((milestone) =>
+        milestoneOrderKey(milestone.id)
+      ),
+    ],
+    [milestones, rows]
+  );
+
+  /** The saved order, trimmed to what is on screen and extended with the rest. */
+  const order = useMemo(
+    () => normalizeOrderIds(orderSlots, settings.ganttTaskOrder),
+    [orderSlots, settings.ganttTaskOrder]
   );
 
   // Which tasks decide the finish date, and how much room the rest have. Run
@@ -244,6 +388,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       ),
     [rows, today]
   );
+
+  // Switching warnings off empties the map rather than threading a flag down:
+  // the badge, the row tint, the bar's at-risk border and the count under the
+  // chart all read from this one place, so they go quiet together.
+  const visibleRisks = settings.ganttShowWarnings ? risksByTaskId : NO_RISKS;
 
   const timeline = useMemo(
     () =>
@@ -455,7 +604,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
 
   const commitOrder = useCallback(
     (nextOrder: string[], label: string) => {
-      const previousOrder = normalizeOrder(rows, settings.ganttTaskOrder);
+      const previousOrder = order;
       plugin.undoHistory.push({
         label,
         undo: async () => {
@@ -464,23 +613,74 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       });
       void plugin.setGanttTaskOrder(nextOrder);
     },
-    [plugin, rows, settings.ganttTaskOrder]
+    [order, plugin]
   );
 
+  /**
+   * Moves a line, task or milestone, to where it was dropped.
+   *
+   * `visibleParentById` knows nothing about milestones, so a milestone's slot
+   * resolves to a parent of `null` — it is a root, it can only land beside
+   * other roots, and it can never be dropped inside a parent task's subtree.
+   * That is exactly right: a milestone is not a child of anything.
+   */
   const handleReorder = useCallback(
     ({ movedId, targetId, placement }: RowReorder) => {
-      const current = normalizeOrder(rows, settings.ganttTaskOrder);
-      commitOrder(
-        moveRelativeTo(current, movedId, targetId, placement),
-        t("gantt.undo_reorder")
+      // Nesting is a change of parent, not of order, and the chart routes it
+      // to `onNestInto` instead. Guarded rather than assumed, so the ordering
+      // code is never handed a placement it has no meaning for.
+      if (placement === "inside") return;
+
+      const next = moveWithinParent(
+        order,
+        movedId,
+        targetId,
+        placement,
+        visibleParentById
       );
+
+      // A drop outside the row's own parent is refused, and a refused drop is
+      // not an edit worth pushing onto the undo stack
+      if (next.join("\n") === order.join("\n")) return;
+
+      commitOrder(next, t("gantt.undo_reorder"));
     },
-    [commitOrder, rows, settings.ganttTaskOrder]
+    [commitOrder, order, visibleParentById]
   );
 
+  const handleToggleCollapse = useCallback(
+    (taskId: string) => {
+      void plugin.setGanttCollapsedTaskIds(
+        toggleCollapsed(settings.ganttCollapsedTaskIds, taskId)
+      );
+    },
+    [plugin, settings.ganttCollapsedTaskIds]
+  );
+
+  /**
+   * Sorts every line by its day, milestones included. A milestone is a single
+   * day, so its start and its end are the same — leaving it out would mean
+   * sorting the chart silently shuffled the tasks out from under it.
+   */
   const handleSortByDate = useCallback(() => {
-    commitOrder(orderByDate(rows), t("gantt.undo_sort"));
-  }, [commitOrder, rows]);
+    commitOrder(
+      orderEntriesByDate([
+        ...rows.map((row) => ({
+          id: row.task.id,
+          start: row.bar.start,
+          end: row.bar.end,
+          label: row.task.summary,
+        })),
+        ...rowMilestones(milestones).map((milestone) => ({
+          id: milestoneOrderKey(milestone.id),
+          start: milestone.date,
+          end: milestone.date,
+          label: milestone.label,
+        })),
+      ]),
+      t("gantt.undo_sort")
+    );
+  }, [commitOrder, milestones, rows]);
 
   /** Saves a milestone edit, keeping the previous list for undo. */
   const commitMilestones = useCallback(
@@ -505,6 +705,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       id: crypto.randomUUID(),
       label: result.draft.label,
       date: result.draft.date,
+      display: result.draft.display,
     };
 
     commitMilestones(
@@ -521,7 +722,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       if (!milestone) return;
 
       const result = await promptForMilestone(app, {
-        initial: { label: milestone.label, date: milestone.date },
+        initial: {
+          label: milestone.label,
+          date: milestone.date,
+          display: milestone.display,
+        },
         defaultDate: today,
       });
       if (!result) return;
@@ -690,6 +895,301 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   /**
+   * Writes one task edit: the words, the state, the two dates and the
+   * progress, in that order and only where something actually changed.
+   *
+   * The order matters. Setting a task in progress stamps a start date and
+   * finishing one stamps a completion date, so the status goes first and the
+   * dates the user typed are written over the top — otherwise a status change
+   * would quietly overrule the date beside it in the same dialog.
+   *
+   * The redraw is optimistic and the vault write is what can fail; a failure
+   * puts the task the view was showing back and says so. Everything the edit
+   * touches is read back off the note afterwards, so the row ends up showing
+   * what the file says rather than what the dialog hoped.
+   */
+  const writeTaskEdit = useCallback(
+    async (taskId: string, draft: TaskEditDraft): Promise<boolean> => {
+      const task = tasksRef.current.find(
+        (candidate) => candidate.id === taskId
+      );
+      if (!task) return false;
+
+      const canEditText = task.type === "dataview";
+      const previousText = taskTextDescription(task.text);
+      const previousStart = findTaskDate(task.dates, "start");
+      const previousDue = findTaskDate(task.dates, "due");
+
+      const textChanged = canEditText && draft.text !== previousText;
+      const statusChanged = draft.status !== task.status;
+      const datesChanged =
+        draft.start !== previousStart || draft.due !== previousDue;
+      const progressChanged = draft.progress !== task.progress.percent;
+
+      if (!textChanged && !statusChanged && !datesChanged && !progressChanged) {
+        return true;
+      }
+
+      // Optimistic: the vault write is slower than the eye
+      applyTaskUpdate(
+        taskId,
+        withTaskChanges(task, {
+          status: draft.status,
+          progress: { percent: draft.progress },
+          dates: datesFromDraft(task.dates, draft),
+          ...(textChanged ? { summary: draft.text } : {}),
+        })
+      );
+
+      try {
+        // An inline task with no ID in its line is found by its text, which is
+        // ambiguous when two tasks read the same — and about to change
+        await stampTaskId(task);
+
+        let current: BaseTask = task;
+
+        if (statusChanged) {
+          await current.updateStatus(draft.status, app);
+          current = withTaskChanges(current, { status: draft.status });
+        }
+
+        if (datesChanged) {
+          const dated = await current.setDates(
+            { start: draft.start, due: draft.due },
+            app
+          );
+          if (!dated) throw new Error("dates could not be written");
+          current = dated;
+        }
+
+        if (textChanged) {
+          const renamed = await setTaskTextInVault(current, draft.text, app);
+          if (!renamed) throw new Error("task text could not be written");
+          current = renamed;
+        }
+
+        if (progressChanged) {
+          const progressed = await current.setProgress(draft.progress, app);
+          if (!progressed) throw new Error("progress could not be written");
+          current = progressed;
+        }
+
+        applyTaskUpdate(taskId, current);
+        return true;
+      } catch (error) {
+        console.error("Could not save the task edit", error);
+        new Notice(t("task_edit.write_failed", { task: task.summary }));
+        applyTaskUpdate(taskId, task);
+        return false;
+      }
+    },
+    [app, applyTaskUpdate, stampTaskId]
+  );
+
+  /**
+   * Opens the editor for a row and writes what comes back.
+   *
+   * A summary row gets the same dialog with its date fields locked, matching
+   * the drag and the resize its bar already refuses: a parent's span is its
+   * children's, so a date written here would be one the chart then ignores.
+   * Its words, its state and its progress are still its own, so everything
+   * else stays editable — a parent task is a task.
+   */
+  const handleOpenTask = useCallback(
+    async (taskId: string) => {
+      const row = rows.find((candidate) => candidate.task.id === taskId);
+      if (!row) return;
+
+      const { task } = row;
+      const summary = summaryTaskIds.has(taskId);
+      const previous: TaskEditDraft = {
+        text: taskTextDescription(task.text),
+        status: task.status,
+        start: findTaskDate(task.dates, "start"),
+        due: findTaskDate(task.dates, "due"),
+        progress: task.progress.percent,
+      };
+
+      const result = await promptForTaskEdit(app, {
+        initial: previous,
+        // What a click on a suggested bar used to write straight to the note.
+        // It now fills the empty date fields instead, so accepting the
+        // schedule the chart proposed is still a click and a save.
+        suggested:
+          row.inferred && !summary
+            ? { start: row.bar.start, due: row.bar.end }
+            : null,
+        summary,
+        canEditText: task.type === "dataview",
+      });
+      if (!result) return;
+
+      const { draft } = result;
+      const unchanged =
+        draft.text === previous.text &&
+        draft.status === previous.status &&
+        draft.start === previous.start &&
+        draft.due === previous.due &&
+        draft.progress === previous.progress;
+      // A dialog opened and closed again is not an edit, and does not belong
+      // on the undo stack in front of whatever the user actually did
+      if (unchanged) return;
+
+      const saved = await writeTaskEdit(taskId, draft);
+      if (!saved) return;
+
+      plugin.undoHistory.push({
+        label: t("task_edit.undo_edit", { task: plainTaskText(task.summary) }),
+        // The same write, run backwards; it reads the task afresh, so an undo
+        // long after the fact still finds the line where it is now
+        undo: async () => {
+          await writeTaskEdit(taskId, previous);
+        },
+      });
+    },
+    [app, plugin, rows, summaryTaskIds, writeTaskEdit]
+  );
+
+  /**
+   * Writes a task's parent and reports it, whichever way it was asked for.
+   *
+   * Shared by the picker and by dragging a row into another, so a nesting made
+   * either way lands in the vault the same and undoes the same.
+   */
+  const applyParentChange = useCallback(
+    async (taskId: string, parentId: string | null) => {
+      const task = tasks.find((candidate) => candidate.id === taskId);
+      if (!task) return;
+
+      const previous = task.parentId;
+      if (parentId === previous) return;
+
+      const parentRow =
+        parentId === null ? null : rows.find((row) => row.task.id === parentId);
+
+      let updated: BaseTask | null;
+      try {
+        // An inline task with no ID in its line is found by its text, which is
+        // ambiguous when two tasks read the same
+        await stampTaskId(task);
+
+        // And the parent needs its ID written down too: without one in the
+        // file its ID was minted at parse time, so the child would be naming
+        // an ID that no longer exists after the next reload
+        if (parentRow) await stampTaskId(parentRow.task);
+
+        updated = await task.setParent(parentId, app);
+      } catch (error) {
+        // Stamping an ID touches two files before the parent is even written,
+        // so there is more here than the write itself that can fail. Without
+        // this the whole thing failed mutely and the button looked broken.
+        console.error("Failed to set the task's parent", error);
+        new Notice(t("gantt.parent_failed"));
+        return;
+      }
+
+      if (!updated) {
+        new Notice(t("gantt.parent_failed"));
+        return;
+      }
+
+      applyTaskUpdate(taskId, updated);
+
+      plugin.undoHistory.push({
+        label: t("gantt.undo_set_parent", {
+          task: plainTaskText(task.summary),
+        }),
+        undo: async () => {
+          // Read the task afresh: the line has moved on since the edit
+          const current =
+            tasksRef.current.find((candidate) => candidate.id === taskId) ??
+            updated;
+          const reverted = await current.setParent(previous, app);
+          if (reverted) applyTaskUpdate(taskId, reverted);
+        },
+      });
+
+      new Notice(
+        parentRow
+          ? t("gantt.parent_set", {
+              task: plainTaskText(task.summary),
+              parent: plainTaskText(parentRow.task.summary),
+            })
+          : t("gantt.parent_cleared", { task: plainTaskText(task.summary) })
+      );
+    },
+    [app, applyTaskUpdate, plugin, rows, stampTaskId, tasks]
+  );
+
+  /**
+   * Asks which task this one should sit inside, and writes it.
+   *
+   * The candidate list leaves out the task itself and everything already
+   * nested under it — both would make a loop, and while the chart survives one
+   * (see `task-hierarchy`) it is not worth letting the user write one from the
+   * UI. Descendants are worked out over every row rather than over the current
+   * group, because a child filed under a different heading is still a child.
+   */
+  const handleSetParent = useCallback(
+    async (taskId: string) => {
+      const task = tasks.find((candidate) => candidate.id === taskId);
+      if (!task) return;
+
+      const descendants = collectDescendantIds(resolveParentIds(rows), taskId);
+
+      const choices = rows
+        .filter(
+          (row) => row.task.id !== taskId && !descendants.has(row.task.id)
+        )
+        .map((row) => ({
+          id: row.task.id,
+          label: plainTaskText(row.task.summary),
+        }));
+
+      const result = await promptForParent(app, {
+        taskLabel: plainTaskText(task.summary),
+        choices,
+      });
+      if (!result) return;
+
+      await applyParentChange(taskId, result.parentId);
+    },
+    [app, applyParentChange, rows, tasks]
+  );
+
+  /**
+   * Whether one task could be dropped inside another.
+   *
+   * Asked while a drag is in flight, so it has to be cheap and it has to
+   * answer for the structure on screen: a milestone holds nothing, a task
+   * cannot go inside itself or inside its own descendants, and a drop that
+   * would only restate the parent it already has is not worth offering.
+   */
+  const canNestInto = useCallback(
+    (movedId: string, targetId: string) => {
+      if (movedId === targetId) return false;
+
+      const moved = rows.find((row) => row.task.id === movedId);
+      const target = rows.find((row) => row.task.id === targetId);
+      if (!moved || !target) return false;
+      if (moved.task.parentId === targetId) return false;
+
+      return !collectDescendantIds(resolveParentIds(rows), movedId).has(
+        targetId
+      );
+    },
+    [rows]
+  );
+
+  const handleNestInto = useCallback(
+    (movedId: string, targetId: string) => {
+      if (!canNestInto(movedId, targetId)) return;
+      void applyParentChange(movedId, targetId);
+    },
+    [applyParentChange, canNestInto]
+  );
+
+  /**
    * Adds a task to the chart. With an anchor the line is written just below
    * it and the new row takes the next position; without one the task goes to
    * the end of the list.
@@ -729,10 +1229,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         setTasks((previous) => [...previous, newTask]);
 
         // Slot the row in where the user asked for it rather than at the end
-        const appended = [
-          ...normalizeOrder(rows, settings.ganttTaskOrder),
-          newTask.id,
-        ];
+        const appended = [...order, newTask.id];
         void plugin.setGanttTaskOrder(
           anchorRow
             ? moveRelativeTo(appended, newTask.id, anchorRow.task.id, "after")
@@ -755,15 +1252,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         new Notice(t("task_create.failed"));
       }
     },
-    [
-      app,
-      askForTaskLine,
-      plugin,
-      rows,
-      settings.ganttTaskOrder,
-      stampTaskId,
-      visibleTasks,
-    ]
+    [app, askForTaskLine, order, plugin, rows, stampTaskId, visibleTasks]
   );
 
   /** Tags in use, most common first, so the picker suggests the usual ones. */
@@ -796,11 +1285,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       setTasks((previous) =>
         previous.map((candidate) =>
           candidate.id === taskId
-            ? (Object.assign(
-                Object.create(Object.getPrototypeOf(candidate)),
-                candidate,
-                { tags: nextTags }
-              ) as BaseTask)
+            ? withTaskChanges(candidate, { tags: nextTags })
             : candidate
         )
       );
@@ -831,11 +1316,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
             setTasks((previous) =>
               previous.map((candidate) =>
                 candidate.id === taskId
-                  ? (Object.assign(
-                      Object.create(Object.getPrototypeOf(candidate)),
-                      candidate,
-                      { tags: task.tags }
-                    ) as BaseTask)
+                  ? withTaskChanges(candidate, { tags: task.tags })
                   : candidate
               )
             );
@@ -847,11 +1328,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         setTasks((previous) =>
           previous.map((candidate) =>
             candidate.id === taskId
-              ? (Object.assign(
-                  Object.create(Object.getPrototypeOf(candidate)),
-                  candidate,
-                  { tags: task.tags }
-                ) as BaseTask)
+              ? withTaskChanges(candidate, { tags: task.tags })
               : candidate
           )
         );
@@ -895,11 +1372,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         setTasks((previous) =>
           previous.map((task) =>
             task.id === targetId
-              ? (Object.assign(
-                  Object.create(Object.getPrototypeOf(task)),
-                  task,
-                  { incomingLinks: [...task.incomingLinks, fromId] }
-                ) as BaseTask)
+              ? withTaskChanges(task, {
+                  incomingLinks: [...task.incomingLinks, fromId],
+                })
               : task
           )
         );
@@ -914,15 +1389,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
             setTasks((previous) =>
               previous.map((task) =>
                 task.id === targetId
-                  ? (Object.assign(
-                      Object.create(Object.getPrototypeOf(task)),
-                      task,
-                      {
-                        incomingLinks: task.incomingLinks.filter(
-                          (id) => id !== fromId
-                        ),
-                      }
-                    ) as BaseTask)
+                  ? withTaskChanges(task, {
+                      incomingLinks: task.incomingLinks.filter(
+                        (id) => id !== fromId
+                      ),
+                    })
                   : task
               )
             );
@@ -1058,13 +1529,17 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         </div>
       )}
 
-      {rows.length === 0 ? (
+      {/* A milestone is reason enough to draw the chart: a plan can be a set
+          of dates to hit before any task has been written down, and hiding
+          them behind "no tasks" would lose work the user can see no other
+          way. */}
+      {rows.length === 0 && rowMilestones(milestones).length === 0 ? (
         <div className="tasks-map-gantt-empty">
           {tasks.length === 0 ? t("gantt.empty") : t("gantt.empty_filtered")}
         </div>
       ) : (
         <GanttChart
-          groups={groups}
+          groups={hierarchyGroups}
           rows={rows}
           dependencies={dependencies}
           timelineStart={timeline.start}
@@ -1079,16 +1554,21 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           criticalEdgeKeys={criticalPath.criticalEdgeKeys}
           floatByTaskId={criticalPath.floatByTaskId}
           showCriticalPath={settings.showCriticalPath}
-          risksByTaskId={risksByTaskId}
+          risksByTaskId={visibleRisks}
           selectedTaskIds={selectedTaskIds}
           highlight={highlight}
           savingTaskIds={savingTaskIds}
           onSelect={handleSelect}
           onCommit={(result) => void handleCommit(result)}
+          onOpenTask={(taskId) => void handleOpenTask(taskId)}
           onReorder={handleReorder}
+          canNestInto={canNestInto}
+          onNestInto={handleNestInto}
           onAddTaskAfter={(taskId) => void addTask(taskId)}
           onStartLink={handleStartLink}
           onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}
+          onToggleCollapse={handleToggleCollapse}
+          onSetParent={(taskId) => void handleSetParent(taskId)}
           onEditFinance={
             settings.financeEnabled
               ? (taskId) => void handleEditFinance(taskId)
@@ -1097,6 +1577,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
           onRemoveTag={(taskId, tag) => void changeTag(taskId, tag, false)}
           milestones={milestones}
+          order={order}
           onMoveMilestone={handleMoveMilestone}
           onEditMilestone={(milestoneId) =>
             void handleEditMilestone(milestoneId)
@@ -1119,9 +1600,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
             })}
           </div>
         )}
-        {risksByTaskId.size > 0 && (
+        {visibleRisks.size > 0 && (
           <div className="tasks-map-gantt-hint tasks-map-gantt-hint--warning">
-            {t("gantt.at_risk_hint", { n: risksByTaskId.size })}
+            {t("gantt.at_risk_hint", { n: visibleRisks.size })}
           </div>
         )}
         {selectedTaskIds.size > 1 && (

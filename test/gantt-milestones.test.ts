@@ -1,11 +1,17 @@
 import {
   GanttMilestone,
+  MILESTONE_ORDER_PREFIX,
   addMilestone,
   findMilestone,
   isGanttMilestone,
+  laneMilestones,
+  milestoneIdFromOrderKey,
+  milestoneOrderKey,
   milestoneStatus,
+  readMilestoneDisplay,
   readMilestones,
   removeMilestone,
+  rowMilestones,
   shiftMilestone,
   sortMilestones,
   updateMilestone,
@@ -21,6 +27,7 @@ function makeMilestone(
     id,
     label: `Milestone ${id}`,
     date: TODAY,
+    display: "lane",
     ...overrides,
   };
 }
@@ -45,6 +52,79 @@ describe("isGanttMilestone", () => {
 
   it("accepts an empty label, which the modal never writes but a data file can", () => {
     expect(isGanttMilestone({ id: "a", label: "", date: TODAY })).toBe(true);
+  });
+
+  // `display` arrived after milestones did. A settings file written by an
+  // earlier version has no such key, and dropping those milestones would wipe
+  // every milestone a user already had.
+  it("accepts a milestone with no display at all", () => {
+    expect(isGanttMilestone({ id: "a", label: "Launch", date: TODAY })).toBe(
+      true
+    );
+  });
+
+  it.each([
+    ["a nonsense display", "sideways"],
+    ["a numeric display", 3],
+    ["a null display", null],
+  ])("accepts %s rather than dropping the milestone", (_name, display) => {
+    expect(
+      isGanttMilestone({ id: "a", label: "Launch", date: TODAY, display })
+    ).toBe(true);
+  });
+});
+
+describe("readMilestoneDisplay", () => {
+  it("reads the one value that means a row", () => {
+    expect(readMilestoneDisplay("row")).toBe("row");
+  });
+
+  it.each([
+    ["undefined", undefined],
+    ["null", null],
+    ["the lane itself", "lane"],
+    ["nonsense", "sideways"],
+    ["a number", 3],
+    ["an object", {}],
+  ])("reads %s as the lane", (_name, value) => {
+    expect(readMilestoneDisplay(value)).toBe("lane");
+  });
+});
+
+describe("milestone order keys", () => {
+  it("namespaces a milestone's slot in the row order", () => {
+    expect(milestoneOrderKey("abc")).toBe(`${MILESTONE_ORDER_PREFIX}abc`);
+  });
+
+  it("reads the milestone back out of its key", () => {
+    expect(milestoneIdFromOrderKey(milestoneOrderKey("abc"))).toBe("abc");
+  });
+
+  it.each([
+    ["a task id", "abc123"],
+    ["a note path", "Tasks/Ship it.md"],
+    ["the bare prefix", MILESTONE_ORDER_PREFIX],
+  ])("does not mistake %s for a milestone", (_name, key) => {
+    expect(milestoneIdFromOrderKey(key)).toBeNull();
+  });
+});
+
+describe("laneMilestones and rowMilestones", () => {
+  const milestones = [
+    makeMilestone("a", { display: "lane" }),
+    makeMilestone("b", { display: "row" }),
+    makeMilestone("c", { display: "lane" }),
+  ];
+
+  it("splits the list by where each one is drawn", () => {
+    expect(laneMilestones(milestones).map((m) => m.id)).toEqual(["a", "c"]);
+    expect(rowMilestones(milestones).map((m) => m.id)).toEqual(["b"]);
+  });
+
+  it("puts everything in the lane when nothing asked for a row", () => {
+    const lane = [makeMilestone("a"), makeMilestone("b")];
+    expect(laneMilestones(lane)).toHaveLength(2);
+    expect(rowMilestones(lane)).toHaveLength(0);
   });
 });
 
@@ -117,6 +197,35 @@ describe("readMilestones", () => {
 
     expect(milestones.map((milestone) => milestone.id)).toEqual(["a", "b"]);
   });
+
+  // The whole point of the back-compat guard: a data file written before row
+  // milestones existed still draws exactly as it always did
+  it("reads a milestone saved without a display as a lane flag", () => {
+    const milestones = readMilestones([
+      { id: "a", label: "Launch", date: TODAY },
+    ]);
+
+    expect(milestones).toEqual([
+      { id: "a", label: "Launch", date: TODAY, display: "lane" },
+    ]);
+  });
+
+  it("keeps a milestone whose display is nonsense, as a lane flag", () => {
+    const milestones = readMilestones([
+      { id: "a", label: "Launch", date: TODAY, display: "sideways" },
+    ]);
+
+    expect(milestones).toHaveLength(1);
+    expect(milestones[0].display).toBe("lane");
+  });
+
+  it("keeps a row milestone a row", () => {
+    const milestones = readMilestones([
+      { id: "a", label: "Launch", date: TODAY, display: "row" },
+    ]);
+
+    expect(milestones[0].display).toBe("row");
+  });
 });
 
 describe("addMilestone", () => {
@@ -171,6 +280,40 @@ describe("updateMilestone", () => {
     });
 
     expect(milestones).toEqual([makeMilestone("a")]);
+  });
+
+  // Moving a milestone between the lane and the list must not mean deleting it
+  // and typing it out again
+  it("moves a milestone from the lane into the list", () => {
+    const milestones = updateMilestone([makeMilestone("a")], "a", {
+      display: "row",
+    });
+
+    expect(findMilestone(milestones, "a")).toMatchObject({
+      display: "row",
+      label: "Milestone a",
+      date: TODAY,
+    });
+  });
+
+  it("moves one back out of the list into the lane", () => {
+    const milestones = updateMilestone(
+      [makeMilestone("a", { display: "row" })],
+      "a",
+      { display: "lane" }
+    );
+
+    expect(findMilestone(milestones, "a")?.display).toBe("lane");
+  });
+
+  it("leaves the display alone when the change does not mention it", () => {
+    const milestones = updateMilestone(
+      [makeMilestone("a", { display: "row" })],
+      "a",
+      { date: "2026-09-01" }
+    );
+
+    expect(findMilestone(milestones, "a")?.display).toBe("row");
   });
 });
 

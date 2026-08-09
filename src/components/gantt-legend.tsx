@@ -26,6 +26,10 @@ export function GanttLegend({ showCriticalPath }: GanttLegendProps) {
         {t("gantt.legend_suggested")}
       </span>
       <span className="tasks-map-gantt-legend__item">
+        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--summary" />
+        {t("gantt.legend_summary")}
+      </span>
+      <span className="tasks-map-gantt-legend__item">
         <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--today" />
         {t("gantt.legend_today")}
       </span>

@@ -1,13 +1,25 @@
 import { diffDays } from "./date-utils";
 import { GanttRow } from "./gantt-rows";
+import { collectDescendantIds } from "./task-hierarchy";
 
 /**
  * Row ordering and grouping for the Gantt.
  *
- * The chart's running order is a plain list of task IDs held in settings.
+ * The chart's running order is a plain list of slot IDs held in settings.
  * Rows are drawn in that order, so dragging a row is only ever a change to
  * the list, and sorting by date is just one particular list the user can ask
  * for (and undo) rather than something the chart does on its own.
+ *
+ * A slot is usually a task ID. A milestone the user asked to see as a row
+ * takes one too, under a namespaced key (`MILESTONE_ORDER_PREFIX`) that no
+ * task ID can collide with — so every function here keeps working on plain
+ * strings and none of them has to know that milestones exist.
+ *
+ * The list stays flat even though the chart nests. Nesting is applied when the
+ * rows are drawn (`task-hierarchy`), which is what keeps a child inside its
+ * parent whatever the list says: the list only ever decides the order of
+ * siblings. Dragging is the one place the two meet, and `moveWithinParent` is
+ * where that is worked out.
  */
 
 export type GanttGroupBy = "none" | "tag" | "status" | "file" | "project";
@@ -31,12 +43,19 @@ export function isGanttGroupBy(value: string): value is GanttGroupBy {
 }
 
 /**
- * The stored order, restricted to the rows present and extended with any row
- * it has not seen yet (new tasks land at the end rather than jumping to the
+ * The stored order, restricted to the slots present and extended with any slot
+ * it has not seen yet (new entries land at the end rather than jumping to the
  * top).
+ *
+ * Slots are plain strings, which is what lets a row milestone hold one: it
+ * passes its namespaced key (see `MILESTONE_ORDER_PREFIX`) alongside the task
+ * IDs and nothing here has to know the difference.
  */
-export function normalizeOrder(rows: GanttRow[], order: string[]): string[] {
-  const present = new Set(rows.map((row) => row.task.id));
+export function normalizeOrderIds(
+  presentIds: string[],
+  order: string[]
+): string[] {
+  const present = new Set(presentIds);
   const seen = new Set<string>();
   const next: string[] = [];
 
@@ -46,13 +65,25 @@ export function normalizeOrder(rows: GanttRow[], order: string[]): string[] {
     next.push(id);
   }
 
-  for (const row of rows) {
-    if (seen.has(row.task.id)) continue;
-    seen.add(row.task.id);
-    next.push(row.task.id);
+  for (const id of presentIds) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    next.push(id);
   }
 
   return next;
+}
+
+/**
+ * The stored order, restricted to the rows present and extended with any row
+ * it has not seen yet (new tasks land at the end rather than jumping to the
+ * top).
+ */
+export function normalizeOrder(rows: GanttRow[], order: string[]): string[] {
+  return normalizeOrderIds(
+    rows.map((row) => row.task.id),
+    order
+  );
 }
 
 /** Rows rearranged to match the given order. */
@@ -89,22 +120,111 @@ export function moveRelativeTo(
   return without;
 }
 
-/** The order the rows would have if sorted earliest-first. */
-export function orderByDate(rows: GanttRow[]): string[] {
-  return [...rows]
+/**
+ * Moves `movedId` next to `targetId`, without letting it leave its parent.
+ *
+ * Two rules, both of which fall out of the chart nesting rows it is given a
+ * flat order for:
+ *
+ * - A row can only be dropped among its own siblings. Dropping onto a row
+ *   deeper in the tree means "next to the ancestor of yours that I landed in",
+ *   which is what makes dragging a task onto a collapsed parent's neighbour do
+ *   what it looks like it does. A drop with no such ancestor — the pointer was
+ *   over another parent's subtree entirely — is refused rather than quietly
+ *   put somewhere else, because reparenting is a separate, deliberate action.
+ * - A parent takes its children with it, so a subtree moves as one block.
+ *
+ * `parentById` must be the resolved map from `task-hierarchy`, i.e. the
+ * structure actually on screen, not the raw `parentId` the tasks carry: a row
+ * whose parent was filtered out of view is a root here, and is draggable like
+ * one. The ancestor walk is capped anyway, so a caller that passes a map with
+ * a loop still left in it gets a refused drop rather than a hung view.
+ */
+export function moveWithinParent(
+  order: string[],
+  movedId: string,
+  targetId: string,
+  placement: "before" | "after",
+  parentById: ReadonlyMap<string, string | null>
+): string[] {
+  if (movedId === targetId) return [...order];
+
+  const movedParent = parentById.get(movedId) ?? null;
+
+  let sibling: string | null = targetId;
+  for (let steps = 0; steps <= parentById.size; steps++) {
+    if (sibling === null) break;
+    if ((parentById.get(sibling) ?? null) === movedParent) break;
+    sibling = parentById.get(sibling) ?? null;
+  }
+
+  // No sibling to land beside, or the target sits inside the row being moved
+  if (sibling === null || sibling === movedId) return [...order];
+  if ((parentById.get(sibling) ?? null) !== movedParent) return [...order];
+
+  const moving = collectDescendantIds(parentById, movedId);
+  const block = order.filter((id) => id === movedId || moving.has(id));
+  if (block.length === 0) return [...order];
+
+  const without = order.filter((id) => id !== movedId && !moving.has(id));
+  const targetIndex = without.indexOf(sibling);
+  if (targetIndex === -1) return [...order];
+
+  let insertAt = targetIndex;
+  if (placement === "after") {
+    // Past the sibling's own children: "after" means after the whole of it,
+    // not wedged between it and the first row nested underneath
+    const siblingSubtree = collectDescendantIds(parentById, sibling);
+    insertAt = targetIndex + 1;
+    while (insertAt < without.length && siblingSubtree.has(without[insertAt])) {
+      insertAt += 1;
+    }
+  }
+
+  without.splice(insertAt, 0, ...block);
+  return without;
+}
+
+/**
+ * Anything that occupies a slot in the order and has a day attached: a task
+ * row, or a milestone drawn as one (whose start and end are the same day).
+ */
+export interface DatedOrderEntry {
+  id: string;
+  start: string;
+  end: string;
+  /** Breaks ties between two entries falling on exactly the same days. */
+  label: string;
+}
+
+/** The order the entries would have if sorted earliest-first. */
+export function orderEntriesByDate(entries: DatedOrderEntry[]): string[] {
+  return [...entries]
     .sort((a, b) => {
       // diffDays(b, a) is a - b in days, i.e. ascending by date
-      const byStart = diffDays(b.bar.start, a.bar.start);
+      const byStart = diffDays(b.start, a.start);
       if (byStart !== 0) return byStart;
 
-      const byEnd = diffDays(b.bar.end, a.bar.end);
+      const byEnd = diffDays(b.end, a.end);
       if (byEnd !== 0) return byEnd;
 
-      return a.task.summary.localeCompare(b.task.summary, undefined, {
+      return a.label.localeCompare(b.label, undefined, {
         sensitivity: "base",
       });
     })
-    .map((row) => row.task.id);
+    .map((entry) => entry.id);
+}
+
+/** The order the rows would have if sorted earliest-first. */
+export function orderByDate(rows: GanttRow[]): string[] {
+  return orderEntriesByDate(
+    rows.map((row) => ({
+      id: row.task.id,
+      start: row.bar.start,
+      end: row.bar.end,
+      label: row.task.summary,
+    }))
+  );
 }
 
 function fileLabel(link: string): string {

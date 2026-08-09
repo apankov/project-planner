@@ -1,12 +1,16 @@
 import { NoteTask } from "../src/types/note-task";
 import { GanttRow } from "../src/lib/gantt-rows";
+import { milestoneOrderKey } from "../src/lib/gantt-milestones";
 import {
   applyOrder,
   groupRows,
   isGanttGroupBy,
   moveRelativeTo,
+  moveWithinParent,
   normalizeOrder,
+  normalizeOrderIds,
   orderByDate,
+  orderEntriesByDate,
 } from "../src/lib/gantt-order";
 
 const LABELS = {
@@ -79,6 +83,37 @@ describe("normalizeOrder", () => {
   it("falls back to row order when nothing is stored", () => {
     const rows = [makeRow("x"), makeRow("y")];
     expect(normalizeOrder(rows, [])).toEqual(["x", "y"]);
+  });
+
+  // A row milestone holds a slot alongside the tasks, so a normalize run over
+  // rows alone would throw it away and lose where the user put it
+  it("drops a milestone slot when only rows are offered", () => {
+    const rows = [makeRow("a")];
+    expect(normalizeOrder(rows, [milestoneOrderKey("m"), "a"])).toEqual(["a"]);
+  });
+});
+
+describe("normalizeOrderIds", () => {
+  const key = milestoneOrderKey("m");
+
+  it("keeps a milestone's slot among the tasks", () => {
+    expect(normalizeOrderIds(["a", "b", key], ["a", key, "b"])).toEqual([
+      "a",
+      key,
+      "b",
+    ]);
+  });
+
+  it("appends a milestone the order has not seen yet", () => {
+    expect(normalizeOrderIds(["a", key], ["a"])).toEqual(["a", key]);
+  });
+
+  it("drops the slot of a milestone that is no longer a row", () => {
+    expect(normalizeOrderIds(["a"], ["a", key])).toEqual(["a"]);
+  });
+
+  it("removes duplicates", () => {
+    expect(normalizeOrderIds(["a", key], [key, key, "a"])).toEqual([key, "a"]);
   });
 });
 
@@ -157,6 +192,170 @@ describe("moveRelativeTo", () => {
   });
 });
 
+describe("moveWithinParent", () => {
+  /*
+   * redesign
+   *   logo
+   *   copy
+   * invoicing
+   */
+  const NESTED: ReadonlyMap<string, string | null> = new Map<
+    string,
+    string | null
+  >([
+    ["redesign", null],
+    ["logo", "redesign"],
+    ["copy", "redesign"],
+    ["invoicing", null],
+  ]);
+  const nestedOrder = ["redesign", "logo", "copy", "invoicing"];
+
+  const FLAT: ReadonlyMap<string, string | null> = new Map<
+    string,
+    string | null
+  >([
+    ["a", null],
+    ["b", null],
+    ["c", null],
+    ["d", null],
+  ]);
+
+  it("reorders siblings inside their parent", () => {
+    expect(
+      moveWithinParent(nestedOrder, "copy", "logo", "before", NESTED)
+    ).toEqual(["redesign", "copy", "logo", "invoicing"]);
+  });
+
+  it("refuses to move a child outside its parent's subtree", () => {
+    expect(
+      moveWithinParent(nestedOrder, "logo", "invoicing", "after", NESTED)
+    ).toEqual(nestedOrder);
+  });
+
+  it("takes a parent's children along when the parent moves", () => {
+    expect(
+      moveWithinParent(nestedOrder, "redesign", "invoicing", "after", NESTED)
+    ).toEqual(["invoicing", "redesign", "logo", "copy"]);
+  });
+
+  it("lands after a sibling's whole subtree, not inside it", () => {
+    const order = ["redesign", "logo", "copy", "invoicing"];
+
+    expect(
+      moveWithinParent(order, "invoicing", "redesign", "after", NESTED)
+    ).toEqual(["redesign", "logo", "copy", "invoicing"]);
+  });
+
+  it("treats a drop onto a nested row as a drop next to its ancestor", () => {
+    expect(
+      moveWithinParent(nestedOrder, "invoicing", "logo", "before", NESTED)
+    ).toEqual(["invoicing", "redesign", "logo", "copy"]);
+  });
+
+  it("behaves like a flat move when nothing is nested", () => {
+    const order = ["a", "b", "c", "d"];
+
+    expect(moveWithinParent(order, "d", "b", "before", FLAT)).toEqual(
+      moveRelativeTo(order, "d", "b", "before")
+    );
+    expect(moveWithinParent(order, "a", "c", "after", FLAT)).toEqual(
+      moveRelativeTo(order, "a", "c", "after")
+    );
+  });
+
+  describe("edge cases", () => {
+    it("is a no-op when dropped on itself", () => {
+      expect(
+        moveWithinParent(nestedOrder, "logo", "logo", "before", NESTED)
+      ).toEqual(nestedOrder);
+    });
+
+    it("refuses to drop a parent inside its own subtree", () => {
+      expect(
+        moveWithinParent(nestedOrder, "redesign", "logo", "after", NESTED)
+      ).toEqual(nestedOrder);
+    });
+
+    it("is a no-op for a target nothing knows about", () => {
+      expect(
+        moveWithinParent(nestedOrder, "logo", "missing", "after", NESTED)
+      ).toEqual(nestedOrder);
+    });
+
+    it("does not mutate the input", () => {
+      const original = [...nestedOrder];
+      moveWithinParent(nestedOrder, "copy", "logo", "before", NESTED);
+      expect(nestedOrder).toEqual(original);
+    });
+
+    /*
+     * A row milestone holds a slot in the same flat order but is in no
+     * parent map, so it resolves to a root — which is exactly the rule that
+     * keeps it out of a task's subtree without any special-casing here.
+     */
+    describe("row milestones", () => {
+      const key = milestoneOrderKey("m");
+      const order = ["redesign", "logo", "copy", "invoicing", key];
+
+      it("moves a milestone among the top-level rows", () => {
+        expect(
+          moveWithinParent(order, key, "invoicing", "before", NESTED)
+        ).toEqual(["redesign", "logo", "copy", key, "invoicing"]);
+      });
+
+      // Dropped onto a child, a milestone lands beside that child's top-level
+      // ancestor — never between the children, which would make it look like
+      // one of them
+      it("lands after a parent's whole subtree, not inside it", () => {
+        expect(moveWithinParent(order, key, "logo", "after", NESTED)).toEqual([
+          "redesign",
+          "logo",
+          "copy",
+          key,
+          "invoicing",
+        ]);
+      });
+
+      it("lands above a parent when dropped before one of its children", () => {
+        expect(moveWithinParent(order, key, "copy", "before", NESTED)).toEqual([
+          key,
+          "redesign",
+          "logo",
+          "copy",
+          "invoicing",
+        ]);
+      });
+
+      it("lets a top-level task move past a milestone", () => {
+        expect(
+          moveWithinParent(order, "invoicing", key, "after", NESTED)
+        ).toEqual(["redesign", "logo", "copy", key, "invoicing"]);
+      });
+
+      it("refuses to move a nested task onto a milestone", () => {
+        expect(moveWithinParent(order, "logo", key, "after", NESTED)).toEqual(
+          order
+        );
+      });
+    });
+
+    it("refuses rather than hangs on a map that still loops", () => {
+      const looped: ReadonlyMap<string, string | null> = new Map<
+        string,
+        string | null
+      >([
+        ["a", "b"],
+        ["b", "a"],
+        ["c", null],
+      ]);
+
+      expect(
+        moveWithinParent(["a", "b", "c"], "c", "a", "after", looped)
+      ).toEqual(["a", "b", "c"]);
+    });
+  });
+});
+
 describe("orderByDate", () => {
   it("sorts earliest first", () => {
     const rows = [
@@ -178,6 +377,24 @@ describe("orderByDate", () => {
       makeRow("c", { start: "2026-08-01", end: "2026-08-02", summary: "Aa" }),
     ];
     expect(orderByDate(rows)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("orderEntriesByDate", () => {
+  it("sorts tasks and milestones together", () => {
+    const key = milestoneOrderKey("m");
+
+    expect(
+      orderEntriesByDate([
+        { id: "late", start: "2026-09-01", end: "2026-09-02", label: "Late" },
+        { id: key, start: "2026-08-15", end: "2026-08-15", label: "Freeze" },
+        { id: "early", start: "2026-08-01", end: "2026-08-02", label: "Early" },
+      ])
+    ).toEqual(["early", key, "late"]);
+  });
+
+  it("returns nothing for nothing", () => {
+    expect(orderEntriesByDate([])).toEqual([]);
   });
 });
 

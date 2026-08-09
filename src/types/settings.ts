@@ -33,12 +33,16 @@ export interface TasksMapSettings {
   ganttLabelWidth: number;
   // Manual Gantt row order, as task IDs
   ganttTaskOrder: string[];
+  // Gantt parents whose children are folded away, as task IDs
+  ganttCollapsedTaskIds: string[];
   // Measure Gantt durations in working days and keep bars off weekends
   ganttSkipWeekends: boolean;
   // Named days marked across the Gantt timeline
   ganttMilestones: GanttMilestone[];
   // Pick out the chain of tasks that decides the finish date, in both views
   showCriticalPath: boolean;
+  // Flag schedule risks on Gantt rows and count them under the chart
+  ganttShowWarnings: boolean;
 
   // Finance: hides the view, command, ribbon and menu entries when off
   financeEnabled: boolean;
@@ -83,9 +87,11 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
 
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
+  ganttCollapsedTaskIds: [],
   ganttSkipWeekends: false,
   ganttMilestones: [],
   showCriticalPath: false,
+  ganttShowWarnings: true,
 
   financeEnabled: false,
   financeRateNotePath: DEFAULT_RATE_NOTE_PATH,

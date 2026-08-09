@@ -2,6 +2,7 @@ import { App, Vault } from "obsidian";
 import { TaskStatus } from "./task";
 import { TaskDateProperty } from "../lib/task-dates";
 import { EMPTY_TASK_FINANCE, TaskFinance } from "../lib/task-finance";
+import { EMPTY_TASK_PROGRESS, TaskProgress } from "../lib/task-progress";
 
 export type TaskInsertPosition = "before" | "after";
 
@@ -35,6 +36,14 @@ export abstract class BaseTask {
   dates: TaskDateProperty[];
   /** Hours, people and expenses, from the task line or from frontmatter. */
   finance: TaskFinance;
+  /** How far along the task is, from the task line or from frontmatter. */
+  progress: TaskProgress;
+  /**
+   * The task this one sits inside, named by ID, or null when it stands alone.
+   * Held on the child so there is only ever one place saying who owns whom;
+   * whether the ID resolves, or loops, is `task-hierarchy`'s problem.
+   */
+  parentId: string | null;
 
   constructor(data: {
     id: string;
@@ -49,6 +58,8 @@ export abstract class BaseTask {
     projects?: string[];
     dates?: TaskDateProperty[];
     finance?: TaskFinance;
+    progress?: TaskProgress;
+    parentId?: string | null;
   }) {
     this.id = data.id;
     this.summary = data.summary;
@@ -62,6 +73,8 @@ export abstract class BaseTask {
     this.projects = data.projects ?? [];
     this.dates = data.dates ?? [];
     this.finance = data.finance ?? EMPTY_TASK_FINANCE;
+    this.progress = data.progress ?? EMPTY_TASK_PROGRESS;
+    this.parentId = data.parentId ?? null;
   }
 
   /**
@@ -123,6 +136,26 @@ export abstract class BaseTask {
   ): Promise<BaseTask | null>;
 
   /**
+   * Write how far along the task is, returning the updated task. A percentage
+   * outside 0–100 is clamped; `null` clears the field entirely, so one call
+   * can also take a task back to carrying no progress at all.
+   */
+  abstract setProgress(
+    _progress: number | null,
+    _app: App
+  ): Promise<BaseTask | null>;
+
+  /**
+   * Name the task this one sits inside, returning the updated task. `null`
+   * clears the field entirely, so one call can also lift a task back out to
+   * standing on its own.
+   */
+  abstract setParent(
+    _parentId: string | null,
+    _app: App
+  ): Promise<BaseTask | null>;
+
+  /**
    * Add link metadata to this task (for creating dependencies)
    */
   abstract addLinkMetadata(
@@ -154,6 +187,8 @@ export abstract class BaseTask {
       projects: this.projects,
       dates: this.dates,
       finance: this.finance,
+      progress: this.progress,
+      parentId: this.parentId,
     };
   }
 }

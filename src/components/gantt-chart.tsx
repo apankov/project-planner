@@ -8,8 +8,11 @@ import React, {
 import { App } from "obsidian";
 import {
   AlertTriangle,
+  ChevronDown,
+  ChevronRight,
   Coins,
   GripVertical,
+  IndentIncrease,
   Link2,
   Network,
   Plus,
@@ -25,18 +28,28 @@ import {
 } from "src/lib/date-utils";
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
 import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
-import { GanttGroup } from "src/lib/gantt-order";
+import { HierarchyGroup } from "src/lib/task-hierarchy";
+import { buildLines, visibleRowsOf } from "src/lib/gantt-lines";
 import {
   ConnectionHighlight,
   connectionKey,
   highlightDirection,
   isHighlightActive,
 } from "src/lib/connection-highlight";
-import { GanttMilestone, milestoneStatus } from "src/lib/gantt-milestones";
+import {
+  GanttMilestone,
+  laneMilestones,
+  milestoneStatus,
+} from "src/lib/gantt-milestones";
 import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
+import { effectiveTaskStatus } from "src/lib/task-progress";
 import { GanttBar, BarDragResult } from "./gantt-bar";
-import { GanttMilestoneMarker, MilestoneDragResult } from "./gantt-milestone";
+import {
+  GanttMilestoneMarker,
+  GanttMilestoneRow,
+  MilestoneDragResult,
+} from "./gantt-milestone";
 import { TagInput } from "./tag-input";
 import { LinkButton } from "./link-button";
 import { Tag } from "./tag";
@@ -65,7 +78,15 @@ export const GANTT_SCALES: GanttScale[] = [
   { id: "months", dayWidth: 5 },
 ];
 
-export type RowPlacement = "before" | "after";
+export type RowPlacement = "before" | "after" | "inside";
+
+/**
+ * How much of a row's height reads as "drop it inside me" rather than as an
+ * insertion above or below. The edges stay wide enough to hit comfortably —
+ * reordering is the commoner move and must not become fiddly to pay for
+ * nesting.
+ */
+const NEST_BAND = 0.4;
 
 export interface RowReorder {
   movedId: string;
@@ -73,33 +94,9 @@ export interface RowReorder {
   placement: RowPlacement;
 }
 
-/** A rendered line is either a group heading or a task row. */
-type ChartLine =
-  | { kind: "header"; key: string; label: string; count: number }
-  | { kind: "row"; key: string; row: GanttRow };
-
-function buildLines(groups: GanttGroup[]): ChartLine[] {
-  const lines: ChartLine[] = [];
-
-  for (const group of groups) {
-    if (group.label) {
-      lines.push({
-        kind: "header",
-        key: `group:${group.key}`,
-        label: group.label,
-        count: group.rows.length,
-      });
-    }
-    for (const row of group.rows) {
-      lines.push({ kind: "row", key: row.task.id, row });
-    }
-  }
-
-  return lines;
-}
-
 interface GanttChartProps {
-  groups: GanttGroup[];
+  /** Headings and their rows, already nested and folded. */
+  groups: HierarchyGroup[];
   rows: GanttRow[];
   dependencies: GanttDependency[];
   timelineStart: string;
@@ -126,16 +123,31 @@ interface GanttChartProps {
       drag selects without toggling, so releasing keeps the task selected. */
   onSelect: (_taskId: string, _toggle?: boolean, _additive?: boolean) => void;
   onCommit: (_result: BarDragResult) => void;
+  /** A click on a bar that moved nothing opens that task for editing. */
+  onOpenTask: (_taskId: string) => void;
   onReorder: (_reorder: RowReorder) => void;
+  /** Whether dropping one task into another would be a legal nesting. */
+  canNestInto: (_movedId: string, _targetId: string) => boolean;
+  /** A task dropped into the middle of another becomes its child. */
+  onNestInto: (_movedId: string, _targetId: string) => void;
   onAddTaskAfter: (_taskId: string) => void;
   onStartLink: (_taskId: string) => void;
   onShowInMap: (_taskId: string) => void;
+  /** Folds a parent's subtree away, or opens it again. */
+  onToggleCollapse: (_taskId: string) => void;
+  /** Opens the picker for which task this one should sit inside. */
+  onSetParent: (_taskId: string) => void;
   /** Absent when finance is switched off, which hides the button. */
   onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
   onRemoveTag: (_taskId: string, _tag: string) => void;
-  /** Named days marked across the timeline. */
+  /** Named days marked across the timeline, in the lane and in the list. */
   milestones: GanttMilestone[];
+  /**
+   * The manual row order, which row milestones take a slot in alongside the
+   * tasks. Already normalised by the view, so every line on screen is in it.
+   */
+  order: string[];
   onMoveMilestone: (_result: MilestoneDragResult) => void;
   onEditMilestone: (_milestoneId: string) => void;
   /** Every tag in use, most common first, for the tag picker. */
@@ -211,7 +223,10 @@ function RowLabel({
   return (
     <>
       <span
-        className={`tasks-map-gantt__status tasks-map-gantt__status--${row.task.status}`}
+        className={`tasks-map-gantt__status tasks-map-gantt__status--${effectiveTaskStatus(
+          row.task.status,
+          row.task.progress
+        )}`}
       />
       {riskMessages.length > 0 && <RiskBadge messages={riskMessages} />}
       <GanttLabelText summary={row.task.summary} app={app} />
@@ -329,14 +344,20 @@ export function GanttChart({
   savingTaskIds,
   onSelect,
   onCommit,
+  onOpenTask,
   onReorder,
+  canNestInto,
+  onNestInto,
   onAddTaskAfter,
   onStartLink,
   onShowInMap,
+  onToggleCollapse,
+  onSetParent,
   onEditFinance,
   onAddTag,
   onRemoveTag,
   milestones,
+  order,
   onMoveMilestone,
   onEditMilestone,
   allTags,
@@ -356,16 +377,35 @@ export function GanttChart({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [taggingId, setTaggingId] = useState<string | null>(null);
 
-  const lines = useMemo(() => buildLines(groups), [groups]);
+  const lines = useMemo(
+    () => buildLines(groups, milestones, order),
+    [groups, milestones, order]
+  );
+
+  /** Rows the arrow layer can reach: the ones actually on screen. */
+  const visibleRows = useMemo(() => visibleRowsOf(lines), [lines]);
+
+  /** Only the flag milestones need the band above the chart. */
+  const laneFlags = useMemo(() => laneMilestones(milestones), [milestones]);
 
   // Milestone flags get a lane of their own, but only once there is one to
   // draw — an empty band above every chart would be a strange default
   const headerRows =
-    milestones.length > 0 ? BASE_HEADER_ROWS + 1 : BASE_HEADER_ROWS;
+    laneFlags.length > 0 ? BASE_HEADER_ROWS + 1 : BASE_HEADER_ROWS;
 
-  /** Which row the pointer is over, and which side of it. */
+  /**
+   * Which line the pointer is over, and what dropping there would mean.
+   *
+   * The middle of a task row nests the dragged task inside it; the edges keep
+   * their old meaning of an insertion above or below. `movedId` is needed
+   * because whether nesting is even offered depends on what is being dragged —
+   * nothing can go inside itself or inside its own descendants.
+   */
   const resolveDropTarget = useCallback(
-    (clientY: number): { id: string; placement: RowPlacement } | null => {
+    (
+      clientY: number,
+      movedId: string
+    ): { id: string; placement: RowPlacement } | null => {
       const container = labelsRef.current;
       if (!container) return null;
 
@@ -375,33 +415,49 @@ export function GanttChart({
         clientY - container.getBoundingClientRect().top - headerHeight;
       const index = Math.floor(offset / ROW_HEIGHT);
       if (index < 0) {
-        const first = lines.find((line) => line.kind === "row");
-        return first?.kind === "row"
-          ? { id: first.row.task.id, placement: "before" }
+        const first = lines.find((line) => line.orderId !== null);
+        return first?.orderId
+          ? { id: first.orderId, placement: "before" }
           : null;
       }
 
       const clamped = Math.min(index, lines.length - 1);
-      // Headers are not drop targets; fall back to the row above them
+      // Headers hold no slot in the order, so they are not drop targets; fall
+      // back to whichever line above them does
       let line = lines[clamped];
-      for (let i = clamped; i >= 0 && line?.kind !== "row"; i--) {
+      for (let i = clamped; i >= 0 && line?.orderId == null; i--) {
         line = lines[i];
       }
-      if (!line || line.kind !== "row") return null;
+      if (!line?.orderId) return null;
 
       const withinRow = offset - clamped * ROW_HEIGHT;
+      const edge = (ROW_HEIGHT * (1 - NEST_BAND)) / 2;
+
+      // Only a task can hold another task. A milestone marks a date and owns
+      // nothing, so its middle goes on meaning "drop after this one".
+      const nestable =
+        line.kind === "row" &&
+        line.orderId !== movedId &&
+        canNestInto(movedId, line.orderId);
+
+      if (nestable && withinRow >= edge && withinRow <= ROW_HEIGHT - edge) {
+        return { id: line.orderId, placement: "inside" };
+      }
+
       return {
-        id: line.row.task.id,
+        id: line.orderId,
         placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
       };
     },
-    [headerRows, lines]
+    [canNestInto, headerRows, lines]
   );
 
   /** A bar dragged up or down shows the same drop indicator as a row drag. */
   const handleVerticalPreview = useCallback(
-    (clientY: number | null) => {
-      setDropTarget(clientY === null ? null : resolveDropTarget(clientY));
+    (clientY: number | null, movedId: string) => {
+      setDropTarget(
+        clientY === null ? null : resolveDropTarget(clientY, movedId)
+      );
     },
     [resolveDropTarget]
   );
@@ -409,11 +465,17 @@ export function GanttChart({
   const handleVerticalDrop = useCallback(
     (movedId: string, clientY: number) => {
       setDropTarget(null);
-      const target = resolveDropTarget(clientY);
+      const target = resolveDropTarget(clientY, movedId);
       if (!target || target.id === movedId) return;
+
+      if (target.placement === "inside") {
+        onNestInto(movedId, target.id);
+        return;
+      }
+
       onReorder({ movedId, targetId: target.id, placement: target.placement });
     },
-    [onReorder, resolveDropTarget]
+    [onNestInto, onReorder, resolveDropTarget]
   );
 
   const handleReorderDown = useCallback(
@@ -432,7 +494,7 @@ export function GanttChart({
     (event: React.PointerEvent<HTMLElement>) => {
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
-      setDropTarget(resolveDropTarget(event.clientY));
+      setDropTarget(resolveDropTarget(event.clientY, drag.movedId));
     },
     [resolveDropTarget]
   );
@@ -446,9 +508,14 @@ export function GanttChart({
       event.currentTarget.releasePointerCapture(event.pointerId);
       setDraggingId(null);
 
-      const target = resolveDropTarget(event.clientY);
+      const target = resolveDropTarget(event.clientY, drag.movedId);
       setDropTarget(null);
       if (!target || target.id === drag.movedId) return;
+
+      if (target.placement === "inside") {
+        onNestInto(drag.movedId, target.id);
+        return;
+      }
 
       onReorder({
         movedId: drag.movedId,
@@ -456,7 +523,7 @@ export function GanttChart({
         placement: target.placement,
       });
     },
-    [onReorder, resolveDropTarget]
+    [onNestInto, onReorder, resolveDropTarget]
   );
 
   const totalDays = inclusiveDayCount(timelineStart, timelineEnd);
@@ -540,6 +607,17 @@ export function GanttChart({
     []
   );
 
+  // How far a child's name sits in from the column's edge. A custom property
+  // set through a ref, because inline `style` props are an ESLint error and a
+  // class per depth would cap the nesting at however many were written.
+  const setDepthRef = useCallback(
+    (depth: number) => (el: HTMLDivElement | null) => {
+      if (!el) return;
+      el.style.setProperty("--gantt-depth", String(depth));
+    },
+    []
+  );
+
   // Arrows are positioned by rendered line, so group headings push them down
   const lineIndexById = useMemo(() => {
     const index = new Map<string, number>();
@@ -549,11 +627,19 @@ export function GanttChart({
     return index;
   }, [lines]);
 
+  /**
+   * Built from the rendered lines rather than from every row, for two reasons:
+   * a summary row's bar is the rolled-up one, and a row folded away inside a
+   * collapsed parent is not here at all. The second is what keeps the arrow
+   * layer honest — a link to a hidden row is dropped rather than drawn to
+   * whichever row happens to have taken its place, the same way a link to a
+   * filtered-out task is already dropped in `getDependencies`.
+   */
   const rowByTaskId = useMemo(() => {
     const map = new Map<string, GanttRow>();
-    rows.forEach((row) => map.set(row.task.id, row));
+    visibleRows.forEach((row) => map.set(row.task.id, row));
     return map;
-  }, [rows]);
+  }, [visibleRows]);
 
   // Blocker names for the conflict messages, without the metadata a task line
   // carries around with it
@@ -608,9 +694,10 @@ export function GanttChart({
 
   const highlighting = isHighlightActive(highlight);
 
-  const rowClassName = (row: GanttRow, base: string) =>
+  const rowClassName = (row: GanttRow, base: string, extra = "") =>
     [
       base,
+      extra,
       selectedTaskIds.has(row.task.id) ? `${base}--selected` : "",
       draggingId === row.task.id ? `${base}--dragging` : "",
       dropTarget?.id === row.task.id
@@ -640,6 +727,22 @@ export function GanttChart({
       .filter(Boolean)
       .join(" ");
 
+  /**
+   * A milestone line carries only the states a milestone can be in. It is not
+   * a task, so it is never selected, never on the critical path, never at
+   * risk and never a link target — the only thing it shares with a row is
+   * that it can be dragged up and down the list.
+   */
+  const milestoneLineClassName = (orderId: string, base: string) =>
+    [
+      base,
+      `${base}--milestone`,
+      draggingId === orderId ? `${base}--dragging` : "",
+      dropTarget?.id === orderId ? `${base}--drop-${dropTarget.placement}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
   return (
     <div className="tasks-map-gantt" ref={gridRef}>
       {/* One scroll container for both panes: vertical scrolling keeps the
@@ -660,10 +763,62 @@ export function GanttChart({
                   {line.count}
                 </span>
               </div>
+            ) : line.kind === "milestone" ? (
+              /* A milestone filed among the tasks. No status dot, no tags, no
+                 row actions and no twisty with anything behind it — it is a
+                 date the plan is measured against, not a task, and offering
+                 it a task's controls would say otherwise. */
+              <div
+                key={line.key}
+                className={milestoneLineClassName(
+                  line.orderId,
+                  "tasks-map-gantt__label"
+                )}
+                onClick={() => onEditMilestone(line.milestone.id)}
+              >
+                <span
+                  className="tasks-map-gantt__grip"
+                  title={t("gantt.reorder_hint")}
+                  onPointerDown={handleReorderDown(line.orderId)}
+                  onPointerMove={handleReorderMove}
+                  onPointerUp={handleReorderUp}
+                  onPointerCancel={handleReorderUp}
+                  /* The row opens the milestone when clicked, and a drag that
+                     ends on the grip still counts as a click on it */
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <GripVertical size={12} />
+                </span>
+                <span
+                  className="tasks-map-gantt__twisty tasks-map-gantt__twisty--empty"
+                  aria-hidden="true"
+                />
+                <span
+                  className="tasks-map-gantt__milestone-dot"
+                  aria-hidden="true"
+                />
+                <span
+                  className="tasks-map-gantt__label-text"
+                  title={t("gantt.milestone_tooltip", {
+                    label: line.milestone.label,
+                    date: line.milestone.date,
+                  })}
+                >
+                  {line.milestone.label}
+                </span>
+                <span className="tasks-map-gantt__milestone-date">
+                  {line.milestone.date}
+                </span>
+              </div>
             ) : (
               <div
                 key={line.key}
-                className={rowClassName(line.row, "tasks-map-gantt__label")}
+                ref={setDepthRef(line.depth)}
+                className={rowClassName(
+                  line.row,
+                  "tasks-map-gantt__label",
+                  line.hasChildren ? "tasks-map-gantt__label--summary" : ""
+                )}
                 onClick={(event) =>
                   onSelect(
                     line.row.task.id,
@@ -682,6 +837,35 @@ export function GanttChart({
                 >
                   <GripVertical size={12} />
                 </span>
+                {/* A fixed-width slot either way, so the names of a parent and
+                    of a childless task at the same depth still line up */}
+                {line.hasChildren ? (
+                  <button
+                    className="tasks-map-gantt__twisty"
+                    title={
+                      line.collapsed ? t("gantt.expand") : t("gantt.collapse")
+                    }
+                    aria-label={
+                      line.collapsed ? t("gantt.expand") : t("gantt.collapse")
+                    }
+                    aria-expanded={!line.collapsed}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggleCollapse(line.row.task.id);
+                    }}
+                  >
+                    {line.collapsed ? (
+                      <ChevronRight size={12} />
+                    ) : (
+                      <ChevronDown size={12} />
+                    )}
+                  </button>
+                ) : (
+                  <span
+                    className="tasks-map-gantt__twisty tasks-map-gantt__twisty--empty"
+                    aria-hidden="true"
+                  />
+                )}
                 {taggingId === line.row.task.id ? (
                   <span
                     className="tasks-map-gantt__tag-input"
@@ -710,7 +894,16 @@ export function GanttChart({
                     onRemoveTag={onRemoveTag}
                   />
                 )}
-                <span className="tasks-map-gantt__row-actions">
+                {/* Always rendered, so the buttons stay in the tab order and
+                    in the accessibility tree; CSS floats them over the right
+                    of the row and reveals them on hover or focus. */}
+                <span
+                  className={`tasks-map-gantt__row-actions${
+                    taggingId === line.row.task.id
+                      ? " tasks-map-gantt__row-actions--hidden"
+                      : ""
+                  }`}
+                >
                   <button
                     className="tasks-map-gantt__row-action"
                     title={t("gantt.add_tag")}
@@ -745,6 +938,17 @@ export function GanttChart({
                     }}
                   >
                     <Link2 size={12} />
+                  </button>
+                  <button
+                    className="tasks-map-gantt__row-action"
+                    title={t("gantt.set_parent")}
+                    aria-label={t("gantt.set_parent")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSetParent(line.row.task.id);
+                    }}
+                  >
+                    <IndentIncrease size={12} />
                   </button>
                   {onEditFinance && (
                     <button
@@ -812,7 +1016,7 @@ export function GanttChart({
                 </div>
               ))}
             </div>
-            {milestones.length > 0 && (
+            {laneFlags.length > 0 && (
               <div
                 className="tasks-map-gantt__milestone-lane"
                 aria-hidden="true"
@@ -873,6 +1077,23 @@ export function GanttChart({
                   className="tasks-map-gantt__group-spacer"
                   aria-hidden="true"
                 />
+              ) : line.kind === "milestone" ? (
+                <div
+                  key={line.key}
+                  className={milestoneLineClassName(
+                    line.orderId,
+                    "tasks-map-gantt__row"
+                  )}
+                >
+                  <GanttMilestoneRow
+                    milestone={line.milestone}
+                    status={milestoneStatus(line.milestone, today)}
+                    offsetDays={diffDays(timelineStart, line.milestone.date)}
+                    dayWidth={scale.dayWidth}
+                    onMove={onMoveMilestone}
+                    onEdit={onEditMilestone}
+                  />
+                </div>
               ) : (
                 <div
                   key={line.key}
@@ -882,10 +1103,12 @@ export function GanttChart({
                     task={line.row.task}
                     bar={line.row.bar}
                     inferred={line.row.inferred}
+                    summary={line.hasChildren}
                     analysis={analysisFor(line.row.task.id)}
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
+                    onOpen={onOpenTask}
                     onVerticalPreview={handleVerticalPreview}
                     onVerticalDrop={handleVerticalDrop}
                     selected={selectedTaskIds.has(line.row.task.id)}
@@ -898,9 +1121,9 @@ export function GanttChart({
 
           {/* Above both the header and the rows, so a milestone's flag stays
               in its lane while its guide line runs the length of the chart. */}
-          {milestones.length > 0 && (
+          {laneFlags.length > 0 && (
             <div className="tasks-map-gantt__milestones">
-              {milestones.map((milestone) => (
+              {laneFlags.map((milestone) => (
                 <GanttMilestoneMarker
                   key={milestone.id}
                   milestone={milestone}
