@@ -312,7 +312,9 @@
     "open_gantt": "打开甘特图",
     "open_gantt_desc": "为这些任务打开甘特图视图",
     "undo": "撤销",
-    "undo_desc": "撤销在任一视图中所做的最后一次更改"
+    "undo_desc": "撤销在任一视图中所做的最后一次更改",
+    "fit_view": "适应视图",
+    "fit_view_desc": "缩小视图直到所有任务都显示在屏幕内"
   },
   "multiselect": {
     "select": "选择...",

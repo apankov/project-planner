@@ -95,10 +95,6 @@ interface TaskMapGraphViewProps {
   reloadRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-interface ReloadTasksOptions {
-  preserveViewport?: boolean;
-}
-
 export default function TaskMapGraphView({
   settings,
   filterState,
@@ -127,7 +123,12 @@ export default function TaskMapGraphView({
   const dropEdgeRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const reactFlowInstance = useReactFlow();
-  const skipFitViewRef = React.useRef(false);
+  // Fitting the view yanks the canvas away from whatever is being edited, so it
+  // only happens on the first paint, on a deliberate reshape of the whole graph
+  // (layout direction, project grouping), or when the fit button is pressed.
+  const hasFittedRef = React.useRef(false);
+  const fitShapeRef = React.useRef<string | null>(null);
+  const pendingFitRef = React.useRef(false);
   const connectStartRef = React.useRef<{
     nodeId: string;
     handleType: "source" | "target";
@@ -208,41 +209,35 @@ export default function TaskMapGraphView({
     }
   }, [hideTags]);
 
-  const reloadTasks = useCallback(
-    ({ preserveViewport = false }: ReloadTasksOptions = {}) => {
-      setIsLoading(true);
-      // Use setTimeout to allow the loading UI to render before heavy computation
-      window.setTimeout(() => {
-        if (preserveViewport) {
-          skipFitViewRef.current = true;
-        }
-        // Reset dropped state on reload so unlinked tasks return to sidebar
-        setDroppedTaskIds(new Set());
-        setNewlyCreatedTaskIds(new Set());
-        droppedNodePositions.current = new Map();
-        const newTasks = getAllTasks(app);
-        setTasks(newTasks);
-        const newRegistry = new Map<string, string[]>();
-        newTasks.forEach((task) => {
-          newRegistry.set(task.id, task.tags);
-        });
-        setTaskTagsRegistry(newRegistry);
-        setIsLoading(false);
-        new Notice("Tasks reloaded");
-      }, 0);
-    },
-    [app]
-  );
-
-  const handleReloadTasks = useCallback(() => {
-    reloadTasks({ preserveViewport: true });
-  }, [reloadTasks]);
+  const reloadTasks = useCallback(() => {
+    setIsLoading(true);
+    // Use setTimeout to allow the loading UI to render before heavy computation
+    window.setTimeout(() => {
+      // Reset dropped state on reload so unlinked tasks return to sidebar
+      setDroppedTaskIds(new Set());
+      setNewlyCreatedTaskIds(new Set());
+      droppedNodePositions.current = new Map();
+      const newTasks = getAllTasks(app);
+      setTasks(newTasks);
+      const newRegistry = new Map<string, string[]>();
+      newTasks.forEach((task) => {
+        newRegistry.set(task.id, task.tags);
+      });
+      setTaskTagsRegistry(newRegistry);
+      setIsLoading(false);
+      new Notice("Tasks reloaded");
+    }, 0);
+  }, [app]);
 
   useEffect(() => {
     if (reloadRef) {
-      reloadRef.current = handleReloadTasks;
+      reloadRef.current = reloadTasks;
     }
-  }, [reloadRef, handleReloadTasks]);
+  }, [reloadRef, reloadTasks]);
+
+  const handleFitView = useCallback(() => {
+    reactFlowInstance.fitView({ duration: 400 });
+  }, [reactFlowInstance]);
 
   // The Gantt asking us to show a task: light up its chain and centre on it
   useEffect(() => {
@@ -251,7 +246,6 @@ export default function TaskMapGraphView({
       if (!focusedId) return;
 
       setHighlightedTaskId(focusedId);
-      skipFitViewRef.current = true;
 
       // Give the rebuild a beat to place the node before centring on it
       window.setTimeout(() => {
@@ -283,7 +277,6 @@ export default function TaskMapGraphView({
   }, []);
 
   const handleDeleteTask = useCallback((taskId: string) => {
-    skipFitViewRef.current = true;
     setTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
     setNewlyCreatedTaskIds((prevTaskIds) => {
       if (!prevTaskIds.has(taskId)) return prevTaskIds;
@@ -300,7 +293,6 @@ export default function TaskMapGraphView({
   }, []);
 
   const handleTaskCreated = useCallback((newTask: BaseTask) => {
-    skipFitViewRef.current = true;
     setNewlyCreatedTaskIds((prevTaskIds) =>
       new Set(prevTaskIds).add(newTask.id)
     );
@@ -313,7 +305,6 @@ export default function TaskMapGraphView({
 
   const handleTaskEdited = useCallback(
     (taskId: string, updatedTask: BaseTask) => {
-      skipFitViewRef.current = true;
       setTasks((prevTasks) =>
         prevTasks.map((task) => (task.id === taskId ? updatedTask : task))
       );
@@ -647,11 +638,10 @@ export default function TaskMapGraphView({
             );
           }
 
-          handleReloadTasks();
+          reloadTasks();
         },
       });
 
-      skipFitViewRef.current = true;
       setTasks((previous) =>
         previous
           .filter((candidate) => candidate.id !== task.id)
@@ -676,7 +666,7 @@ export default function TaskMapGraphView({
     [
       app,
       createUpdatedTask,
-      handleReloadTasks,
+      reloadTasks,
       plugin,
       readTaskLine,
       restoreTaskLine,
@@ -766,13 +756,28 @@ export default function TaskMapGraphView({
     setNodes([...layoutedLinkedNodes, ...layoutedDroppedNodes]);
     setEdges(newEdges);
 
-    if (skipFitViewRef.current) {
-      skipFitViewRef.current = false;
-    } else {
-      window.setTimeout(() => {
-        reactFlowInstance.fitView({ duration: 400 });
-      }, 1000);
+    const hasNodes =
+      layoutedLinkedNodes.length + layoutedDroppedNodes.length > 0;
+    const fitShape = `${settings.layoutDirection}|${groupByProject}`;
+    if (hasNodes) {
+      if (fitShapeRef.current !== null && fitShapeRef.current !== fitShape) {
+        pendingFitRef.current = true;
+      }
+      fitShapeRef.current = fitShape;
     }
+
+    if (!hasNodes || (hasFittedRef.current && !pendingFitRef.current)) return;
+
+    // The first fit waits for the nodes to be measured; a reshape should feel
+    // immediate. Clearing the timer on re-run keeps a rebuild mid-wait from
+    // firing a second, stale fit.
+    const delay = hasFittedRef.current ? 60 : 1000;
+    const timer = window.setTimeout(() => {
+      hasFittedRef.current = true;
+      pendingFitRef.current = false;
+      reactFlowInstance.fitView({ duration: 400 });
+    }, delay);
+    return () => window.clearTimeout(timer);
   }, [
     graphTasks,
     filterState,
@@ -933,7 +938,6 @@ export default function TaskMapGraphView({
 
     if (vault) {
       await removeLinkSignsBetweenTasks(vault, targetTask, sourceTask.id);
-      skipFitViewRef.current = true;
       updateTaskIncomingLinks(targetTask.id, (incomingLinks) =>
         incomingLinks.filter((id) => id !== sourceTask.id)
       );
@@ -1023,7 +1027,6 @@ export default function TaskMapGraphView({
         settings.linkingStyle
       );
 
-      skipFitViewRef.current = true;
       setNewlyCreatedTaskIds((prevTaskIds) =>
         new Set(prevTaskIds).add(newTask.id)
       );
@@ -1104,7 +1107,6 @@ export default function TaskMapGraphView({
         settings.linkingStyle
       );
       if (hash) {
-        skipFitViewRef.current = true;
         updateTaskIncomingLinks(targetTask.id, (incomingLinks) =>
           incomingLinks.includes(sourceTask.id)
             ? incomingLinks
@@ -1238,7 +1240,6 @@ export default function TaskMapGraphView({
         });
         droppedNodePositions.current.set(newTask.id, position);
 
-        skipFitViewRef.current = true;
         setDroppedTaskIds((previous) => new Set(previous).add(newTask.id));
         setNewlyCreatedTaskIds((previous) => new Set(previous).add(newTask.id));
         setTasks((previous) => [...previous, newTask]);
@@ -1321,7 +1322,6 @@ export default function TaskMapGraphView({
           );
         }
 
-        skipFitViewRef.current = true;
         setNewlyCreatedTaskIds((prevTaskIds) =>
           new Set(prevTaskIds).add(newTask.id)
         );
@@ -1615,7 +1615,6 @@ export default function TaskMapGraphView({
           settings.linkingStyle
         );
 
-        skipFitViewRef.current = true;
         updateTaskIncomingLinks(targetTask.id, (links) => [
           ...links.filter((id) => id !== sourceTask.id),
           movedTask.id,
@@ -1635,7 +1634,7 @@ export default function TaskMapGraphView({
               targetTask,
               settings.linkingStyle
             );
-            handleReloadTasks();
+            reloadTasks();
           },
         });
 
@@ -1653,7 +1652,7 @@ export default function TaskMapGraphView({
     },
     [
       edges,
-      handleReloadTasks,
+      reloadTasks,
       plugin,
       settings.linkingStyle,
       tasks,
@@ -1844,9 +1843,6 @@ export default function TaskMapGraphView({
       // Store the position so the node appears exactly at the drop point
       droppedNodePositions.current.set(taskId, position);
 
-      // Prevent fitView from zooming out after a sidebar drop
-      skipFitViewRef.current = true;
-
       // Mark task as dropped — triggers graph re-render with the new node
       setDroppedTaskIds((prev) => {
         const next = new Set(prev);
@@ -2015,7 +2011,8 @@ export default function TaskMapGraphView({
                 showTags={settings.showTags}
                 hideTags={hideTags}
                 setHideTags={toggleHideTags}
-                reloadTasks={handleReloadTasks}
+                reloadTasks={reloadTasks}
+                fitView={handleFitView}
                 showUnlinkedPanel={embed.showUnlinkedPanel}
                 hideUnlinkedTasks={hideUnlinkedTasks}
                 setHideUnlinkedTasks={setHideUnlinkedTasks}

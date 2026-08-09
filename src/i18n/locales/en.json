@@ -312,7 +312,9 @@
     "open_gantt": "Open Gantt",
     "open_gantt_desc": "Open the Gantt view for these tasks",
     "undo": "Undo",
-    "undo_desc": "Take back the last change made in either view"
+    "undo_desc": "Take back the last change made in either view",
+    "fit_view": "Fit view",
+    "fit_view_desc": "Zoom out until every task fits on screen"
   },
   "multiselect": {
     "select": "Select...",

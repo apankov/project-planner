@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, GanttChartSquare, Undo2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  GanttChartSquare,
+  Maximize2,
+  Undo2,
+} from "lucide-react";
 import { t } from "../i18n";
 
 interface ControlsPanelProps {
@@ -7,6 +13,8 @@ interface ControlsPanelProps {
   hideTags: boolean;
   setHideTags: () => void;
   reloadTasks: () => void;
+  /** Puts the whole graph back on screen; the view no longer does this itself. */
+  fitView: () => void;
   showUnlinkedPanel: boolean;
   hideUnlinkedTasks: boolean;
   setHideUnlinkedTasks: (_val: boolean) => void;
@@ -28,6 +36,7 @@ export default function ControlsPanel({
   hideTags,
   setHideTags,
   reloadTasks,
+  fitView,
   showUnlinkedPanel,
   hideUnlinkedTasks,
   setHideUnlinkedTasks,
@@ -142,6 +151,14 @@ export default function ControlsPanel({
               className="tasks-map-gui-overlay-reload-button"
             >
               {t("filters.reload_tasks")}
+            </button>
+            <button
+              onClick={fitView}
+              className="tasks-map-gui-overlay-reload-button tasks-map-open-gantt-button"
+              title={t("controls.fit_view_desc")}
+            >
+              <Maximize2 size={14} />
+              <span>{t("controls.fit_view")}</span>
             </button>
             <button
               onClick={onUndo}

@@ -312,7 +312,9 @@
     "open_gantt": "Gantt openen",
     "open_gantt_desc": "Open de Gantt-weergave voor deze taken",
     "undo": "Ongedaan maken",
-    "undo_desc": "Maak de laatste wijziging in een van beide weergaven ongedaan"
+    "undo_desc": "Maak de laatste wijziging in een van beide weergaven ongedaan",
+    "fit_view": "Passend maken",
+    "fit_view_desc": "Zoom uit tot alle taken op het scherm passen"
   },
   "multiselect": {
     "select": "Selecteer...",
