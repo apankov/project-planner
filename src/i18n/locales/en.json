@@ -126,6 +126,7 @@
     "tooltip_critical": "On the critical path — no slack",
     "tooltip_slack": "{{n}} days of slack",
     "tooltip_behind": "{{n}} days later than the plan allows",
+    "tooltip_progress": "{{n}}% complete",
     "risk_overdue": "Overdue",
     "risk_late_start": "Should have started by now",
     "risk_conflict": "Starts before \"{{blocker}}\" finishes"
@@ -168,6 +169,8 @@
     "show_task_tags_desc": "Display tags on task nodes",
     "show_status_counts": "Show status counts",
     "show_status_counts_desc": "Display a status counts overlay on the canvas",
+    "gantt_show_warnings": "Show Gantt warnings",
+    "gantt_show_warnings_desc": "Display warning markers on at-risk task rows and the summary line below the Gantt chart",
     "layout": "Layout",
     "layout_direction": "Layout direction",
     "layout_direction_desc": "Direction for the node layout",

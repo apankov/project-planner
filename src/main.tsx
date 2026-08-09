@@ -290,6 +290,12 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists the Gantt's schedule-warning toggle. */
+  async setGanttShowWarnings(show: boolean): Promise<void> {
+    this.settings.ganttShowWarnings = show;
+    await this.saveSettings();
+  }
+
   /** Persists per-connection line styles. */
   async setEdgeStyleOverrides(overrides: EdgeStyleOverrides): Promise<void> {
     this.settings.edgeStyleOverrides = overrides;

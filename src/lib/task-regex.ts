@@ -38,6 +38,29 @@ export const TEXT_DATE_FIELD_REMOVAL = new RegExp(
   "gi"
 );
 
+// Progress field names recognized on a task line and in frontmatter.
+// The first entry is canonical: it is the only spelling ever written back.
+export const PROGRESS_FIELD_NAMES =
+  "progress|percentComplete|percent-complete|percentcomplete|percent";
+
+// Dataview progress field: [progress:: 40], [progress:: 40%], (progress:: 40)
+// Capturing, for reading the value (no 'g' flag, for .match())
+export const PROGRESS_FIELD_PATTERN = new RegExp(
+  `[[(]{1,2}(?:${PROGRESS_FIELD_NAMES})::\\s*([^\\])]*)[\\])]{1,2}`,
+  "i"
+);
+
+// The same field, for stripping it out of a displayed summary and out of a
+// line before rewriting it
+export const PROGRESS_FIELD_REMOVAL = new RegExp(
+  `[[(]{1,2}(?:${PROGRESS_FIELD_NAMES})::\\s*[^\\])]*[\\])]{1,2}`,
+  "gi"
+);
+
+// A progress value on its own: a number, optionally with a trailing percent
+// sign. Deliberately strict — "40 percent" and "nearly done" are not numbers.
+export const PROGRESS_VALUE_PATTERN = /^[+-]?\d+(?:\.\d+)?\s*%?$/;
+
 // Cleaning patterns - for removing metadata (no capture groups)
 export const EMOJI_ID_REMOVAL = /🆔\s+\S+/g;
 export const DATAVIEW_BRACKET_ID_REMOVAL = /\[id::\s*\S+\]/g;

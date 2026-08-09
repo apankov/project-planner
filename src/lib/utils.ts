@@ -17,6 +17,7 @@ import {
 } from "src/types/base-task";
 import { getFrontmatterDateProperties } from "./task-dates";
 import { FINANCE_FIELD_REMOVAL, getFrontmatterFinance } from "./task-finance";
+import { getFrontmatterProgress } from "./task-progress";
 import {
   ConnectionHighlight,
   EMPTY_HIGHLIGHT,
@@ -1627,6 +1628,7 @@ function parseTaskNote(
     // Note tasks keep their dates in frontmatter rather than in the task text
     task.dates = getFrontmatterDateProperties(frontmatter);
     task.finance = getFrontmatterFinance(frontmatter);
+    task.progress = getFrontmatterProgress(frontmatter);
 
     // Collect all incoming links from various sources
     const allIncomingLinks: string[] = [];

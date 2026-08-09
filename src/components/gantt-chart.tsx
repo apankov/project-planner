@@ -710,7 +710,16 @@ export function GanttChart({
                     onRemoveTag={onRemoveTag}
                   />
                 )}
-                <span className="tasks-map-gantt__row-actions">
+                {/* Always rendered, so the buttons stay in the tab order and
+                    in the accessibility tree; CSS floats them over the right
+                    of the row and reveals them on hover or focus. */}
+                <span
+                  className={`tasks-map-gantt__row-actions${
+                    taggingId === line.row.task.id
+                      ? " tasks-map-gantt__row-actions--hidden"
+                      : ""
+                  }`}
+                >
                   <button
                     className="tasks-map-gantt__row-action"
                     title={t("gantt.add_tag")}

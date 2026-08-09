@@ -3051,7 +3051,11 @@ If your plugin does not need CSS, delete this file.
    visible area. As flex items they would otherwise be exactly one viewport
    tall however many rows there are, which left the label column's background
    (and its sticky header) ending at the fold, with the bars below showing
-   through the task names. `min-height` keeps a short list filling the pane. */
+   through the task names. `min-height` keeps a short list filling the pane.
+
+   This box is no longer the only thing keeping the timeline out of the task
+   names: every line below paints its own opaque backdrop, so however this
+   column's height ends up being computed, no row can be left transparent. */
 .tasks-map-gantt__labels {
   position: sticky;
   left: 0;
@@ -3099,7 +3103,14 @@ If your plugin does not need CSS, delete this file.
   box-sizing: border-box;
 }
 
+/* `position` anchors the row-action overlay. `background-color` is the opaque
+   backdrop for this one row: the timeline is a sibling of the whole column, so
+   without it a task name is only readable while some ancestor box happens to
+   reach this far down. Every state below tints *over* this colour rather than
+   replacing it — a translucent `background` shorthand would put the bars back
+   behind the text. */
 .tasks-map-gantt__label {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -3107,12 +3118,18 @@ If your plugin does not need CSS, delete this file.
   padding: 0 6px 0 8px;
   box-sizing: border-box;
   cursor: pointer;
+  background-color: var(--background-primary);
   border-bottom: 1px solid var(--background-modifier-border-hover);
 }
 
+/* A solid-colour gradient, not `background`, so the opaque colour above
+   survives: the hover tint a theme supplies here is usually translucent. */
 .tasks-map-gantt__label--selected,
 .tasks-map-gantt__row--selected {
-  background: var(--background-modifier-hover);
+  background-image: linear-gradient(
+    var(--background-modifier-hover),
+    var(--background-modifier-hover)
+  );
 }
 
 .tasks-map-gantt__label--dimmed,
@@ -3120,16 +3137,31 @@ If your plugin does not need CSS, delete this file.
   opacity: 0.35;
 }
 
+/* Mixed into the column's own colour rather than into `transparent`. The
+   result is the same shade a translucent tint composited to, but opaque, so
+   the row keeps hiding the timeline behind it. */
 .tasks-map-gantt__label--connected {
-  background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--interactive-accent) 12%,
+    var(--background-primary)
+  );
 }
 
 .tasks-map-gantt__label--upstream {
-  background: color-mix(in srgb, var(--color-purple, #7c5cbf) 14%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-purple, #7c5cbf) 14%,
+    var(--background-primary)
+  );
 }
 
 .tasks-map-gantt__label--downstream {
-  background: color-mix(in srgb, var(--color-orange, #e07c3a) 14%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-orange, #e07c3a) 14%,
+    var(--background-primary)
+  );
 }
 
 .tasks-map-gantt__tag-input {
@@ -3137,15 +3169,42 @@ If your plugin does not need CSS, delete this file.
   min-width: 0;
 }
 
+/* Floated over the right edge of the row instead of taking a column of its
+   own: the buttons are hidden for all but the hovered row, and a reserved
+   strip would narrow every task name to pay for it. Out of flow, so revealing
+   them cannot shove the name sideways under the pointer.
+
+   The two `inherit`s copy whatever backdrop the row itself ended up with —
+   plain, selected, connected, at risk — so the strip covers the text it sits
+   on without having to restate a colour for every state. */
 .tasks-map-gantt__row-actions {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
   display: inline-flex;
+  align-items: center;
   gap: 2px;
+  padding: 0 6px 0 10px;
+  background-color: inherit;
+  background-image: inherit;
   opacity: 0;
+  pointer-events: none;
 }
 
-.tasks-map-gantt__label:hover .tasks-map-gantt__row-actions {
+/* `focus-within` is what keeps the buttons usable from the keyboard: they stay
+   in the DOM and in the tab order, and tabbing into one reveals the strip. */
+.tasks-map-gantt__label:hover .tasks-map-gantt__row-actions,
+.tasks-map-gantt__label:focus-within .tasks-map-gantt__row-actions {
   opacity: 1;
+  pointer-events: auto;
+}
+
+/* Editing a tag turns the row into a text field that runs its full width;
+   the overlay would sit on top of the input's right-hand end. */
+.tasks-map-gantt__row-actions--hidden {
+  display: none;
 }
 
 .tasks-map-gantt__row-action {
@@ -3169,7 +3228,11 @@ If your plugin does not need CSS, delete this file.
 }
 
 .tasks-map-gantt__label--link-target:hover {
-  background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--interactive-accent) 18%,
+    var(--background-primary)
+  );
   cursor: crosshair;
 }
 
@@ -3421,8 +3484,12 @@ If your plugin does not need CSS, delete this file.
   width: 0;
 }
 
-.tasks-map-gantt__milestone--today { --milestone-color: var(--color-orange, #e07c3a); }
-.tasks-map-gantt__milestone--past { --milestone-color: var(--text-faint); }
+.tasks-map-gantt__milestone--today {
+  --milestone-color: var(--color-orange, #e07c3a);
+}
+.tasks-map-gantt__milestone--past {
+  --milestone-color: var(--text-faint);
+}
 
 .tasks-map-gantt__milestone-line {
   position: absolute;
@@ -3611,7 +3678,34 @@ If your plugin does not need CSS, delete this file.
   cursor: progress;
 }
 
+/* How much of the task is done, filled from the left edge.
+
+   The wash is mixed from the bar's own text colour rather than a fixed white
+   or a fixed accent, which is what lets one rule read against every variant:
+   on the solid status colours the text is white, so the fill lightens them;
+   on the dashed inferred bar the text is muted dark on the page background,
+   so the same rule darkens instead of vanishing. The right edge is a hard
+   inset line because at a low percentage the wash alone is too thin to spot,
+   and it stays legible under the critical outline and the at-risk border. */
+.tasks-map-gantt-bar__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--bar-progress, 0%);
+  max-width: 100%;
+  border-radius: 4px 0 0 4px;
+  background: color-mix(in srgb, currentcolor 30%, transparent);
+  box-shadow: inset -2px 0 0 color-mix(in srgb, currentcolor 65%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Both sit above the fill: without a position they would paint underneath it,
+   hiding the name and the resize handles' hover state */
 .tasks-map-gantt-bar__label {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   padding: 0 6px;
   overflow: hidden;
@@ -3621,6 +3715,8 @@ If your plugin does not need CSS, delete this file.
 }
 
 .tasks-map-gantt-bar__handle {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   width: 6px;
   align-self: stretch;
@@ -3663,8 +3759,13 @@ If your plugin does not need CSS, delete this file.
   box-shadow: inset 3px 0 0 var(--color-red, #c0554d);
 }
 
+/* Opaque, like the other row tints: see `.tasks-map-gantt__label` */
 .tasks-map-gantt__label--at-risk {
-  background: color-mix(in srgb, var(--color-yellow, #d9a441) 10%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-yellow, #d9a441) 10%,
+    var(--background-primary)
+  );
 }
 
 .tasks-map-gantt__risk {

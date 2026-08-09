@@ -126,6 +126,7 @@
     "tooltip_critical": "位于关键路径 — 没有宽余时间",
     "tooltip_slack": "宽余 {{n}} 天",
     "tooltip_behind": "比计划允许的晚 {{n}} 天",
+    "tooltip_progress": "已完成 {{n}}%",
     "risk_overdue": "已逾期",
     "risk_late_start": "本应已经开始",
     "risk_conflict": "在“{{blocker}}”完成之前就开始"
@@ -168,6 +169,8 @@
     "show_task_tags_desc": "在任务节点上显示标签",
     "show_status_counts": "显示状态计数",
     "show_status_counts_desc": "在画布上显示状态计数叠加层",
+    "gantt_show_warnings": "显示甘特图警告",
+    "gantt_show_warnings_desc": "在有风险的任务行上显示警告标记，并在甘特图下方显示汇总提示",
     "layout": "布局",
     "layout_direction": "布局方向",
     "layout_direction_desc": "节点布局的方向",

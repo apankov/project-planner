@@ -71,6 +71,7 @@ export function GanttBar({
   saving,
 }: GanttBarProps) {
   const barRef = useRef<HTMLDivElement | null>(null);
+  const progressRef = useRef<HTMLSpanElement | null>(null);
   const dragRef = useRef<{
     mode: BarDragMode;
     startX: number;
@@ -84,6 +85,8 @@ export function GanttBar({
   const label = plainTaskText(task.summary);
   const offsetDays = diffDays(timelineStart, bar.start);
   const spanDays = inclusiveDayCount(bar.start, bar.end);
+  /** How much of the task is done, or null when it carries no progress. */
+  const percent = task.progress.percent;
 
   // Positioned before paint so a bar never flashes at the timeline origin
   useLayoutEffect(() => {
@@ -92,6 +95,14 @@ export function GanttBar({
     el.style.setProperty("--bar-offset", String(offsetDays));
     el.style.setProperty("--bar-span", String(spanDays));
   }, [offsetDays, spanDays]);
+
+  // The fill is its own element, so a task with no progress renders nothing
+  // extra at all — the ref is null and this does not run
+  useLayoutEffect(() => {
+    const el = progressRef.current;
+    if (!el) return;
+    el.style.setProperty("--bar-progress", `${percent ?? 0}%`);
+  }, [percent]);
 
   const applyPreview = useCallback(
     (mode: BarDragMode, days: number) => {
@@ -247,6 +258,7 @@ export function GanttBar({
     inferred
       ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
       : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
+    percent === null ? null : t("gantt.tooltip_progress", { n: percent }),
     slack,
   ]
     .filter(Boolean)
@@ -263,6 +275,9 @@ export function GanttBar({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
+      {percent === null ? null : (
+        <span ref={progressRef} className="tasks-map-gantt-bar__progress" />
+      )}
       <span
         className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
         onPointerDown={handlePointerDown("resize-start")}

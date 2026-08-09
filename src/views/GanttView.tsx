@@ -66,7 +66,7 @@ import {
 } from "src/lib/gantt-milestones";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { findCriticalPath } from "src/lib/critical-path";
-import { findScheduleRisks } from "src/lib/schedule-risk";
+import { ScheduleRisk, findScheduleRisks } from "src/lib/schedule-risk";
 import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { MilestoneDragResult } from "src/components/gantt-milestone";
@@ -87,6 +87,9 @@ interface GanttViewProps {
   settings: TasksMapSettings;
   plugin: TasksMapPlugin;
 }
+
+/** Stable empty map, so switching the warnings off is not a new prop. */
+const NO_RISKS: Map<string, ScheduleRisk[]> = new Map();
 
 export default function GanttView({ settings, plugin }: GanttViewProps) {
   const app = useApp();
@@ -244,6 +247,11 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       ),
     [rows, today]
   );
+
+  // Switching warnings off empties the map rather than threading a flag down:
+  // the badge, the row tint, the bar's at-risk border and the count under the
+  // chart all read from this one place, so they go quiet together.
+  const visibleRisks = settings.ganttShowWarnings ? risksByTaskId : NO_RISKS;
 
   const timeline = useMemo(
     () =>
@@ -1079,7 +1087,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           criticalEdgeKeys={criticalPath.criticalEdgeKeys}
           floatByTaskId={criticalPath.floatByTaskId}
           showCriticalPath={settings.showCriticalPath}
-          risksByTaskId={risksByTaskId}
+          risksByTaskId={visibleRisks}
           selectedTaskIds={selectedTaskIds}
           highlight={highlight}
           savingTaskIds={savingTaskIds}
@@ -1119,9 +1127,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
             })}
           </div>
         )}
-        {risksByTaskId.size > 0 && (
+        {visibleRisks.size > 0 && (
           <div className="tasks-map-gantt-hint tasks-map-gantt-hint--warning">
-            {t("gantt.at_risk_hint", { n: risksByTaskId.size })}
+            {t("gantt.at_risk_hint", { n: visibleRisks.size })}
           </div>
         )}
         {selectedTaskIds.size > 1 && (

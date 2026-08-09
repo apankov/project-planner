@@ -8,6 +8,11 @@ import {
   frontmatterKeyForDate,
 } from "../lib/task-dates";
 import { TaskFinance, financeFrontmatterPatch } from "../lib/task-finance";
+import {
+  TaskProgress,
+  clampProgress,
+  progressFrontmatterPatch,
+} from "../lib/task-progress";
 
 interface DependencyEntry {
   uid: string;
@@ -202,10 +207,30 @@ export class NoteTask extends BaseTask {
     return this.copyWith({ finance });
   }
 
+  async setProgress(
+    progress: number | null,
+    app: App
+  ): Promise<BaseTask | null> {
+    const percent = clampProgress(progress);
+    const { set, remove } = progressFrontmatterPatch({ percent });
+
+    const wrote = await this.updateFrontmatter(app, (frontmatter) => {
+      // Every accepted spelling goes, so a note that used `percent` cannot
+      // keep it around contradicting the `progress` just written
+      for (const key of remove) delete frontmatter[key];
+      Object.assign(frontmatter, set);
+    });
+
+    if (!wrote) return null;
+
+    return this.copyWith({ progress: { percent } });
+  }
+
   /** A copy of this task with a few fields swapped and the rest carried over. */
   private copyWith(changes: {
     dates?: TaskDateProperty[];
     finance?: TaskFinance;
+    progress?: TaskProgress;
   }): NoteTask {
     return new NoteTask({
       id: this.id,
@@ -220,6 +245,7 @@ export class NoteTask extends BaseTask {
       projects: this.projects,
       dates: this.dates,
       finance: this.finance,
+      progress: this.progress,
       ...changes,
     });
   }
