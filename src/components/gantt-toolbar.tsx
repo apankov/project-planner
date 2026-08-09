@@ -30,6 +30,8 @@ interface GanttToolbarProps {
   onHideCompletedChange: (_hide: boolean) => void;
   skipWeekends: boolean;
   onSkipWeekendsChange: (_skip: boolean) => void;
+  showCriticalPath: boolean;
+  onShowCriticalPathChange: (_show: boolean) => void;
   taskCount: number;
   groupBy: GanttGroupBy;
   onGroupByChange: (_groupBy: GanttGroupBy) => void;
@@ -55,6 +57,8 @@ export function GanttToolbar({
   onHideCompletedChange,
   skipWeekends,
   onSkipWeekendsChange,
+  showCriticalPath,
+  onShowCriticalPathChange,
   taskCount,
   groupBy,
   onGroupByChange,
@@ -165,6 +169,18 @@ export function GanttToolbar({
           onChange={(event) => onSkipWeekendsChange(event.target.checked)}
         />
         <span>{t("gantt.skip_weekends")}</span>
+      </label>
+
+      <label
+        className="tasks-map-gantt-toolbar__toggle"
+        title={t("gantt.critical_path_desc")}
+      >
+        <input
+          type="checkbox"
+          checked={showCriticalPath}
+          onChange={(event) => onShowCriticalPathChange(event.target.checked)}
+        />
+        <span>{t("gantt.critical_path")}</span>
       </label>
 
       <span className="tasks-map-gantt-toolbar__count">

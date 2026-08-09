@@ -16,10 +16,27 @@ export interface BarDragResult {
 /** How far the pointer must travel vertically before a drag reorders. */
 const VERTICAL_INTENT_PX = 12;
 
+/** What the schedule analysis has to say about one bar. */
+export interface BarAnalysis {
+  /** No slack: this bar is one of the ones deciding the finish date. */
+  critical: boolean;
+  /** Days it could slip before the plan does, or null when not being shown. */
+  slackDays: number | null;
+  /** Overdue, never started, or contradicting one of its blockers. */
+  atRisk: boolean;
+}
+
+export const NO_BAR_ANALYSIS: BarAnalysis = {
+  critical: false,
+  slackDays: null,
+  atRisk: false,
+};
+
 interface GanttBarProps {
   task: BaseTask;
   bar: ScheduledBar;
   inferred: boolean;
+  analysis: BarAnalysis;
   /** First day of the chart, used as the origin for bar offsets. */
   timelineStart: string;
   dayWidth: number;
@@ -44,6 +61,7 @@ export function GanttBar({
   task,
   bar,
   inferred,
+  analysis,
   timelineStart,
   dayWidth,
   onCommit,
@@ -208,13 +226,31 @@ export function GanttBar({
     dragging ? "tasks-map-gantt-bar--dragging" : "",
     selected ? "tasks-map-gantt-bar--selected" : "",
     saving ? "tasks-map-gantt-bar--saving" : "",
+    analysis.critical ? "tasks-map-gantt-bar--critical" : "",
+    analysis.atRisk ? "tasks-map-gantt-bar--at-risk" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  const tooltip = inferred
-    ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
-    : t("gantt.bar_tooltip", { start: bar.start, end: bar.end });
+  // How much room the task has is the first thing anyone asks after seeing
+  // the dates, so it goes on the same tooltip rather than behind another hover
+  const slack =
+    analysis.slackDays === null
+      ? null
+      : analysis.slackDays < 0
+        ? t("gantt.tooltip_behind", { n: -analysis.slackDays })
+        : analysis.critical
+          ? t("gantt.tooltip_critical")
+          : t("gantt.tooltip_slack", { n: analysis.slackDays });
+
+  const tooltip = [
+    inferred
+      ? t("gantt.bar_inferred_tooltip", { start: bar.start, end: bar.end })
+      : t("gantt.bar_tooltip", { start: bar.start, end: bar.end }),
+    slack,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <div

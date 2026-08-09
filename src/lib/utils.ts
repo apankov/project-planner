@@ -1786,7 +1786,9 @@ export function createNodesFromTasks(
     folder: DEFAULT_COMPANION_FOLDER,
   },
   onRequestDelete?: (_task: BaseTask) => Promise<void>,
-  onEditFinance?: (_task: BaseTask) => Promise<void>
+  onEditFinance?: (_task: BaseTask) => Promise<void>,
+  /** Tasks with no slack; empty when the critical path is switched off. */
+  criticalIds: Set<string> = new Set()
 ): TaskNode[] {
   const highlighting = isHighlightActive(highlight);
   const isVertical = layoutDirection === "Vertical";
@@ -1809,6 +1811,7 @@ export function createNodesFromTasks(
       onRequestDelete,
       connected: highlighting && highlight.taskIds.has(task.id),
       dimmed: highlighting && !highlight.taskIds.has(task.id),
+      critical: criticalIds.has(task.id),
       onDeleteTask,
       onTaskEdited,
       onTaskCreated,
@@ -1828,7 +1831,9 @@ export function createEdgesFromTasks(
   edgeStyle: "Bezier" | "Straight" | "SmoothStep" = "Bezier",
   smoothStepRadius: number = 10,
   highlight: ConnectionHighlight = EMPTY_HIGHLIGHT,
-  edgeStyleOverrides: EdgeStyleOverrides = {}
+  edgeStyleOverrides: EdgeStyleOverrides = {},
+  /** Links with no slack; empty when the critical path is switched off. */
+  criticalEdgeKeys: Set<string> = new Set()
 ): TaskEdge[] {
   const edges: TaskEdge[] = [];
   const highlighting = isHighlightActive(highlight);
@@ -1858,6 +1863,7 @@ export function createEdgesFromTasks(
           dimmed:
             highlighting &&
             !highlight.edgeKeys.has(connectionKey(parentTaskId, task.id)),
+          critical: criticalEdgeKeys.has(connectionKey(parentTaskId, task.id)),
           style: getEdgeStyle(edgeStyleOverrides, parentTaskId, task.id),
         },
       });

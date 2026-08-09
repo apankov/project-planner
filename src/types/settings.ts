@@ -34,6 +34,8 @@ export interface TasksMapSettings {
   ganttTaskOrder: string[];
   // Measure Gantt durations in working days and keep bars off weekends
   ganttSkipWeekends: boolean;
+  // Pick out the chain of tasks that decides the finish date, in both views
+  showCriticalPath: boolean;
 
   // Finance: hides the view, command, ribbon and menu entries when off
   financeEnabled: boolean;
@@ -79,6 +81,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
   ganttSkipWeekends: false,
+  showCriticalPath: false,
 
   financeEnabled: false,
   financeRateNotePath: DEFAULT_RATE_NOTE_PATH,
