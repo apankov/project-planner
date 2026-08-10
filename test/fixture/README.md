@@ -1,6 +1,6 @@
 # Test Fixture Vault
 
-This Obsidian vault serves as a test environment for the Tasks Map plugin development.
+This Obsidian vault serves as a test environment for Project Planner plugin development.
 
 ## Setup
 

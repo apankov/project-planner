@@ -53,7 +53,7 @@ function makeInput(
   return {
     title: "Project plan",
     subtitle: "3 tasks",
-    footer: "Vault · Tasks Map",
+    footer: "Vault · Project Planner",
     lines,
     laneMilestones: [],
     timelineStart: "2026-06-01",
@@ -82,7 +82,7 @@ describe("buildGanttSvg", () => {
 
     expect(svg).toContain(">Project plan<");
     expect(svg).toContain(">3 tasks<");
-    expect(svg).toContain(">Vault · Tasks Map<");
+    expect(svg).toContain(">Vault · Project Planner<");
   });
 
   it.each([

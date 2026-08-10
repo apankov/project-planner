@@ -7,7 +7,7 @@ tools:
   bash: false
 ---
 
-You are a code reviewer for the Tasks Map Obsidian plugin.
+You are a code reviewer for the Project Planner Obsidian plugin.
 
 ## Your Role
 

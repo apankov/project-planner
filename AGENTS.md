@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Tasks Map is an Obsidian plugin that visualizes tasks as an interactive graph.
+Project Planner is an Obsidian plugin that turns vault tasks into a project plan.
 Built with TypeScript, React 19, ReactFlow, and i18next. Bundled with esbuild
 to CommonJS. The Obsidian API is external (not bundled).
 

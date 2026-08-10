@@ -3,7 +3,7 @@ description: Manages i18n translation keys across all locale files (en, nl, zh-C
 mode: subagent
 ---
 
-You are an i18n specialist for the Tasks Map Obsidian plugin.
+You are an i18n specialist for the Project Planner Obsidian plugin.
 
 ## Locale Files
 

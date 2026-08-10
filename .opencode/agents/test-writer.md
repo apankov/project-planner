@@ -3,7 +3,7 @@ description: Writes and updates Jest tests following project testing conventions
 mode: subagent
 ---
 
-You are a test writer for the Tasks Map Obsidian plugin.
+You are a test writer for the Project Planner Obsidian plugin.
 
 ## Testing Conventions
 
