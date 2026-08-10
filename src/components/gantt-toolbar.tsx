@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ArrowDownWideNarrow,
+  CalendarArrowDown,
   CalendarCheck,
   Flag,
   Plus,
@@ -36,7 +37,9 @@ interface GanttToolbarProps {
   taskCount: number;
   groupBy: GanttGroupBy;
   onGroupByChange: (_groupBy: GanttGroupBy) => void;
-  onSortByDate: () => void;
+  /** True while the chart is drawn flat and earliest first. */
+  dateOrder: boolean;
+  onToggleDateOrder: () => void;
   onAddTask: () => void;
   onAddMilestone: () => void;
   onUndoOrder: () => void;
@@ -64,7 +67,8 @@ export function GanttToolbar({
   taskCount,
   groupBy,
   onGroupByChange,
-  onSortByDate,
+  dateOrder,
+  onToggleDateOrder,
   onAddTask,
   onAddMilestone,
   onUndoOrder,
@@ -116,13 +120,32 @@ export function GanttToolbar({
         <span>{t("gantt.add_milestone")}</span>
       </button>
 
+      {/* A mode, not a one-off shuffle: while it is on the chart stays sorted
+          and the rows stay flat, and the manual order waits underneath. It
+          says so three ways over — filled in, a calendar in place of the sort
+          arrows, and a name that turns from the action into the state — since
+          a toggle that looks like every other button is one the user has to
+          press to find out what it did. */}
       <button
-        className="tasks-map-gantt-toolbar__button"
-        onClick={onSortByDate}
-        title={t("gantt.sort_by_date_desc")}
+        className={`tasks-map-gantt-toolbar__button ${
+          dateOrder ? "tasks-map-gantt-toolbar__button--active" : ""
+        }`}
+        onClick={onToggleDateOrder}
+        aria-pressed={dateOrder}
+        title={
+          dateOrder
+            ? t("gantt.sort_by_date_off_desc")
+            : t("gantt.sort_by_date_desc")
+        }
       >
-        <ArrowDownWideNarrow size={14} />
-        <span>{t("gantt.sort_by_date")}</span>
+        {dateOrder ? (
+          <CalendarArrowDown size={14} />
+        ) : (
+          <ArrowDownWideNarrow size={14} />
+        )}
+        <span>
+          {dateOrder ? t("gantt.sorted_by_date") : t("gantt.sort_by_date")}
+        </span>
       </button>
 
       <button

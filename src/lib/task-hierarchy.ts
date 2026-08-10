@@ -284,6 +284,35 @@ export function buildHierarchy(
   return { lines: flattenHierarchy(roots, collapsedIds), parentById };
 }
 
+/**
+ * The same rows drawn as one flat list, in whatever order `compare` asks for.
+ *
+ * Nesting only ever decides the order of siblings, so a chart that keeps its
+ * indenting cannot put a row next to an unrelated task that happens to start
+ * the same day. Sorting the whole chart therefore has to give the indenting up
+ * — every row becomes a line of its own, at the top level.
+ *
+ * What the tree earned is kept: a parent still carries the bar rolled up over
+ * its children, and it is that bar `compare` is handed, so a summary lands
+ * where the work under it actually falls. Collapsing goes on working too — a
+ * folded parent still hides its children, which are still its children, they
+ * just are not drawn underneath it any more.
+ */
+export function buildFlatHierarchy(
+  rows: GanttRow[],
+  collapsedIds: ReadonlySet<string>,
+  compare: (_a: GanttRow, _b: GanttRow) => number
+): HierarchyResult {
+  const { roots, parentById } = buildHierarchyTree(rows);
+  const lines = flattenHierarchy(roots, collapsedIds).map((line) => ({
+    ...line,
+    depth: 0,
+  }));
+
+  lines.sort((a, b) => compare(a.row, b.row));
+  return { lines, parentById };
+}
+
 /** Children keyed by parent, in the order their rows were given. */
 export function childrenByParent(
   parentById: ReadonlyMap<string, string | null>

@@ -1,6 +1,7 @@
 import { NoteTask } from "../src/types/note-task";
 import { GanttRow } from "../src/lib/gantt-rows";
 import {
+  buildFlatHierarchy,
   buildHierarchy,
   buildHierarchyTree,
   childrenByParent,
@@ -246,6 +247,86 @@ describe("flattenHierarchy", () => {
       lines.find((line) => line.row.task.id === "invoicing")?.collapsed
     ).toBe(false);
     expect(idsOf(lines)).toHaveLength(5);
+  });
+});
+
+describe("buildFlatHierarchy", () => {
+  /*
+   * redesign            (rolled up over its children: 08-02 → 08-20)
+   *   logo              08-10
+   *   copy              08-02
+   * invoicing           08-05
+   */
+  const rows = [
+    makeTask("redesign", { start: "2026-08-30" }),
+    makeTask("logo", { parentId: "redesign", start: "2026-08-10" }),
+    makeTask("copy", { parentId: "redesign", start: "2026-08-02" }),
+    makeTask("invoicing", { start: "2026-08-05" }),
+  ];
+
+  const byStart = (a: GanttRow, b: GanttRow) =>
+    a.bar.start.localeCompare(b.bar.start);
+
+  it("draws every row at the top level, in the order asked for", () => {
+    const { lines } = buildFlatHierarchy(rows, NOTHING_COLLAPSED, byStart);
+
+    // redesign is rolled up to its children's span, so it ties with copy on
+    // the 2nd and the sort leaves the two of them as the tree had them
+    expect(idsOf(lines)).toEqual(["redesign", "copy", "invoicing", "logo"]);
+    expect(lines.every((line) => line.depth === 0)).toBe(true);
+  });
+
+  // The whole point of flattening: a child sorts against every other row, not
+  // only against its siblings
+  it("lets a child sort past rows outside its parent", () => {
+    const { lines } = buildFlatHierarchy(rows, NOTHING_COLLAPSED, byStart);
+
+    expect(idsOf(lines).indexOf("copy")).toBeLessThan(
+      idsOf(lines).indexOf("invoicing")
+    );
+  });
+
+  it("keeps the parent's rolled-up bar, so it sorts on its children's span", () => {
+    const { lines } = buildFlatHierarchy(rows, NOTHING_COLLAPSED, byStart);
+    const redesign = lines.find((line) => line.row.task.id === "redesign");
+
+    // Its own date said 08-30; the work beneath it starts on the 2nd
+    expect(redesign?.row.bar.start).toBe("2026-08-02");
+    expect(redesign?.hasChildren).toBe(true);
+  });
+
+  it("still hides a collapsed parent's children", () => {
+    const { lines } = buildFlatHierarchy(rows, new Set(["redesign"]), byStart);
+
+    expect(idsOf(lines)).toEqual(["redesign", "invoicing"]);
+  });
+
+  it("reports the same structure a nested build would", () => {
+    const flat = buildFlatHierarchy(rows, NOTHING_COLLAPSED, byStart);
+    const nested = buildHierarchy(rows, NOTHING_COLLAPSED);
+
+    expect([...flat.parentById]).toEqual([...nested.parentById]);
+  });
+
+  describe("edge cases", () => {
+    it("returns nothing for no rows", () => {
+      expect(
+        buildFlatHierarchy([], NOTHING_COLLAPSED, byStart).lines
+      ).toHaveLength(0);
+    });
+
+    it("loses no row to a parent link that loops", () => {
+      const looped = [
+        makeTask("a", { parentId: "b", start: "2026-08-04" }),
+        makeTask("b", { parentId: "a", start: "2026-08-03" }),
+      ];
+
+      const ids = idsOf(
+        buildFlatHierarchy(looped, NOTHING_COLLAPSED, byStart).lines
+      );
+
+      expect([...ids].sort()).toEqual(["a", "b"]);
+    });
   });
 });
 

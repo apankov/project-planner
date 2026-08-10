@@ -126,6 +126,13 @@ interface GanttChartProps {
   /** A click on a bar that moved nothing opens that task for editing. */
   onOpenTask: (_taskId: string) => void;
   onReorder: (_reorder: RowReorder) => void;
+  /**
+   * Whether the running order is the user's to arrange at all. False while the
+   * chart sorts itself — a sorted list has no room for a dropped row — and it
+   * takes dragging a row into another one with it, since that drop lands
+   * through the same targets.
+   */
+  reorderable: boolean;
   /** Whether dropping one task into another would be a legal nesting. */
   canNestInto: (_movedId: string, _targetId: string) => boolean;
   /** A task dropped into the middle of another becomes its child. */
@@ -144,8 +151,9 @@ interface GanttChartProps {
   /** Named days marked across the timeline, in the lane and in the list. */
   milestones: GanttMilestone[];
   /**
-   * The manual row order, which row milestones take a slot in alongside the
-   * tasks. Already normalised by the view, so every line on screen is in it.
+   * The running row order, which row milestones take a slot in alongside the
+   * tasks. Already worked out by the view — the manual order, or the sorted
+   * one while the chart is in date order — so every line on screen is in it.
    */
   order: string[];
   onMoveMilestone: (_result: MilestoneDragResult) => void;
@@ -346,6 +354,7 @@ export function GanttChart({
   onCommit,
   onOpenTask,
   onReorder,
+  reorderable,
   canNestInto,
   onNestInto,
   onAddTaskAfter,
@@ -406,6 +415,10 @@ export function GanttChart({
       clientY: number,
       movedId: string
     ): { id: string; placement: RowPlacement } | null => {
+      // Nowhere to drop while the chart owns its own order, which also stops
+      // the drop indicator following a drag that could not be honoured
+      if (!reorderable) return null;
+
       const container = labelsRef.current;
       if (!container) return null;
 
@@ -449,7 +462,7 @@ export function GanttChart({
         placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
       };
     },
-    [canNestInto, headerRows, lines]
+    [canNestInto, headerRows, lines, reorderable]
   );
 
   /** A bar dragged up or down shows the same drop indicator as a row drag. */
@@ -728,6 +741,26 @@ export function GanttChart({
       .join(" ");
 
   /**
+   * The drag handle for a line, or a spent one while the chart owns its own
+   * order. The handle keeps its place either way: rows that lost a grip would
+   * shuffle every name in the column sideways when the mode is turned on.
+   */
+  const gripProps = (orderId: string) =>
+    reorderable
+      ? {
+          className: "tasks-map-gantt__grip",
+          title: t("gantt.reorder_hint"),
+          onPointerDown: handleReorderDown(orderId),
+          onPointerMove: handleReorderMove,
+          onPointerUp: handleReorderUp,
+          onPointerCancel: handleReorderUp,
+        }
+      : {
+          className: "tasks-map-gantt__grip tasks-map-gantt__grip--locked",
+          title: t("gantt.reorder_locked"),
+        };
+
+  /**
    * A milestone line carries only the states a milestone can be in. It is not
    * a task, so it is never selected, never on the critical path, never at
    * risk and never a link target — the only thing it shares with a row is
@@ -777,12 +810,7 @@ export function GanttChart({
                 onClick={() => onEditMilestone(line.milestone.id)}
               >
                 <span
-                  className="tasks-map-gantt__grip"
-                  title={t("gantt.reorder_hint")}
-                  onPointerDown={handleReorderDown(line.orderId)}
-                  onPointerMove={handleReorderMove}
-                  onPointerUp={handleReorderUp}
-                  onPointerCancel={handleReorderUp}
+                  {...gripProps(line.orderId)}
                   /* The row opens the milestone when clicked, and a drag that
                      ends on the grip still counts as a click on it */
                   onClick={(event) => event.stopPropagation()}
@@ -827,14 +855,7 @@ export function GanttChart({
                   )
                 }
               >
-                <span
-                  className="tasks-map-gantt__grip"
-                  title={t("gantt.reorder_hint")}
-                  onPointerDown={handleReorderDown(line.row.task.id)}
-                  onPointerMove={handleReorderMove}
-                  onPointerUp={handleReorderUp}
-                  onPointerCancel={handleReorderUp}
-                >
+                <span {...gripProps(line.row.task.id)}>
                   <GripVertical size={12} />
                 </span>
                 {/* A fixed-width slot either way, so the names of a parent and
