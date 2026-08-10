@@ -25,7 +25,8 @@ export default function FilterPresetsPanel({
   onRename,
   onDelete,
 }: FilterPresetsPanelProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Collapsed on open: the canvas is the point, the panels are on request
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleCollapsed = useCallback(() => {
     setIsCollapsed((prev) => !prev);

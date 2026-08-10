@@ -388,7 +388,13 @@
     "undo": "Ongedaan maken",
     "undo_desc": "Maak de laatste wijziging in een van beide weergaven ongedaan",
     "fit_view": "Passend maken",
-    "fit_view_desc": "Zoom uit tot alle taken op het scherm passen"
+    "fit_view_desc": "Zoom uit tot alle taken op het scherm passen",
+    "actions": "Takenkaartacties",
+    "reload_desc": "Lees de taken in je kluis opnieuw",
+    "open_kanban": "Bord openen",
+    "open_kanban_desc": "Open de bordweergave voor deze taken",
+    "open_finance": "Financiën openen",
+    "open_finance_desc": "Open de financiënweergave voor taken"
   },
   "multiselect": {
     "select": "Selecteer...",

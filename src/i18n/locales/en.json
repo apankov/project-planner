@@ -388,7 +388,13 @@
     "undo": "Undo",
     "undo_desc": "Take back the last change made in either view",
     "fit_view": "Fit view",
-    "fit_view_desc": "Zoom out until every task fits on screen"
+    "fit_view_desc": "Zoom out until every task fits on screen",
+    "actions": "Task map actions",
+    "reload_desc": "Read the tasks in your vault again",
+    "open_kanban": "Open board",
+    "open_kanban_desc": "Open the board view for these tasks",
+    "open_finance": "Open finance",
+    "open_finance_desc": "Open the task finance view"
   },
   "multiselect": {
     "select": "Select...",

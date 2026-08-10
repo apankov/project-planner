@@ -388,7 +388,13 @@
     "undo": "撤销",
     "undo_desc": "撤销在任一视图中所做的最后一次更改",
     "fit_view": "适应视图",
-    "fit_view_desc": "缩小视图直到所有任务都显示在屏幕内"
+    "fit_view_desc": "缩小视图直到所有任务都显示在屏幕内",
+    "actions": "任务图操作",
+    "reload_desc": "重新读取仓库中的任务",
+    "open_kanban": "打开看板",
+    "open_kanban_desc": "为这些任务打开看板视图",
+    "open_finance": "打开财务",
+    "open_finance_desc": "打开任务财务视图"
   },
   "multiselect": {
     "select": "选择...",

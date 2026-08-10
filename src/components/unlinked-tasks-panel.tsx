@@ -16,7 +16,8 @@ interface UnlinkedTasksPanelProps {
 }
 
 export default function UnlinkedTasksPanel({ tasks }: UnlinkedTasksPanelProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Collapsed on open: the canvas is the point, the panels are on request
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [filterQuery, setFilterQuery] = useState("");
 
   const toggleCollapsed = useCallback(() => {

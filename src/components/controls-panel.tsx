@@ -1,20 +1,16 @@
 import React, { useState } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  GanttChartSquare,
-  Maximize2,
-  Undo2,
-} from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { t } from "../i18n";
 
+/**
+ * The view toggles. The actions that used to sit at the bottom of this panel
+ * (reload, fit, undo, open another view) now live in `GraphActionBar`, which
+ * stays on screen while this panel is collapsed.
+ */
 interface ControlsPanelProps {
   showTags: boolean;
   hideTags: boolean;
   setHideTags: () => void;
-  reloadTasks: () => void;
-  /** Puts the whole graph back on screen; the view no longer does this itself. */
-  fitView: () => void;
   showUnlinkedPanel: boolean;
   hideUnlinkedTasks: boolean;
   setHideUnlinkedTasks: (_val: boolean) => void;
@@ -23,20 +19,12 @@ interface ControlsPanelProps {
   setGroupByProject: (_val: boolean) => void;
   showCriticalPath: boolean;
   setShowCriticalPath: (_val: boolean) => void;
-  /** Omitted in embeds, where opening another view would be surprising. */
-  onOpenGantt?: () => void;
-  onUndo: () => void;
-  canUndo: boolean;
-  /** What pressing undo would reverse, for the tooltip. */
-  undoLabel: string | null;
 }
 
 export default function ControlsPanel({
   showTags,
   hideTags,
   setHideTags,
-  reloadTasks,
-  fitView,
   showUnlinkedPanel,
   hideUnlinkedTasks,
   setHideUnlinkedTasks,
@@ -45,12 +33,9 @@ export default function ControlsPanel({
   setGroupByProject,
   showCriticalPath,
   setShowCriticalPath,
-  onOpenGantt,
-  onUndo,
-  canUndo,
-  undoLabel,
 }: ControlsPanelProps) {
-  const [isMinimized, setIsMinimized] = useState(false);
+  // Collapsed on open: the canvas is the point, the panels are on request
+  const [isMinimized, setIsMinimized] = useState(true);
 
   const toggleMinimized = () => {
     setIsMinimized((prev) => !prev);
@@ -143,42 +128,6 @@ export default function ControlsPanel({
                 </span>
               </label>
             </div>
-          </div>
-
-          <div className="tasks-map-filter-actions">
-            <button
-              onClick={reloadTasks}
-              className="tasks-map-gui-overlay-reload-button"
-            >
-              {t("filters.reload_tasks")}
-            </button>
-            <button
-              onClick={fitView}
-              className="tasks-map-gui-overlay-reload-button tasks-map-open-gantt-button"
-              title={t("controls.fit_view_desc")}
-            >
-              <Maximize2 size={14} />
-              <span>{t("controls.fit_view")}</span>
-            </button>
-            <button
-              onClick={onUndo}
-              disabled={!canUndo}
-              className="tasks-map-gui-overlay-reload-button tasks-map-open-gantt-button"
-              title={undoLabel ?? t("controls.undo_desc")}
-            >
-              <Undo2 size={14} />
-              <span>{t("controls.undo")}</span>
-            </button>
-            {onOpenGantt && (
-              <button
-                onClick={onOpenGantt}
-                className="tasks-map-gui-overlay-reload-button tasks-map-open-gantt-button"
-                title={t("controls.open_gantt_desc")}
-              >
-                <GanttChartSquare size={14} />
-                <span>{t("controls.open_gantt")}</span>
-              </button>
-            )}
           </div>
         </div>
       )}
