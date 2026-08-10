@@ -35,18 +35,34 @@ date:
 
 ## Row order
 
-The chart never rearranges itself. Rows keep the order you put them in, and
-new tasks are appended rather than slotted in by date.
+The chart never rearranges itself unless you ask it to. Rows keep the order you
+put them in, and new tasks are appended rather than slotted in by date.
 
 | Control          | What it does                                              |
 | ---------------- | --------------------------------------------------------- |
 | Drag the grip    | Moves a row; the order is saved                            |
-| Sort by date     | Rearranges once, earliest first                            |
+| Sort by date     | Switches date order on or off (see below)                  |
 | Undo             | Steps back through previous orders, including after a drag |
 | Group by         | Splits rows by tag, status, note, or project               |
 
 A task with several tags is filed under one of them only — drawing it in every
 matching group would duplicate the bar.
+
+### Date order
+
+**Sort by date** is a mode rather than a one-off shuffle. While it is on the
+chart draws every row **flat** — no indenting — and strictly earliest first, so
+a child sits next to whatever else starts that day rather than under its
+parent. Nesting only ever decides the order of rows within a parent, so an
+indented chart could never be in true date order.
+
+A parent is sorted by the bar it draws, i.e. the span rolled up over its
+children, and it can still be collapsed to fold them away. Milestones drawn as
+rows sort in on their own date alongside the tasks.
+
+Your own row order is untouched underneath: dragging is switched off while the
+mode is on, and turning it off puts the arrangement — and the nesting — back
+exactly as it was.
 
 ## Adding and linking tasks
 

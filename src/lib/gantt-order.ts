@@ -1,14 +1,20 @@
 import { diffDays } from "./date-utils";
 import { GanttRow } from "./gantt-rows";
-import { collectDescendantIds } from "./task-hierarchy";
+import {
+  HierarchyResult,
+  buildFlatHierarchy,
+  collectDescendantIds,
+} from "./task-hierarchy";
 
 /**
  * Row ordering and grouping for the Gantt.
  *
  * The chart's running order is a plain list of slot IDs held in settings.
  * Rows are drawn in that order, so dragging a row is only ever a change to
- * the list, and sorting by date is just one particular list the user can ask
- * for (and undo) rather than something the chart does on its own.
+ * the list rather than something the chart does on its own. Date order is the
+ * one exception: it is a mode, worked out from the rows themselves, and it
+ * leaves the stored list untouched so the user's own arrangement survives it
+ * (see `buildDateOrderedHierarchy`).
  *
  * A slot is usually a task ID. A milestone the user asked to see as a row
  * takes one too, under a namespaced key (`MILESTONE_ORDER_PREFIX`) that no
@@ -197,33 +203,57 @@ export interface DatedOrderEntry {
   label: string;
 }
 
+/** Earliest first, ties broken on the end day and then on the label. */
+function compareByDate(a: DatedOrderEntry, b: DatedOrderEntry): number {
+  // diffDays(b, a) is a - b in days, i.e. ascending by date
+  const byStart = diffDays(b.start, a.start);
+  if (byStart !== 0) return byStart;
+
+  const byEnd = diffDays(b.end, a.end);
+  if (byEnd !== 0) return byEnd;
+
+  return a.label.localeCompare(b.label, undefined, {
+    sensitivity: "base",
+  });
+}
+
+/** A row as a dated slot: the bar it draws, and its name to break ties. */
+export function dateEntryForRow(row: GanttRow): DatedOrderEntry {
+  return {
+    id: row.task.id,
+    start: row.bar.start,
+    end: row.bar.end,
+    label: row.task.summary,
+  };
+}
+
 /** The order the entries would have if sorted earliest-first. */
 export function orderEntriesByDate(entries: DatedOrderEntry[]): string[] {
-  return [...entries]
-    .sort((a, b) => {
-      // diffDays(b, a) is a - b in days, i.e. ascending by date
-      const byStart = diffDays(b.start, a.start);
-      if (byStart !== 0) return byStart;
-
-      const byEnd = diffDays(b.end, a.end);
-      if (byEnd !== 0) return byEnd;
-
-      return a.label.localeCompare(b.label, undefined, {
-        sensitivity: "base",
-      });
-    })
-    .map((entry) => entry.id);
+  return [...entries].sort(compareByDate).map((entry) => entry.id);
 }
 
 /** The order the rows would have if sorted earliest-first. */
 export function orderByDate(rows: GanttRow[]): string[] {
-  return orderEntriesByDate(
-    rows.map((row) => ({
-      id: row.task.id,
-      start: row.bar.start,
-      end: row.bar.end,
-      label: row.task.summary,
-    }))
+  return orderEntriesByDate(rows.map(dateEntryForRow));
+}
+
+/**
+ * The lines to draw when the user has asked for date order.
+ *
+ * Flat, earliest first, and worked out from the rows on screen rather than
+ * from the stored order — which is the point of the mode: the chart stays
+ * sorted as dates are edited, and the manual order underneath is left alone to
+ * come back when the mode goes off.
+ *
+ * The bars compared are the rolled-up ones, so a parent sits at the start of
+ * the work beneath it (see `buildFlatHierarchy`), which is the bar it draws.
+ */
+export function buildDateOrderedHierarchy(
+  rows: GanttRow[],
+  collapsedIds: ReadonlySet<string>
+): HierarchyResult {
+  return buildFlatHierarchy(rows, collapsedIds, (a, b) =>
+    compareByDate(dateEntryForRow(a), dateEntryForRow(b))
   );
 }
 

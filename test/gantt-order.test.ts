@@ -3,6 +3,7 @@ import { GanttRow } from "../src/lib/gantt-rows";
 import { milestoneOrderKey } from "../src/lib/gantt-milestones";
 import {
   applyOrder,
+  buildDateOrderedHierarchy,
   groupRows,
   isGanttGroupBy,
   moveRelativeTo,
@@ -29,6 +30,7 @@ function makeRow(
     status?: "todo" | "in_progress" | "done" | "canceled";
     link?: string;
     projects?: string[];
+    parentId?: string | null;
   } = {}
 ): GanttRow {
   const start = overrides.start ?? "2026-08-10";
@@ -47,6 +49,7 @@ function makeRow(
       starred: false,
       projects: overrides.projects ?? [],
       dates: [],
+      parentId: overrides.parentId ?? null,
     }),
     bar: {
       id,
@@ -395,6 +398,58 @@ describe("orderEntriesByDate", () => {
 
   it("returns nothing for nothing", () => {
     expect(orderEntriesByDate([])).toEqual([]);
+  });
+});
+
+describe("buildDateOrderedHierarchy", () => {
+  const NOTHING_COLLAPSED: ReadonlySet<string> = new Set();
+
+  /*
+   * A parent whose own date is late, holding two children, and an unrelated
+   * task falling between them. Nested, "sort by date" could never put the
+   * unrelated task between the children; flat, that is exactly what it does.
+   */
+  const rows = [
+    makeRow("redesign", { start: "2026-08-30", end: "2026-08-30" }),
+    makeRow("logo", {
+      start: "2026-08-10",
+      end: "2026-08-12",
+      parentId: "redesign",
+    }),
+    makeRow("copy", {
+      start: "2026-08-02",
+      end: "2026-08-03",
+      parentId: "redesign",
+    }),
+    makeRow("invoicing", { start: "2026-08-05", end: "2026-08-06" }),
+  ];
+
+  it("draws every row flat, earliest first", () => {
+    const { lines } = buildDateOrderedHierarchy(rows, NOTHING_COLLAPSED);
+
+    expect(lines.map((line) => line.row.task.id)).toEqual([
+      "copy",
+      "redesign",
+      "invoicing",
+      "logo",
+    ]);
+    expect(lines.every((line) => line.depth === 0)).toBe(true);
+  });
+
+  it("sorts a summary by the work under it, not by its own date", () => {
+    const { lines } = buildDateOrderedHierarchy(rows, NOTHING_COLLAPSED);
+    const redesign = lines.find((line) => line.row.task.id === "redesign");
+
+    expect(redesign?.row.bar.start).toBe("2026-08-02");
+    expect(redesign?.row.bar.end).toBe("2026-08-12");
+  });
+
+  it("agrees with the order orderByDate would give the same bars", () => {
+    const { lines } = buildDateOrderedHierarchy(rows, NOTHING_COLLAPSED);
+
+    expect(lines.map((line) => line.row.task.id)).toEqual(
+      orderByDate(lines.map((line) => line.row))
+    );
   });
 });
 

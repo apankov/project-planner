@@ -48,6 +48,8 @@ import {
 import {
   GanttGroupBy,
   applyOrder,
+  buildDateOrderedHierarchy,
+  dateEntryForRow,
   groupRows,
   moveRelativeTo,
   moveWithinParent,
@@ -264,14 +266,20 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
    * Each group nested on its own, so a parent and a child that land under
    * different headings are each drawn where their own metadata puts them
    * rather than one dragging the other out of its group.
+   *
+   * In date order the nesting is dropped and the rows are laid out flat and
+   * earliest first — within each group, since grouping is a split the user
+   * asked for and sorting is not a reason to undo it.
    */
   const hierarchy = useMemo(
     () =>
       groups.map((group) => ({
         group,
-        ...buildHierarchy(group.rows, collapsedIds),
+        ...(settings.ganttDateOrder
+          ? buildDateOrderedHierarchy(group.rows, collapsedIds)
+          : buildHierarchy(group.rows, collapsedIds)),
       })),
-    [collapsedIds, groups]
+    [collapsedIds, groups, settings.ganttDateOrder]
   );
 
   const hierarchyGroups: HierarchyGroup[] = useMemo(
@@ -354,6 +362,32 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     () => normalizeOrderIds(orderSlots, settings.ganttTaskOrder),
     [orderSlots, settings.ganttTaskOrder]
   );
+
+  /**
+   * The running order the chart draws its lines in.
+   *
+   * The saved one, unless the user asked for date order — in which case it is
+   * read back off the rows on screen, rolled-up bars and all, so a milestone
+   * drawn as a row lands on its own date among them instead of wherever it was
+   * once dragged. Only the drawing uses this: everything that edits the order
+   * still works on `order`, which is what keeps the manual arrangement intact
+   * underneath the sorting.
+   */
+  const lineOrder = useMemo(() => {
+    if (!settings.ganttDateOrder) return order;
+
+    return orderEntriesByDate([
+      ...hierarchy.flatMap(({ lines }) =>
+        lines.map((line) => dateEntryForRow(line.row))
+      ),
+      ...rowMilestones(milestones).map((milestone) => ({
+        id: milestoneOrderKey(milestone.id),
+        start: milestone.date,
+        end: milestone.date,
+        label: milestone.label,
+      })),
+    ]);
+  }, [hierarchy, milestones, order, settings.ganttDateOrder]);
 
   // Which tasks decide the finish date, and how much room the rest have. Run
   // over the rows on screen, so filtering the chart re-asks the question of the
@@ -658,29 +692,29 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   /**
-   * Sorts every line by its day, milestones included. A milestone is a single
-   * day, so its start and its end are the same — leaving it out would mean
-   * sorting the chart silently shuffled the tasks out from under it.
+   * Turns date order on or off.
+   *
+   * On, every line is drawn flat and earliest first — tasks, their children
+   * and the milestones among them alike. It has to be flat: nesting decides
+   * the order of siblings only, so an indented chart cannot put a child next
+   * to an unrelated task that starts the same day, which is the whole of what
+   * "sorted by date" means.
+   *
+   * It stays sorted while it is on, so a date edited on the chart moves its
+   * row where it now belongs rather than leaving a list that was sorted once.
+   * The manual order is not touched, and turning this off restores it.
    */
-  const handleSortByDate = useCallback(() => {
-    commitOrder(
-      orderEntriesByDate([
-        ...rows.map((row) => ({
-          id: row.task.id,
-          start: row.bar.start,
-          end: row.bar.end,
-          label: row.task.summary,
-        })),
-        ...rowMilestones(milestones).map((milestone) => ({
-          id: milestoneOrderKey(milestone.id),
-          start: milestone.date,
-          end: milestone.date,
-          label: milestone.label,
-        })),
-      ]),
-      t("gantt.undo_sort")
-    );
-  }, [commitOrder, milestones, rows]);
+  const handleToggleDateOrder = useCallback(() => {
+    const next = !settings.ganttDateOrder;
+
+    plugin.undoHistory.push({
+      label: next ? t("gantt.undo_sort") : t("gantt.undo_sort_off"),
+      undo: async () => {
+        await plugin.setGanttDateOrder(!next);
+      },
+    });
+    void plugin.setGanttDateOrder(next);
+  }, [plugin, settings.ganttDateOrder]);
 
   /** Saves a milestone edit, keeping the previous list for undo. */
   const commitMilestones = useCallback(
@@ -1505,7 +1539,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         taskCount={rows.length}
         groupBy={groupBy}
         onGroupByChange={setGroupBy}
-        onSortByDate={handleSortByDate}
+        dateOrder={settings.ganttDateOrder}
+        onToggleDateOrder={handleToggleDateOrder}
         onAddTask={() => void addTask(null)}
         onAddMilestone={() => void handleAddMilestone()}
         onUndoOrder={() => void handleUndo()}
@@ -1562,6 +1597,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onCommit={(result) => void handleCommit(result)}
           onOpenTask={(taskId) => void handleOpenTask(taskId)}
           onReorder={handleReorder}
+          /* Date order decides the running order, so a row dropped somewhere
+             else would snap straight back: the handles go quiet rather than
+             promise a move that cannot hold. */
+          reorderable={!settings.ganttDateOrder}
           canNestInto={canNestInto}
           onNestInto={handleNestInto}
           onAddTaskAfter={(taskId) => void addTask(taskId)}
@@ -1577,7 +1616,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
           onRemoveTag={(taskId, tag) => void changeTag(taskId, tag, false)}
           milestones={milestones}
-          order={order}
+          order={lineOrder}
           onMoveMilestone={handleMoveMilestone}
           onEditMilestone={(milestoneId) =>
             void handleEditMilestone(milestoneId)

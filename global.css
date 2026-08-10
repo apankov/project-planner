@@ -2919,6 +2919,22 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-on-accent);
 }
 
+/* A mode that is switched on, e.g. date order, which stays on until it is
+   pressed again — it has to look pressed rather than merely clicked, and go on
+   looking pressed under the pointer, or hovering it reads as switching off.
+   Scoped to the toolbar and matched on the element as well, because a theme
+   styling plain `button` outranks a lone class and would leave the one button
+   whose colour carries state looking like every other one. The `background`
+   shorthand rather than `background-color`: it clears a themed gradient too. */
+.tasks-map-gantt-toolbar button.tasks-map-gantt-toolbar__button--active,
+.tasks-map-gantt-toolbar button.tasks-map-gantt-toolbar__button--active:hover {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: 1px solid var(--interactive-accent);
+  font-weight: var(--font-semibold, 600);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 25%);
+}
+
 .tasks-map-gantt-toolbar__button:disabled {
   opacity: 0.6;
   cursor: default;
@@ -3304,6 +3320,13 @@ If your plugin does not need CSS, delete this file.
 
 .tasks-map-gantt__label:hover .tasks-map-gantt__grip {
   opacity: 1;
+}
+
+/* Date order arranges the rows, so the handle is kept only to hold its place
+   in the column: it shows faintly on hover and says why it does nothing */
+.tasks-map-gantt__label:hover .tasks-map-gantt__grip--locked {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .tasks-map-gantt__label--dragging,

@@ -36,6 +36,8 @@ export interface TasksMapSettings {
   ganttTaskOrder: string[];
   // Gantt parents whose children are folded away, as task IDs
   ganttCollapsedTaskIds: string[];
+  // Draw Gantt rows flat and earliest first, ignoring the manual order above
+  ganttDateOrder: boolean;
   // Measure Gantt durations in working days and keep bars off weekends
   ganttSkipWeekends: boolean;
   // Named days marked across the Gantt timeline
@@ -96,6 +98,7 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttLabelWidth: 260,
   ganttTaskOrder: [],
   ganttCollapsedTaskIds: [],
+  ganttDateOrder: false,
   ganttSkipWeekends: false,
   ganttMilestones: [],
   showCriticalPath: false,

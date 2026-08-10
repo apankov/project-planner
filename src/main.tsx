@@ -299,6 +299,17 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /**
+   * Persists whether the Gantt draws its rows in date order.
+   *
+   * A mode rather than a rewrite of the row order: the manual order is left
+   * where it is, so turning this off gives the user their own arrangement back.
+   */
+  async setGanttDateOrder(dateOrder: boolean): Promise<void> {
+    this.settings.ganttDateOrder = dateOrder;
+    await this.saveSettings();
+  }
+
   /** Persists the Gantt's working-days toggle. */
   async setGanttSkipWeekends(skip: boolean): Promise<void> {
     this.settings.ganttSkipWeekends = skip;
