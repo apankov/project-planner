@@ -3983,3 +3983,377 @@ If your plugin does not need CSS, delete this file.
   stroke-width: 2.5;
   opacity: 1;
 }
+
+/* ==========================================================================
+   Board view
+
+   Columns scroll sideways as a row and each one scrolls on its own inside,
+   so a long column never stretches the board. Drop feedback is drawn with a
+   border on the card being passed rather than an inserted placeholder: the
+   cards below it stay put, which is what makes a long drag readable.
+   ========================================================================== */
+
+.tasks-map-kanban-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tasks-map-kanban-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.tasks-map-kanban-toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tasks-map-kanban-toolbar__button--accent {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tasks-map-kanban-toolbar__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tasks-map-kanban-toolbar__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  color: var(--text-faint);
+}
+
+.tasks-map-kanban-toolbar__search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  font-size: 12px;
+  width: 160px;
+  color: var(--text-normal);
+}
+
+.tasks-map-kanban-toolbar__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tasks-map-kanban-toolbar__count,
+.tasks-map-kanban-toolbar__note {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.tasks-map-kanban-toolbar__spacer {
+  flex: 1 1 auto;
+}
+
+.tasks-map-kanban-empty {
+  padding: 12px;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* Stretched rather than shrink-to-fit: a column's empty space below its last
+   card is where "drop at the end" is aimed, so it has to be worth aiming at */
+.tasks-map-kanban-board {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 12px;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+}
+
+.tasks-map-kanban-column {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 280px;
+  height: 100%;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-secondary);
+}
+
+.tasks-map-kanban-column--collapsed {
+  width: 40px;
+}
+
+.tasks-map-kanban-column__collapsed-handle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  height: 100%;
+}
+
+.tasks-map-kanban-column__collapsed-label {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+/* Only while a card is in the air, so the board is quiet at rest */
+.tasks-map-kanban-column--droppable {
+  border-color: var(--interactive-accent);
+}
+
+.tasks-map-kanban-column--locked {
+  border-style: dashed;
+  border-color: var(--background-modifier-border);
+  opacity: 0.6;
+}
+
+.tasks-map-kanban-column--over {
+  background: var(--background-modifier-hover);
+}
+
+.tasks-map-kanban-column__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex: 0 0 auto;
+}
+
+.tasks-map-kanban-column__title {
+  flex: 1 1 auto;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tasks-map-kanban-column__count {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.tasks-map-kanban-column__collapse,
+.tasks-map-kanban-column__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tasks-map-kanban-column__lock {
+  display: inline-flex;
+  color: var(--text-faint);
+  cursor: help;
+}
+
+.tasks-map-kanban-column__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 60px;
+}
+
+.tasks-map-kanban-column__empty {
+  padding: 12px 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+}
+
+.tasks-map-kanban-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-left: 3px solid var(--text-faint);
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-primary);
+  cursor: grab;
+}
+
+.tasks-map-kanban-card--todo {
+  border-left-color: var(--text-faint);
+}
+
+.tasks-map-kanban-card--in_progress {
+  border-left-color: var(--interactive-accent);
+}
+
+.tasks-map-kanban-card--done {
+  border-left-color: var(--color-green, #4c9a5a);
+}
+
+.tasks-map-kanban-card--canceled {
+  border-left-color: var(--color-red, #c0554d);
+}
+
+.tasks-map-kanban-card--selected {
+  box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.tasks-map-kanban-card--dragging {
+  opacity: 0.4;
+}
+
+.tasks-map-kanban-card--saving {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.tasks-map-kanban-card--drop-before {
+  border-top: 2px solid var(--interactive-accent);
+}
+
+.tasks-map-kanban-card--drop-after {
+  border-bottom: 2px solid var(--interactive-accent);
+}
+
+.tasks-map-kanban-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tasks-map-kanban-card__status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: 1px;
+}
+
+.tasks-map-kanban-card__summary {
+  flex: 1 1 auto;
+  font-size: 13px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.tasks-map-kanban-card--done .tasks-map-kanban-card__summary,
+.tasks-map-kanban-card--canceled .tasks-map-kanban-card__summary {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.tasks-map-kanban-card__star {
+  flex: 0 0 auto;
+  font-size: 11px;
+}
+
+.tasks-map-kanban-card__progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.tasks-map-kanban-card__progress-fill {
+  height: 100%;
+  width: var(--tasks-map-card-progress, 0%);
+  background: var(--interactive-accent);
+}
+
+.tasks-map-kanban-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tasks-map-kanban-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tasks-map-kanban-card__due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.tasks-map-kanban-card__due--overdue {
+  background: color-mix(
+    in srgb,
+    var(--color-red, #c0554d) 20%,
+    var(--background-primary)
+  );
+  color: var(--color-red, #c0554d);
+}
+
+.tasks-map-kanban-card__due--today {
+  background: color-mix(
+    in srgb,
+    var(--color-yellow, #d9a441) 20%,
+    var(--background-primary)
+  );
+  color: var(--color-yellow, #d9a441);
+}
+
+.tasks-map-kanban-card__people {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.tasks-map-kanban-card__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 600;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}

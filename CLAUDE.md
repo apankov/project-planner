@@ -1,7 +1,8 @@
 # CLAUDE.md
 
 Obsidian plugin that renders vault tasks as an interactive graph, a Gantt
-chart, and a finance view. Tasks come from the **Dataview** plugin at runtime —
+chart, a kanban board, and a finance view. Tasks come from the **Dataview**
+plugin at runtime —
 it (and Tasks) must be installed in the vault or the views refuse to render.
 
 `AGENTS.md` holds the detailed code-style guide (imports, naming, React
@@ -67,8 +68,8 @@ docs/                 # Zensical site → nicoknl.github.io/tasks-map
 
 ## Architecture
 
-- **Three views + one embed.** Graph, Gantt, and Finance each pair an Obsidian
-  `ItemView` (`TasksMapGanttItemView.tsx`) with a React component
+- **Four views + one embed.** Graph, Gantt, Kanban, and Finance each pair an
+  Obsidian `ItemView` (`TasksMapGanttItemView.tsx`) with a React component
   (`GanttView.tsx`); the ItemView owns `createRoot`. A `tasks-map` fenced code
   block renders the graph inline via `registerMarkdownCodeBlockProcessor`.
 - **View ids live in `src/lib/view-focus.ts`**, not in `main.tsx`, because the
