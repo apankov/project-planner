@@ -3,6 +3,7 @@ import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverrides } from "../lib/edge-style-manager";
 import { GanttMilestone } from "../lib/gantt-milestones";
+import { KanbanGroupBy } from "../lib/kanban-buckets";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 import { DEFAULT_RATE_NOTE_PATH } from "../lib/rate-book-note";
 
@@ -43,6 +44,13 @@ export interface TasksMapSettings {
   showCriticalPath: boolean;
   // Flag schedule risks on Gantt rows and count them under the chart
   ganttShowWarnings: boolean;
+
+  // The question the board's columns answer
+  kanbanGroupBy: KanbanGroupBy;
+  // Manual card order on the board, as task IDs
+  kanbanCardOrder: string[];
+  // Board columns folded away, as "<grouping>:<column key>"
+  kanbanCollapsedBuckets: string[];
 
   // Finance: hides the view, command, ribbon and menu entries when off
   financeEnabled: boolean;
@@ -92,6 +100,10 @@ export const DEFAULT_SETTINGS: TasksMapSettings = {
   ganttMilestones: [],
   showCriticalPath: false,
   ganttShowWarnings: true,
+
+  kanbanGroupBy: "status",
+  kanbanCardOrder: [],
+  kanbanCollapsedBuckets: [],
 
   financeEnabled: false,
   financeRateNotePath: DEFAULT_RATE_NOTE_PATH,

@@ -15,6 +15,9 @@ import TasksMapGanttItemView, {
 import TasksMapFinanceItemView, {
   FINANCE_VIEW_TYPE,
 } from "./views/TasksMapFinanceItemView";
+import TasksMapKanbanItemView, {
+  KANBAN_VIEW_TYPE,
+} from "./views/TasksMapKanbanItemView";
 import TaskMapGraphEmbedView, {
   TaskMapEmbedError,
   filterStateFromSource,
@@ -40,6 +43,7 @@ import { UndoHistory } from "./lib/undo-history";
 import { ensureRateNote } from "./lib/rate-book-note";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 import { GanttMilestone } from "./lib/gantt-milestones";
+import { KanbanGroupBy } from "./lib/kanban-buckets";
 
 const EMBED_CODE_BLOCK = "tasks-map";
 
@@ -100,6 +104,11 @@ export default class TasksMapPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new TasksMapFinanceItemView(leaf)
     );
 
+    this.registerView(
+      KANBAN_VIEW_TYPE,
+      (leaf: WorkspaceLeaf) => new TasksMapKanbanItemView(leaf)
+    );
+
     this.addSettingTab(new TasksMapSettingTab(this.app, this));
 
     this.addCommand({
@@ -143,6 +152,14 @@ export default class TasksMapPlugin extends Plugin {
     }
 
     this.addCommand({
+      id: "open-tasks-map-kanban-view",
+      name: t("commands.open_kanban_view"),
+      callback: () => {
+        void this.activateKanbanViewInMainArea();
+      },
+    });
+
+    this.addCommand({
       id: "create-notes-for-existing-tasks",
       name: t("commands.retrofit_companion_notes"),
       callback: () => {
@@ -164,6 +181,10 @@ export default class TasksMapPlugin extends Plugin {
 
     this.addRibbonIcon("gantt-chart", t("ribbon.open_tasks_gantt"), () => {
       void this.activateGanttViewInMainArea();
+    });
+
+    this.addRibbonIcon("columns-3", t("ribbon.open_tasks_kanban"), () => {
+      void this.activateKanbanViewInMainArea();
     });
 
     // Register the tasks-map fenced code block processor
@@ -302,6 +323,30 @@ export default class TasksMapPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists which question the board's columns answer. */
+  async setKanbanGroupBy(groupBy: KanbanGroupBy): Promise<void> {
+    this.settings.kanbanGroupBy = groupBy;
+    await this.saveSettings();
+  }
+
+  /**
+   * Persists the board's manual card order.
+   *
+   * One flat list of task IDs for the whole board rather than one per column:
+   * a card dragged to another column keeps the place it was dropped in, and
+   * changing the grouping does not throw the arrangement away.
+   */
+  async setKanbanCardOrder(order: string[]): Promise<void> {
+    this.settings.kanbanCardOrder = order;
+    await this.saveSettings();
+  }
+
+  /** Persists which board columns are folded away. */
+  async setKanbanCollapsedBuckets(keys: string[]): Promise<void> {
+    this.settings.kanbanCollapsedBuckets = keys;
+    await this.saveSettings();
+  }
+
   /** Persists per-connection line styles. */
   async setEdgeStyleOverrides(overrides: EdgeStyleOverrides): Promise<void> {
     this.settings.edgeStyleOverrides = overrides;
@@ -424,6 +469,12 @@ export default class TasksMapPlugin extends Plugin {
   async activateGanttViewInMainArea() {
     const leaf = this.app.workspace.getLeaf(true); // true = main area
     await leaf.setViewState({ type: GANTT_VIEW_TYPE, active: true });
+    void this.app.workspace.revealLeaf(leaf);
+  }
+
+  async activateKanbanViewInMainArea() {
+    const leaf = this.app.workspace.getLeaf(true); // true = main area
+    await leaf.setViewState({ type: KANBAN_VIEW_TYPE, active: true });
     void this.app.workspace.revealLeaf(leaf);
   }
 
