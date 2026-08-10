@@ -106,13 +106,13 @@ import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { MilestoneDragResult } from "src/components/gantt-milestone";
 import { promptForMilestone } from "src/components/gantt-milestone-modal";
-import { TasksMapSettings } from "src/types/settings";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import { useUndoHistory } from "src/hooks/use-undo-history";
 import { TaskDateProperty, findTaskDate } from "src/lib/task-dates";
 import { TaskProgress, effectiveTaskStatus } from "src/lib/task-progress";
 import { TaskStatus } from "src/types/task";
-import TasksMapPlugin from "../main";
+import ProjectPlannerPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
   GANTT_VIEW_TYPE,
@@ -121,8 +121,8 @@ import {
 import { t } from "../i18n";
 
 interface GanttViewProps {
-  settings: TasksMapSettings;
-  plugin: TasksMapPlugin;
+  settings: ProjectPlannerSettings;
+  plugin: ProjectPlannerPlugin;
 }
 
 /** Stable empty map, so switching the warnings off is not a new prop. */
@@ -1750,15 +1750,15 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
 
   if (isLoading) {
     return (
-      <div className="tasks-map-loading-container">
-        <div className="tasks-map-spinner" />
-        <div className="tasks-map-loading-text">{t("gantt.loading")}</div>
+      <div className="project-planner-loading-container">
+        <div className="project-planner-spinner" />
+        <div className="project-planner-loading-text">{t("gantt.loading")}</div>
       </div>
     );
   }
 
   return (
-    <div className="tasks-map-gantt-container">
+    <div className="project-planner-gantt-container">
       <GanttToolbar
         scale={scale}
         onScaleChange={setScale}
@@ -1792,14 +1792,14 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       />
 
       {linkingFromId && (
-        <div className="tasks-map-gantt-linking">
+        <div className="project-planner-gantt-linking">
           {t("gantt.linking_hint", {
             task:
               rows.find((row) => row.task.id === linkingFromId)?.task.summary ??
               "",
           })}
           <button
-            className="tasks-map-gantt-linking__cancel"
+            className="project-planner-gantt-linking__cancel"
             onClick={() => setLinkingFromId(null)}
           >
             {t("gantt.linking_cancel")}
@@ -1812,7 +1812,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           them behind "no tasks" would lose work the user can see no other
           way. */}
       {rows.length === 0 && rowMilestones(milestones).length === 0 ? (
-        <div className="tasks-map-gantt-empty">
+        <div className="project-planner-gantt-empty">
           {tasks.length === 0 ? t("gantt.empty") : t("gantt.empty_filtered")}
         </div>
       ) : (
@@ -1872,10 +1872,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         />
       )}
 
-      <div className="tasks-map-gantt-footer">
+      <div className="project-planner-gantt-footer">
         <GanttLegend showCriticalPath={settings.showCriticalPath} />
         {settings.showCriticalPath && criticalPath.projectFinish && (
-          <div className="tasks-map-gantt-hint">
+          <div className="project-planner-gantt-hint">
             {t("gantt.critical_path_hint", {
               finish: criticalPath.projectFinish,
               n: criticalPath.criticalIds.size,
@@ -1883,17 +1883,17 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           </div>
         )}
         {visibleRisks.size > 0 && (
-          <div className="tasks-map-gantt-hint tasks-map-gantt-hint--warning">
+          <div className="project-planner-gantt-hint project-planner-gantt-hint--warning">
             {t("gantt.at_risk_hint", { n: visibleRisks.size })}
           </div>
         )}
         {selectedTaskIds.size > 1 && (
-          <div className="tasks-map-gantt-hint">
+          <div className="project-planner-gantt-hint">
             {t("gantt.moved_together_hint", { n: selectedTaskIds.size })}
           </div>
         )}
         {inferredRows.length > 0 && (
-          <div className="tasks-map-gantt-hint">
+          <div className="project-planner-gantt-hint">
             {t("gantt.inferred_hint", { n: inferredRows.length })}
           </div>
         )}

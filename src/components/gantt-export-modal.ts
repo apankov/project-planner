@@ -64,7 +64,7 @@ export class GanttExportModal extends Modal {
     contentEl.createEl("h3", { text: t("gantt.export_modal_title") });
     contentEl.createEl("p", {
       text: t("gantt.export_modal_desc"),
-      cls: "tasks-map-gantt-export-modal__desc",
+      cls: "project-planner-gantt-export-modal__desc",
     });
 
     new Setting(contentEl)

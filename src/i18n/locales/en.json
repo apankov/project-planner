@@ -1,11 +1,11 @@
 {
   "plugin": {
-    "name": "Tasks Map",
-    "description": "A graph view of your tasks"
+    "name": "Project Planner",
+    "description": "Plan projects from your Markdown tasks"
   },
   "commands": {
-    "open_map_view": "Open map view",
-    "insert_filter_as_code_block": "Insert current filter as embedded Tasks Map",
+    "open_map_view": "Open graph view",
+    "insert_filter_as_code_block": "Insert current filter as embedded graph",
     "open_gantt_view": "Open Gantt view",
     "open_kanban_view": "Open board view",
     "retrofit_companion_notes": "Create notes for existing tasks",
@@ -13,19 +13,19 @@
     "create_rate_note": "Create the rates note"
   },
   "ribbon": {
-    "open_tasks_map": "Open tasks map view",
+    "open_tasks_map": "Open project graph",
     "open_tasks_gantt": "Open Tasks Gantt",
     "open_tasks_kanban": "Open tasks board",
     "open_tasks_finance": "Open task finance"
   },
   "view": {
-    "title": "Tasks map",
-    "dataview_required": "Tasks Map requires the Dataview plugin to be installed and enabled.",
+    "title": "Project graph",
+    "dataview_required": "Project Planner requires the Dataview plugin to be installed and enabled.",
     "dataview_not_installed": "The Dataview plugin is not currently installed.",
     "dataview_disabled": "The Dataview plugin is installed but not enabled.",
     "visit_community_plugins": "Visit the Community Plugins section in Settings to install or enable Dataview.",
-    "plugin_not_found": "Unable to load Tasks Map",
-    "plugin_not_found_description": "The Tasks Map plugin instance could not be resolved. Try closing and reopening the view."
+    "plugin_not_found": "Unable to load Project Planner",
+    "plugin_not_found_description": "The Project Planner plugin instance could not be resolved. Try closing and reopening the view."
   },
   "gantt": {
     "view_title": "Tasks Gantt",
@@ -41,7 +41,7 @@
     "export_done": "Saved {{file}} ({{width}}×{{height}})",
     "export_done_copied": "Saved {{file}} ({{width}}×{{height}}) and copied it to the clipboard",
     "export_subtitle": "{{n}} tasks · {{start}} to {{end}}",
-    "export_footer": "{{vault}} · exported {{date}} · Tasks Map",
+    "export_footer": "{{vault}} · exported {{date}} · Project Planner",
     "export_modal_title": "Export the chart",
     "export_modal_desc": "A plain, print-ready picture of the chart as it stands — the same rows, order and filters, with the whole timeline fitted to one landscape page.",
     "export_modal_heading": "Heading",
@@ -280,7 +280,7 @@
     "modal_placeholder": "What needs doing?",
     "modal_submit": "Add task",
     "modal_cancel": "Cancel",
-    "no_target_note": "Open a note first, or add a task to one, so Tasks Map knows where to write",
+    "no_target_note": "Open a note first, or add a task to one, so Project Planner knows where to write",
     "could_not_read": "That task could not be read back — nothing was changed",
     "failed": "Could not create the task",
     "created": "Task added to {{note}}",
@@ -509,9 +509,9 @@
   },
   "embed": {
     "pick_note_placeholder": "Choose a note...",
-    "dataview_required": "Tasks Map requires the Dataview plugin.",
-    "invalid_json": "This Tasks Map embed contains invalid JSON. Re-insert it using the command palette to fix it.",
-    "legacy_format": "This Tasks Map embed uses an outdated format. Re-insert it using the command palette to migrate it."
+    "dataview_required": "Project Planner requires the Dataview plugin.",
+    "invalid_json": "This Project Planner embed contains invalid JSON. Re-insert it using the command palette to fix it.",
+    "legacy_format": "This Project Planner embed uses an outdated format. Re-insert it using the command palette to migrate it."
   },
   "finance": {
     "menu_item": "Finance…",

@@ -1,3 +1,3 @@
 # License
 
-Tasks Map is licensed under the [MIT License](https://github.com/NicoKNL/tasks-map/blob/main/LICENSE).
+Project Planner is licensed under the [MIT License](https://github.com/HMIL1151/project-planner/blob/main/LICENSE).

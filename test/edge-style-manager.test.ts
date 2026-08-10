@@ -123,8 +123,8 @@ describe("getEdgeStyleClasses", () => {
 
   it("adds a colour and a pattern class", () => {
     expect(getEdgeStyleClasses(RED_DASHED)).toEqual([
-      "tasks-map-hash-edge-path--color-red",
-      "tasks-map-hash-edge-path--dashed",
+      "project-planner-hash-edge-path--color-red",
+      "project-planner-hash-edge-path--dashed",
     ]);
   });
 });

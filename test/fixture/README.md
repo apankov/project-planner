@@ -4,7 +4,7 @@ This Obsidian vault serves as a test environment for the Tasks Map plugin develo
 
 ## Setup
 
-The plugin is loaded via a symbolic link in `.obsidian/plugins/tasks-map/` that points to the root project directory. This means:
+The plugin is loaded via a symbolic link in `.obsidian/plugins/project-planner/` that points to the root project directory. This means:
 
 1. Run `npm run build` in the project root to compile the latest plugin version
 2. Open this fixture vault in Obsidian to test the latest built version

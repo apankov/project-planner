@@ -154,9 +154,9 @@ const TaskMenu = ({
   };
 
   return (
-    <div className="tasks-map-task-menu nodrag" ref={menuRef}>
+    <div className="project-planner-task-menu nodrag" ref={menuRef}>
       <button
-        className="tasks-map-task-menu-button"
+        className="project-planner-task-menu-button"
         onClick={handleToggle}
         aria-label="Task menu"
       >
@@ -164,16 +164,16 @@ const TaskMenu = ({
       </button>
 
       {isOpen && (
-        <div className="tasks-map-task-menu-dropdown">
+        <div className="project-planner-task-menu-dropdown">
           <button
-            className="tasks-map-task-menu-item"
+            className="project-planner-task-menu-item"
             onClick={(e) => void handleCreate(e)}
           >
             <CirclePlus size={12} />
             <span>Create task</span>
           </button>
           <button
-            className="tasks-map-task-menu-item"
+            className="project-planner-task-menu-item"
             onClick={(e) => void handleEdit(e)}
           >
             <SquarePen size={12} />
@@ -181,7 +181,7 @@ const TaskMenu = ({
           </button>
           {onEditFinance && (
             <button
-              className="tasks-map-task-menu-item"
+              className="project-planner-task-menu-item"
               onClick={(e) => void handleFinance(e)}
             >
               <Coins size={12} />
@@ -189,7 +189,7 @@ const TaskMenu = ({
             </button>
           )}
           <button
-            className="tasks-map-task-menu-item tasks-map-task-menu-item--danger"
+            className="project-planner-task-menu-item project-planner-task-menu-item--danger"
             onClick={(e) => void handleDelete(e)}
           >
             <Trash2 size={12} />

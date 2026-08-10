@@ -71,7 +71,7 @@ function renderSummaryWithLinks(
       container.createEl("a", {
         text: text,
         href: url,
-        cls: "tasks-map-link",
+        cls: "project-planner-link",
         attr: {
           target: "_blank",
           rel: "noopener noreferrer",
@@ -87,7 +87,7 @@ function renderSummaryWithLinks(
       const displayText = alias || file;
       const link = container.createEl("a", {
         text: displayText,
-        cls: "tasks-map-link tasks-map-link--internal",
+        cls: "project-planner-link project-planner-link--internal",
       });
 
       link.addEventListener("click", (e) => {
@@ -106,7 +106,7 @@ function renderSummaryWithLinks(
       const [, code] = inlineCodeMatch;
       container.createEl("code", {
         text: code,
-        cls: "tasks-map-inline-code",
+        cls: "project-planner-inline-code",
       });
       return;
     }

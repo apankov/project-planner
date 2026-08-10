@@ -43,14 +43,14 @@ export default function ControlsPanel({
 
   return (
     <div
-      className={`tasks-map-filter-panel ${isMinimized ? "tasks-map-filter-panel--minimized" : ""}`}
+      className={`project-planner-filter-panel ${isMinimized ? "project-planner-filter-panel--minimized" : ""}`}
     >
-      <div className="tasks-map-filter-panel__header">
-        <span className="tasks-map-filter-panel__title">
+      <div className="project-planner-filter-panel__header">
+        <span className="project-planner-filter-panel__title">
           {t("controls.title")}
         </span>
         <button
-          className="tasks-map-filter-panel__header-icon"
+          className="project-planner-filter-panel__header-icon"
           onClick={toggleMinimized}
           aria-label={
             isMinimized ? t("controls.expand") : t("controls.minimize")
@@ -62,18 +62,18 @@ export default function ControlsPanel({
       </div>
 
       {!isMinimized && (
-        <div className="tasks-map-filter-panel__content">
-          <div className="tasks-map-filter-section">
+        <div className="project-planner-filter-panel__content">
+          <div className="project-planner-filter-section">
             {showUnlinkedPanel && (
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-gui-overlay-checkbox-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-gui-overlay-checkbox-label">
                   <input
                     type="checkbox"
                     checked={hideUnlinkedTasks}
                     onChange={(e) => setHideUnlinkedTasks(e.target.checked)}
-                    className="tasks-map-gui-overlay-checkbox-input"
+                    className="project-planner-gui-overlay-checkbox-input"
                   />
-                  <span className="tasks-map-gui-overlay-checkbox-text">
+                  <span className="project-planner-gui-overlay-checkbox-text">
                     {t("filters.hide_unlinked_tasks")}
                   </span>
                 </label>
@@ -81,15 +81,15 @@ export default function ControlsPanel({
             )}
 
             {showTags && (
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-gui-overlay-checkbox-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-gui-overlay-checkbox-label">
                   <input
                     type="checkbox"
                     checked={hideTags}
                     onChange={setHideTags}
-                    className="tasks-map-gui-overlay-checkbox-input"
+                    className="project-planner-gui-overlay-checkbox-input"
                   />
-                  <span className="tasks-map-gui-overlay-checkbox-text">
+                  <span className="project-planner-gui-overlay-checkbox-text">
                     {t("filters.hide_tags_on_nodes")}
                   </span>
                 </label>
@@ -97,33 +97,33 @@ export default function ControlsPanel({
             )}
 
             {showGroupByProject && (
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-gui-overlay-checkbox-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-gui-overlay-checkbox-label">
                   <input
                     type="checkbox"
                     checked={groupByProject}
                     onChange={(e) => setGroupByProject(e.target.checked)}
-                    className="tasks-map-gui-overlay-checkbox-input"
+                    className="project-planner-gui-overlay-checkbox-input"
                   />
-                  <span className="tasks-map-gui-overlay-checkbox-text">
+                  <span className="project-planner-gui-overlay-checkbox-text">
                     {t("controls.group_by_project")}
                   </span>
                 </label>
               </div>
             )}
 
-            <div className="tasks-map-filter-item">
+            <div className="project-planner-filter-item">
               <label
-                className="tasks-map-gui-overlay-checkbox-label"
+                className="project-planner-gui-overlay-checkbox-label"
                 title={t("gantt.critical_path_desc")}
               >
                 <input
                   type="checkbox"
                   checked={showCriticalPath}
                   onChange={(e) => setShowCriticalPath(e.target.checked)}
-                  className="tasks-map-gui-overlay-checkbox-input"
+                  className="project-planner-gui-overlay-checkbox-input"
                 />
-                <span className="tasks-map-gui-overlay-checkbox-text">
+                <span className="project-planner-gui-overlay-checkbox-text">
                   {t("gantt.critical_path")}
                 </span>
               </label>

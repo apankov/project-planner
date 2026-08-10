@@ -7,12 +7,12 @@
  * the views, so the views cannot import the plugin for a runtime value.
  */
 
-export const MAP_VIEW_TYPE = "tasks-map-graph-view";
-export const GANTT_VIEW_TYPE = "tasks-map-gantt-view";
-export const FINANCE_VIEW_TYPE = "tasks-map-finance-view";
-export const KANBAN_VIEW_TYPE = "tasks-map-kanban-view";
+export const MAP_VIEW_TYPE = "project-planner-graph-view";
+export const GANTT_VIEW_TYPE = "project-planner-gantt-view";
+export const FINANCE_VIEW_TYPE = "project-planner-finance-view";
+export const KANBAN_VIEW_TYPE = "project-planner-kanban-view";
 
-export const FOCUS_TASK_EVENT = "tasks-map:focus-task";
+export const FOCUS_TASK_EVENT = "project-planner:focus-task";
 
 export interface FocusTaskDetail {
   viewType: string;

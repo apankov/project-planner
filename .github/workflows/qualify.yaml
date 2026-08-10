@@ -365,7 +365,7 @@ jobs:
               // Prettier lists each unformatted file on its own line after "Checking formatting..."
               const lines = output.split('\n').filter(l =>
                 l.trim() && !l.includes('Checking formatting') && !l.includes('prettier') &&
-                !l.startsWith('>') && !l.includes('tasks-map@') && !l.includes('Code style issues')
+                !l.startsWith('>') && !l.includes('project-planner@') && !l.includes('Code style issues')
               );
               const fileLines = lines.filter(l => /\.(ts|tsx|js|jsx|json|css|md)$/.test(l.trim()));
               return fileLines.length > 0 ? `${fileLines.length} file${fileLines.length !== 1 ? 's' : ''}` : null;

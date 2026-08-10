@@ -20,7 +20,7 @@ interface FinanceTimelineProps {
 }
 
 function setHeight(el: HTMLElement | null, percent: number): void {
-  el?.style.setProperty("--tasks-map-finance-column", `${percent}%`);
+  el?.style.setProperty("--project-planner-finance-column", `${percent}%`);
 }
 
 export default function FinanceTimeline({
@@ -32,7 +32,7 @@ export default function FinanceTimeline({
   emptyLabel,
 }: FinanceTimelineProps) {
   if (buckets.length === 0) {
-    return <p className="tasks-map-finance__empty">{emptyLabel}</p>;
+    return <p className="project-planner-finance__empty">{emptyLabel}</p>;
   }
 
   const tallest = Math.max(...buckets.map((bucket) => bucket.total), 1);
@@ -42,36 +42,39 @@ export default function FinanceTimeline({
   const labelEvery = Math.max(1, Math.ceil(buckets.length / 12));
 
   return (
-    <div className="tasks-map-finance-timeline">
-      <div className="tasks-map-finance-timeline__plot">
+    <div className="project-planner-finance-timeline">
+      <div className="project-planner-finance-timeline__plot">
         {buckets.map((bucket, index) => (
-          <div className="tasks-map-finance-timeline__slot" key={bucket.start}>
+          <div
+            className="project-planner-finance-timeline__slot"
+            key={bucket.start}
+          >
             <div
-              className="tasks-map-finance-timeline__column"
+              className="project-planner-finance-timeline__column"
               title={`${formatLabel(bucket.start)} — ${formatMoney(bucket.total)}`}
             >
               <div
-                className="tasks-map-finance-timeline__materials"
+                className="project-planner-finance-timeline__materials"
                 ref={(el) => setHeight(el, (bucket.materials / tallest) * 100)}
               />
               <div
-                className="tasks-map-finance-timeline__labour"
+                className="project-planner-finance-timeline__labour"
                 ref={(el) => setHeight(el, (bucket.labour / tallest) * 100)}
               />
             </div>
-            <div className="tasks-map-finance-timeline__tick">
+            <div className="project-planner-finance-timeline__tick">
               {index % labelEvery === 0 ? formatLabel(bucket.start) : ""}
             </div>
           </div>
         ))}
       </div>
-      <div className="tasks-map-finance-timeline__key">
-        <span className="tasks-map-finance-timeline__key-item">
-          <span className="tasks-map-finance-timeline__swatch tasks-map-finance-timeline__swatch--labour" />
+      <div className="project-planner-finance-timeline__key">
+        <span className="project-planner-finance-timeline__key-item">
+          <span className="project-planner-finance-timeline__swatch project-planner-finance-timeline__swatch--labour" />
           {labourLabel}
         </span>
-        <span className="tasks-map-finance-timeline__key-item">
-          <span className="tasks-map-finance-timeline__swatch tasks-map-finance-timeline__swatch--materials" />
+        <span className="project-planner-finance-timeline__key-item">
+          <span className="project-planner-finance-timeline__swatch project-planner-finance-timeline__swatch--materials" />
           {materialsLabel}
         </span>
       </div>

@@ -1,11 +1,11 @@
 {
   "plugin": {
-    "name": "任务地图",
-    "description": "任务的图形视图"
+    "name": "Project Planner",
+    "description": "通过 Markdown 任务规划项目"
   },
   "commands": {
-    "open_map_view": "打开地图视图",
-    "insert_filter_as_code_block": "将当前筛选器插入为嵌入式任务地图",
+    "open_map_view": "打开图谱视图",
+    "insert_filter_as_code_block": "将当前筛选器插入为嵌入式图谱",
     "open_gantt_view": "打开甘特图视图",
     "open_kanban_view": "打开看板视图",
     "retrofit_companion_notes": "为现有任务创建笔记",
@@ -13,19 +13,19 @@
     "create_rate_note": "创建费率笔记"
   },
   "ribbon": {
-    "open_tasks_map": "打开任务地图视图",
+    "open_tasks_map": "打开项目图谱",
     "open_tasks_gantt": "打开任务甘特图",
     "open_tasks_kanban": "打开任务看板",
     "open_tasks_finance": "打开任务财务"
   },
   "view": {
-    "title": "任务地图",
-    "dataview_required": "任务地图需要安装并启用 Dataview 插件。",
+    "title": "项目图谱",
+    "dataview_required": "Project Planner需要安装并启用 Dataview 插件。",
     "dataview_not_installed": "当前未安装 Dataview 插件。",
     "dataview_disabled": "Dataview 插件已安装但未启用。",
     "visit_community_plugins": "请访问设置中的社区插件部分以安装或启用 Dataview。",
-    "plugin_not_found": "无法加载任务地图",
-    "plugin_not_found_description": "无法解析任务地图插件实例。请尝试关闭并重新打开视图。"
+    "plugin_not_found": "无法加载Project Planner",
+    "plugin_not_found_description": "无法解析Project Planner插件实例。请尝试关闭并重新打开视图。"
   },
   "gantt": {
     "view_title": "任务甘特图",
@@ -41,7 +41,7 @@
     "export_done": "已保存 {{file}}（{{width}}×{{height}}）",
     "export_done_copied": "已保存 {{file}}（{{width}}×{{height}}）并复制到剪贴板",
     "export_subtitle": "{{n}} 个任务 · {{start}} 至 {{end}}",
-    "export_footer": "{{vault}} · 导出于 {{date}} · Tasks Map",
+    "export_footer": "{{vault}} · 导出于 {{date}} · Project Planner",
     "export_modal_title": "导出图表",
     "export_modal_desc": "把当前图表画成一张简洁、适合打印的图片——相同的行、顺序和筛选，整条时间轴正好放进一页横向版面。",
     "export_modal_heading": "标题",
@@ -509,9 +509,9 @@
   },
   "embed": {
     "pick_note_placeholder": "选择笔记...",
-    "dataview_required": "任务地图需要 Dataview 插件。",
-    "invalid_json": "此任务地图嵌入块包含无效的 JSON。请通过命令面板重新插入以修复。",
-    "legacy_format": "此任务地图嵌入块使用过时的格式。请通过命令面板重新插入以迁移。"
+    "dataview_required": "Project Planner需要 Dataview 插件。",
+    "invalid_json": "此Project Planner嵌入块包含无效的 JSON。请通过命令面板重新插入以修复。",
+    "legacy_format": "此Project Planner嵌入块使用过时的格式。请通过命令面板重新插入以迁移。"
   },
   "finance": {
     "menu_item": "财务…",

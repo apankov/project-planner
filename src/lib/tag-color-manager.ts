@@ -121,7 +121,7 @@ export function getTagColorClass(
 ): string {
   const override = overrides?.[tag];
   if (override && isTagColorName(override)) {
-    return `tasks-map-tag--custom-${override}`;
+    return `project-planner-tag--custom-${override}`;
   }
 
   let hash = 0;
@@ -129,5 +129,5 @@ export function getTagColorClass(
     hash = (hash * 31 + tag.charCodeAt(i)) % 2147483647;
   }
   const index = Math.abs(hash) % PALETTE_SIZE;
-  return `tasks-map-tag--${palette}-${index}`;
+  return `project-planner-tag--${palette}-${index}`;
 }

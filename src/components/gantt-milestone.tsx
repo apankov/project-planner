@@ -150,9 +150,9 @@ export function GanttMilestoneMarker({
   });
 
   const className = [
-    "tasks-map-gantt__milestone",
-    `tasks-map-gantt__milestone--${status}`,
-    dragging ? "tasks-map-gantt__milestone--dragging" : "",
+    "project-planner-gantt__milestone",
+    `project-planner-gantt__milestone--${status}`,
+    dragging ? "project-planner-gantt__milestone--dragging" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -165,17 +165,20 @@ export function GanttMilestoneMarker({
   return (
     <div ref={markerRef} className={className}>
       <button
-        className="tasks-map-gantt__milestone-flag"
+        className="project-planner-gantt__milestone-flag"
         title={tooltip}
         aria-label={tooltip}
         {...handlers}
       >
-        <span className="tasks-map-gantt__milestone-diamond" />
-        <span className="tasks-map-gantt__milestone-label">
+        <span className="project-planner-gantt__milestone-diamond" />
+        <span className="project-planner-gantt__milestone-label">
           {milestone.label}
         </span>
       </button>
-      <div className="tasks-map-gantt__milestone-line" aria-hidden="true" />
+      <div
+        className="project-planner-gantt__milestone-line"
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -204,9 +207,9 @@ export function GanttMilestoneRow({
   });
 
   const className = [
-    "tasks-map-gantt__milestone-point",
-    `tasks-map-gantt__milestone-point--${status}`,
-    dragging ? "tasks-map-gantt__milestone-point--dragging" : "",
+    "project-planner-gantt__milestone-point",
+    `project-planner-gantt__milestone-point--${status}`,
+    dragging ? "project-planner-gantt__milestone-point--dragging" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -219,12 +222,12 @@ export function GanttMilestoneRow({
   return (
     <div ref={markerRef} className={className}>
       <button
-        className="tasks-map-gantt__milestone-handle"
+        className="project-planner-gantt__milestone-handle"
         title={tooltip}
         aria-label={tooltip}
         {...handlers}
       >
-        <span className="tasks-map-gantt__milestone-diamond" />
+        <span className="project-planner-gantt__milestone-diamond" />
       </button>
     </div>
   );

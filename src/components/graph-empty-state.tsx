@@ -14,8 +14,8 @@ export function GraphEmptyState({ variant }: GraphEmptyStateProps) {
       : t("graph.all_unlinked_hint");
 
   return (
-    <div className="tasks-map-graph-empty-state">
-      <p className="tasks-map-graph-empty-state__message">{message}</p>
+    <div className="project-planner-graph-empty-state">
+      <p className="project-planner-graph-empty-state__message">{message}</p>
     </div>
   );
 }

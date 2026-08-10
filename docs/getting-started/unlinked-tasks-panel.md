@@ -2,7 +2,7 @@
 
 ## What are unlinked tasks?
 
-A task is considered **unlinked** when it has no connections to any other task — it neither depends on anything nor is depended on by anything. Tasks Map moves these tasks into a dedicated **Unlinked Tasks** panel on the left side of the view so they do not clutter the graph canvas.
+A task is considered **unlinked** when it has no connections to any other task — it neither depends on anything nor is depended on by anything. Project Planner moves these tasks into a dedicated **Unlinked Tasks** panel on the left side of the view so they do not clutter the graph canvas.
 
 From the panel you can browse them, search, and drag any task onto the canvas when you are ready to work with it.
 

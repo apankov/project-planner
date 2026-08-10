@@ -71,7 +71,7 @@ function ProjectDot({ project, color }: ProjectDotProps) {
     },
     [project, color]
   );
-  return <span ref={ref} className="tasks-map-project-dot" />;
+  return <span ref={ref} className="project-planner-project-dot" />;
 }
 
 interface TaskNodeData {
@@ -235,7 +235,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
   const handleDoubleClick = async (event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target as Element;
     const interactiveTarget = target.closest?.(
-      "button, input, textarea, select, a, [role='button'], .nodrag, .react-flow__handle, .tasks-map-add-tag-button, .tasks-map-tag-remove-icon"
+      "button, input, textarea, select, a, [role='button'], .nodrag, .react-flow__handle, .project-planner-add-tag-button, .project-planner-tag-remove-icon"
     );
     if (interactiveTarget && event.currentTarget.contains(interactiveTarget)) {
       return;
@@ -253,10 +253,10 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
   return (
     <div
       className={[
-        "tasks-map-task-node-root",
-        connected ? "tasks-map-task-node-root--connected" : "",
-        dimmed ? "tasks-map-task-node-root--dimmed" : "",
-        critical ? "tasks-map-task-node-root--critical" : "",
+        "project-planner-task-node-root",
+        connected ? "project-planner-task-node-root--connected" : "",
+        dimmed ? "project-planner-task-node-root--dimmed" : "",
+        critical ? "project-planner-task-node-root--critical" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -264,18 +264,21 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     >
       {selected && taskDates.length > 0 && (
         <div
-          className="tasks-map-task-date-bar"
+          className="project-planner-task-date-bar"
           aria-label={t("task_dates.title")}
         >
           {taskDates.map(({ type, date }) => (
-            <span className="tasks-map-task-date-item" key={type}>
-              <span className="tasks-map-task-date-emoji" aria-hidden="true">
+            <span className="project-planner-task-date-item" key={type}>
+              <span
+                className="project-planner-task-date-emoji"
+                aria-hidden="true"
+              >
                 {TASK_DATE_EMOJIS[type]}
               </span>
-              <span className="tasks-map-task-date-label">
+              <span className="project-planner-task-date-label">
                 {t(`task_dates.${type}`)}
               </span>
-              <span className="tasks-map-task-date-value">{date}</span>
+              <span className="project-planner-task-date-value">{date}</span>
             </span>
           ))}
         </div>
@@ -289,14 +292,14 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
         debugVisualization={debugVisualization}
         selected={selected}
       >
-        <div className="tasks-map-task-node-header">
+        <div className="project-planner-task-node-header">
           <TaskStatusToggle
             status={status}
             task={task}
             onStatusChange={setStatus}
           />
           {showPriorities && <TaskPriority priority={task.priority} />}
-          <div className="tasks-map-task-node-header-spacer" />
+          <div className="project-planner-task-node-header-spacer" />
           <StarButton
             starred={starred}
             onClick={() => void handleStarToggle()}
@@ -314,13 +317,16 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
           />
         </div>
 
-        <div className="tasks-map-task-node-content">
-          <span ref={summaryRef} className="tasks-map-task-node-summary" />
+        <div className="project-planner-task-node-content">
+          <span
+            ref={summaryRef}
+            className="project-planner-task-node-summary"
+          />
         </div>
 
         {showTags && (
-          <div className="tasks-map-task-node-footer">
-            <div className="tasks-map-tag-list">
+          <div className="project-planner-task-node-footer">
+            <div className="project-planner-tag-list">
               {tags.map((tag) => (
                 <Tag
                   key={tag}
@@ -344,7 +350,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
                 </div>
               ) : (
                 <span
-                  className="tasks-map-add-tag-button"
+                  className="project-planner-add-tag-button"
                   onClick={() => setIsAddingTag(true)}
                 >
                   <Plus size={10} />
@@ -370,7 +376,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
         )}
 
         {groupByProject && task.projects.length > 1 && (
-          <div className="tasks-map-task-node-projects">
+          <div className="project-planner-task-node-projects">
             {task.projects.map((project, index) => (
               <ProjectDot
                 key={project}

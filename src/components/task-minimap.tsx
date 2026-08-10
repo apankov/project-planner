@@ -6,11 +6,11 @@ export const TaskMinimap = () => {
     const status = node.data?.task?.status;
     switch (status) {
       case "done":
-        return "var(--tasks-map-color-green)";
+        return "var(--project-planner-color-green)";
       case "in_progress":
-        return "var(--tasks-map-color-blue)";
+        return "var(--project-planner-color-blue)";
       case "canceled":
-        return "var(--tasks-map-color-red)";
+        return "var(--project-planner-color-red)";
       default:
         return "var(--background-secondary)";
     }
@@ -18,7 +18,7 @@ export const TaskMinimap = () => {
 
   return (
     <MiniMap
-      className="tasks-map-react-flow__minimap"
+      className="project-planner-react-flow__minimap"
       nodeColor={getNodeColor}
       pannable
       zoomable

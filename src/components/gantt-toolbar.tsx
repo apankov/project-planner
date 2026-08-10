@@ -82,14 +82,14 @@ export function GanttToolbar({
   undoLabel,
 }: GanttToolbarProps) {
   return (
-    <div className="tasks-map-gantt-toolbar">
-      <div className="tasks-map-gantt-toolbar__group">
+    <div className="project-planner-gantt-toolbar">
+      <div className="project-planner-gantt-toolbar__group">
         {GANTT_SCALES.map((option) => (
           <button
             key={option.id}
-            className={`tasks-map-gantt-toolbar__scale ${
+            className={`project-planner-gantt-toolbar__scale ${
               option.id === scale.id
-                ? "tasks-map-gantt-toolbar__scale--active"
+                ? "project-planner-gantt-toolbar__scale--active"
                 : ""
             }`}
             onClick={() => onScaleChange(option)}
@@ -100,7 +100,7 @@ export function GanttToolbar({
       </div>
 
       <button
-        className="tasks-map-gantt-toolbar__button"
+        className="project-planner-gantt-toolbar__button"
         onClick={onScrollToToday}
         title={t("gantt.jump_to_today")}
       >
@@ -109,7 +109,7 @@ export function GanttToolbar({
       </button>
 
       <button
-        className="tasks-map-gantt-toolbar__button tasks-map-gantt-toolbar__button--accent"
+        className="project-planner-gantt-toolbar__button project-planner-gantt-toolbar__button--accent"
         onClick={onAddTask}
         title={t("gantt.add_task_desc")}
       >
@@ -118,7 +118,7 @@ export function GanttToolbar({
       </button>
 
       <button
-        className="tasks-map-gantt-toolbar__button"
+        className="project-planner-gantt-toolbar__button"
         onClick={onAddMilestone}
         title={t("gantt.add_milestone_desc")}
       >
@@ -133,8 +133,8 @@ export function GanttToolbar({
           a toggle that looks like every other button is one the user has to
           press to find out what it did. */}
       <button
-        className={`tasks-map-gantt-toolbar__button ${
-          dateOrder ? "tasks-map-gantt-toolbar__button--active" : ""
+        className={`project-planner-gantt-toolbar__button ${
+          dateOrder ? "project-planner-gantt-toolbar__button--active" : ""
         }`}
         onClick={onToggleDateOrder}
         aria-pressed={dateOrder}
@@ -155,7 +155,7 @@ export function GanttToolbar({
       </button>
 
       <button
-        className="tasks-map-gantt-toolbar__button"
+        className="project-planner-gantt-toolbar__button"
         onClick={onUndoOrder}
         disabled={!canUndoOrder}
         title={undoLabel ?? t("gantt.undo_order_desc")}
@@ -164,7 +164,7 @@ export function GanttToolbar({
         <span>{t("gantt.undo_order")}</span>
       </button>
 
-      <label className="tasks-map-gantt-toolbar__toggle">
+      <label className="project-planner-gantt-toolbar__toggle">
         <span>{t("gantt.group_by")}</span>
         <select
           value={groupBy}
@@ -181,7 +181,7 @@ export function GanttToolbar({
         </select>
       </label>
 
-      <div className="tasks-map-gantt-toolbar__search">
+      <div className="project-planner-gantt-toolbar__search">
         <Search size={14} />
         <input
           type="text"
@@ -191,7 +191,7 @@ export function GanttToolbar({
         />
       </div>
 
-      <label className="tasks-map-gantt-toolbar__toggle">
+      <label className="project-planner-gantt-toolbar__toggle">
         <input
           type="checkbox"
           checked={hideCompleted}
@@ -201,7 +201,7 @@ export function GanttToolbar({
       </label>
 
       <label
-        className="tasks-map-gantt-toolbar__toggle"
+        className="project-planner-gantt-toolbar__toggle"
         title={t("gantt.skip_weekends_desc")}
       >
         <input
@@ -213,7 +213,7 @@ export function GanttToolbar({
       </label>
 
       <label
-        className="tasks-map-gantt-toolbar__toggle"
+        className="project-planner-gantt-toolbar__toggle"
         title={t("gantt.critical_path_desc")}
       >
         <input
@@ -224,15 +224,15 @@ export function GanttToolbar({
         <span>{t("gantt.critical_path")}</span>
       </label>
 
-      <span className="tasks-map-gantt-toolbar__count">
+      <span className="project-planner-gantt-toolbar__count">
         {t("gantt.task_count", { n: taskCount })}
       </span>
 
-      <div className="tasks-map-gantt-toolbar__spacer" />
+      <div className="project-planner-gantt-toolbar__spacer" />
 
       {inferredCount > 0 && (
         <button
-          className="tasks-map-gantt-toolbar__button tasks-map-gantt-toolbar__button--accent"
+          className="project-planner-gantt-toolbar__button project-planner-gantt-toolbar__button--accent"
           onClick={onApplyInferred}
           disabled={applying}
           title={t("gantt.apply_inferred_desc")}
@@ -246,7 +246,7 @@ export function GanttToolbar({
           and away from the editing controls: exporting writes a picture, not
           a task. */}
       <button
-        className="tasks-map-gantt-toolbar__button"
+        className="project-planner-gantt-toolbar__button"
         onClick={onExport}
         disabled={exporting}
         title={t("gantt.export_desc")}
@@ -256,7 +256,7 @@ export function GanttToolbar({
       </button>
 
       <button
-        className="tasks-map-gantt-toolbar__button"
+        className="project-planner-gantt-toolbar__button"
         onClick={onReload}
         title={t("gantt.reload")}
       >

@@ -26,7 +26,7 @@ interface FinanceBarListProps {
 }
 
 function setWidth(el: HTMLElement | null, percent: number): void {
-  el?.style.setProperty("--tasks-map-finance-bar", `${percent}%`);
+  el?.style.setProperty("--project-planner-finance-bar", `${percent}%`);
 }
 
 export default function FinanceBarList({
@@ -34,7 +34,7 @@ export default function FinanceBarList({
   emptyLabel,
 }: FinanceBarListProps) {
   if (items.length === 0) {
-    return <p className="tasks-map-finance__empty">{emptyLabel}</p>;
+    return <p className="project-planner-finance__empty">{emptyLabel}</p>;
   }
 
   // Scaled against the biggest bar rather than the total, so a long tail of
@@ -42,32 +42,32 @@ export default function FinanceBarList({
   const largest = Math.max(...items.map((item) => Math.abs(item.value)), 1);
 
   return (
-    <ul className="tasks-map-finance-bars">
+    <ul className="project-planner-finance-bars">
       {items.map((item) => (
-        <li className="tasks-map-finance-bars__row" key={item.key}>
+        <li className="project-planner-finance-bars__row" key={item.key}>
           <button
-            className="tasks-map-finance-bars__button"
+            className="project-planner-finance-bars__button"
             onClick={item.onClick}
             disabled={!item.onClick}
             type="button"
           >
-            <span className="tasks-map-finance-bars__label">
+            <span className="project-planner-finance-bars__label">
               {item.label}
               {item.detail && (
-                <span className="tasks-map-finance-bars__detail">
+                <span className="project-planner-finance-bars__detail">
                   {item.detail}
                 </span>
               )}
             </span>
-            <span className="tasks-map-finance-bars__track">
+            <span className="project-planner-finance-bars__track">
               <span
-                className="tasks-map-finance-bars__fill"
+                className="project-planner-finance-bars__fill"
                 ref={(el) =>
                   setWidth(el, (Math.abs(item.value) / largest) * 100)
                 }
               />
             </span>
-            <span className="tasks-map-finance-bars__value">
+            <span className="project-planner-finance-bars__value">
               {item.display}
             </span>
           </button>

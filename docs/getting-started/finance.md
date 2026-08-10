@@ -4,7 +4,7 @@ Planning here is time and materials. A task consumes hours, those hours are
 worked by named people in some proportion, each person sits at a grade with a
 chargeout rate, and on top of the labour sit any materials the task has to buy.
 
-Finance is off by default. Turn it on under **Settings → Tasks Map → Finance**,
+Finance is off by default. Turn it on under **Settings → Project Planner → Finance**,
 which adds the **Task finance** view, its ribbon icon and command, and a
 **Finance…** entry on each task's menu in the map.
 

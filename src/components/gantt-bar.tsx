@@ -310,15 +310,15 @@ export function GanttBar({
   );
 
   const classNames = [
-    "tasks-map-gantt-bar",
-    `tasks-map-gantt-bar--${effectiveTaskStatus(task.status, task.progress)}`,
-    summary ? "tasks-map-gantt-bar--summary" : "",
-    inferred && !summary ? "tasks-map-gantt-bar--inferred" : "",
-    dragging ? "tasks-map-gantt-bar--dragging" : "",
-    selected ? "tasks-map-gantt-bar--selected" : "",
-    saving ? "tasks-map-gantt-bar--saving" : "",
-    analysis.critical ? "tasks-map-gantt-bar--critical" : "",
-    analysis.atRisk ? "tasks-map-gantt-bar--at-risk" : "",
+    "project-planner-gantt-bar",
+    `project-planner-gantt-bar--${effectiveTaskStatus(task.status, task.progress)}`,
+    summary ? "project-planner-gantt-bar--summary" : "",
+    inferred && !summary ? "project-planner-gantt-bar--inferred" : "",
+    dragging ? "project-planner-gantt-bar--dragging" : "",
+    selected ? "project-planner-gantt-bar--selected" : "",
+    saving ? "project-planner-gantt-bar--saving" : "",
+    analysis.critical ? "project-planner-gantt-bar--critical" : "",
+    analysis.atRisk ? "project-planner-gantt-bar--at-risk" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -361,20 +361,23 @@ export function GanttBar({
       onPointerCancel={endDrag}
     >
       {percent === null || summary ? null : (
-        <span ref={progressRef} className="tasks-map-gantt-bar__progress" />
+        <span
+          ref={progressRef}
+          className="project-planner-gantt-bar__progress"
+        />
       )}
       {/* A summary spans its children rather than holding dates of its own,
           so there is nothing for a resize handle to write */}
       {!summary && (
         <span
-          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
+          className="project-planner-gantt-bar__handle project-planner-gantt-bar__handle--start"
           onPointerDown={handlePointerDown("resize-start")}
         />
       )}
-      <span className="tasks-map-gantt-bar__label">{label}</span>
+      <span className="project-planner-gantt-bar__label">{label}</span>
       {!summary && (
         <span
-          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
+          className="project-planner-gantt-bar__handle project-planner-gantt-bar__handle--end"
           onPointerDown={handlePointerDown("resize-end")}
         />
       )}

@@ -13,7 +13,7 @@ export interface FilterPreset {
   filter: FilterState;
 }
 
-export interface TasksMapSettings {
+export interface ProjectPlannerSettings {
   showPriorities: boolean;
   showTags: boolean;
   showStatusCounts: boolean;
@@ -79,7 +79,7 @@ export interface TasksMapSettings {
   filterPresets: FilterPreset[];
 }
 
-export const DEFAULT_SETTINGS: TasksMapSettings = {
+export const DEFAULT_SETTINGS: ProjectPlannerSettings = {
   showPriorities: true,
   showTags: true,
   showStatusCounts: true,

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ReactFlowProvider } from "reactflow";
 import { AppContext } from "src/contexts/context";
-import TaskMapGraphView from "./TaskMapGraphView";
+import GraphView from "./GraphView";
 import { EmbedSidebar } from "src/components/embed-sidebar";
-import type TasksMapPlugin from "../main";
-import { TasksMapSettings } from "src/types/settings";
+import type ProjectPlannerPlugin from "../main";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { FilterState, DEFAULT_FILTER_STATE } from "src/types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "src/types/embed-config";
 import { TaskStatus } from "src/types/task";
@@ -20,18 +20,18 @@ export interface ParsedEmbed {
   config: EmbedConfig;
 }
 
-interface TaskMapGraphEmbedViewProps {
-  plugin: TasksMapPlugin;
+interface GraphEmbedViewProps {
+  plugin: ProjectPlannerPlugin;
   initialFilter: FilterState;
   embedConfig: EmbedConfig;
 }
 
-export default function TaskMapGraphEmbedView({
+export default function GraphEmbedView({
   plugin,
   initialFilter,
   embedConfig,
-}: TaskMapGraphEmbedViewProps) {
-  const [settings, setSettings] = useState<TasksMapSettings>({
+}: GraphEmbedViewProps) {
+  const [settings, setSettings] = useState<ProjectPlannerSettings>({
     ...plugin.settings,
   });
 
@@ -51,17 +51,17 @@ export default function TaskMapGraphEmbedView({
 
   useEffect(() => {
     const handler = () => setSettings({ ...plugin.settings });
-    window.addEventListener("tasks-map:settings-changed", handler);
+    window.addEventListener("project-planner:settings-changed", handler);
     return () =>
-      window.removeEventListener("tasks-map:settings-changed", handler);
+      window.removeEventListener("project-planner:settings-changed", handler);
   }, [plugin]);
 
   return (
     <AppContext.Provider value={plugin.app}>
-      <div className="tasks-map-embed-container" ref={containerRef}>
-        <div className="tasks-map-embed-inner">
+      <div className="project-planner-embed-container" ref={containerRef}>
+        <div className="project-planner-embed-inner">
           <ReactFlowProvider>
-            <TaskMapGraphView
+            <GraphView
               settings={settings}
               filterState={filterState}
               setFilterState={setFilterState}
@@ -77,13 +77,13 @@ export default function TaskMapGraphEmbedView({
   );
 }
 
-export function TaskMapEmbedError({ message }: { message: string }) {
+export function EmbedError({ message }: { message: string }) {
   return (
-    <div className="tasks-map-embed-error" role="alert">
-      <span className="tasks-map-embed-error__icon" aria-hidden="true">
+    <div className="project-planner-embed-error" role="alert">
+      <span className="project-planner-embed-error__icon" aria-hidden="true">
         ⚠️
       </span>
-      <span className="tasks-map-embed-error__message">{message}</span>
+      <span className="project-planner-embed-error__message">{message}</span>
     </div>
   );
 }
@@ -253,7 +253,7 @@ export function filterStateFromSource(source: string): ParseResult {
     if ("filter" in obj === false && "config" in obj === false) {
       // JSON parsed but uses the old flat format
       console.warn(
-        "[tasks-map] Embed block uses the old flat format. Re-insert it using the command palette to migrate it to the current format."
+        "[project-planner] Embed block uses the old flat format. Re-insert it using the command palette to migrate it to the current format."
       );
       return { kind: "legacy" };
     }
@@ -271,7 +271,7 @@ export function filterStateFromSource(source: string): ParseResult {
       config: coerceEmbedConfig(rawConfig),
     };
   } catch (err) {
-    console.warn("[tasks-map] Failed to parse embed filter config:", err);
+    console.warn("[project-planner] Failed to parse embed filter config:", err);
     return { kind: "invalid" };
   }
 }

@@ -117,15 +117,15 @@ export class TaskFinanceModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this;
-    contentEl.addClass("tasks-map-finance-modal");
+    contentEl.addClass("project-planner-finance-modal");
 
     contentEl.createEl("h3", { text: t("finance.modal_title") });
     contentEl.createEl("p", {
-      cls: "tasks-map-finance-modal__task",
+      cls: "project-planner-finance-modal__task",
       text: this.options.summary,
     });
     contentEl.createEl("p", {
-      cls: "tasks-map-finance-modal__schedule",
+      cls: "project-planner-finance-modal__schedule",
       text: this.options.inferred
         ? t("finance.modal_schedule_suggested", { days: this.options.days })
         : t("finance.modal_schedule", { days: this.options.days }),
@@ -174,7 +174,7 @@ export class TaskFinanceModal extends Modal {
       });
 
     this.hoursHintEl = container.createEl("p", {
-      cls: "tasks-map-finance-modal__hint",
+      cls: "project-planner-finance-modal__hint",
     });
   }
 
@@ -185,16 +185,16 @@ export class TaskFinanceModal extends Modal {
    */
   private rowSetting(container: HTMLElement): Setting {
     const setting = new Setting(container);
-    setting.settingEl.addClass("tasks-map-finance-modal__row");
-    setting.infoEl.addClass("tasks-map-finance-modal__row-info");
-    setting.controlEl.addClass("tasks-map-finance-modal__row-control");
+    setting.settingEl.addClass("project-planner-finance-modal__row");
+    setting.infoEl.addClass("project-planner-finance-modal__row-info");
+    setting.controlEl.addClass("project-planner-finance-modal__row-control");
     return setting;
   }
 
   private renderPeople(container: HTMLElement): void {
     container.createEl("h4", { text: t("finance.modal_people") });
     this.peopleRowsEl = container.createDiv({
-      cls: "tasks-map-finance-modal__rows",
+      cls: "project-planner-finance-modal__rows",
     });
 
     const footer = new Setting(container).addButton((button) =>
@@ -206,7 +206,7 @@ export class TaskFinanceModal extends Modal {
     );
 
     this.shareChipEl = footer.controlEl.createSpan({
-      cls: "tasks-map-finance-modal__chip",
+      cls: "project-planner-finance-modal__chip",
     });
 
     this.drawPeopleRows();
@@ -250,7 +250,7 @@ export class TaskFinanceModal extends Modal {
 
       setting.addText((text) => {
         text.inputEl.type = "number";
-        text.inputEl.addClass("tasks-map-finance-modal__share");
+        text.inputEl.addClass("project-planner-finance-modal__share");
         text.setPlaceholder("100");
         text.setValue(trimNumber(allocation.share * 100));
         text.onChange((value) => {
@@ -261,7 +261,7 @@ export class TaskFinanceModal extends Modal {
       });
 
       setting.controlEl.createSpan({
-        cls: "tasks-map-finance-modal__readout",
+        cls: "project-planner-finance-modal__readout",
         text: this.readoutFor(allocation),
       });
 
@@ -295,7 +295,7 @@ export class TaskFinanceModal extends Modal {
   private renderExpenses(container: HTMLElement): void {
     container.createEl("h4", { text: t("finance.modal_costs") });
     this.expenseRowsEl = container.createDiv({
-      cls: "tasks-map-finance-modal__rows",
+      cls: "project-planner-finance-modal__rows",
     });
 
     new Setting(container).addButton((button) =>
@@ -328,7 +328,7 @@ export class TaskFinanceModal extends Modal {
 
       setting.addText((text) => {
         text.inputEl.type = "number";
-        text.inputEl.addClass("tasks-map-finance-modal__amount");
+        text.inputEl.addClass("project-planner-finance-modal__amount");
         text.setPlaceholder("0");
         text.setValue(trimNumber(expense.amount));
         text.onChange((value) => {
@@ -351,7 +351,7 @@ export class TaskFinanceModal extends Modal {
 
     if (this.options.inline && this.expenses.length > CROWDED_ROWS) {
       rows.createEl("p", {
-        cls: "tasks-map-finance-modal__hint",
+        cls: "project-planner-finance-modal__hint",
         text: t("finance.modal_line_crowded"),
       });
     }
@@ -359,7 +359,7 @@ export class TaskFinanceModal extends Modal {
 
   private renderSummary(container: HTMLElement): void {
     this.summaryEl = container.createEl("p", {
-      cls: "tasks-map-finance-modal__summary",
+      cls: "project-planner-finance-modal__summary",
     });
   }
 
@@ -427,7 +427,7 @@ export class TaskFinanceModal extends Modal {
     if (this.shareChipEl) {
       this.shareChipEl.setText(`${trimNumber(share * 100)}%`);
       this.shareChipEl.toggleClass(
-        "tasks-map-finance-modal__chip--warning",
+        "project-planner-finance-modal__chip--warning",
         draft.allocations.length > 0 && Math.abs(share - 1) > 0.005
       );
     }
@@ -436,7 +436,7 @@ export class TaskFinanceModal extends Modal {
     // hours do, and there are only ever a handful of rows
     for (const [index, row] of Array.from(
       this.peopleRowsEl?.querySelectorAll(
-        ".tasks-map-finance-modal__readout"
+        ".project-planner-finance-modal__readout"
       ) ?? []
     ).entries()) {
       const allocation = this.allocations[index];

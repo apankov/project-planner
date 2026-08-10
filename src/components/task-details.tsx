@@ -7,7 +7,7 @@ interface TaskDetailsProps {
 
 export function TaskDetails({ task, status }: TaskDetailsProps) {
   return (
-    <div className="tasks-map-task-details">
+    <div className="project-planner-task-details">
       <div>
         <b>ID:</b> {task.id}
       </div>

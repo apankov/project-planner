@@ -3,33 +3,33 @@ import { ItemView, WorkspaceLeaf } from "obsidian";
 import { createRoot, Root } from "react-dom/client";
 import { ReactFlowProvider } from "reactflow";
 import { AppContext } from "src/contexts/context";
-import TaskMapGraphView from "./TaskMapGraphView";
+import GraphView from "./GraphView";
 import { checkDataviewPlugin } from "../lib/utils";
-import TasksMapPlugin from "../main";
-import { TasksMapSettings } from "src/types/settings";
+import ProjectPlannerPlugin from "../main";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { FilterState, DEFAULT_FILTER_STATE } from "src/types/filter-state";
 import { MAP_VIEW_TYPE } from "src/lib/view-focus";
 import { t } from "../i18n";
 
 // Wrapper component that manages settings updates and filter state for the graph view
-function TaskMapGraphWrapper({
+function GraphWrapper({
   pluginSettings,
   plugin,
   onFilterStateChange,
 }: {
-  pluginSettings: TasksMapSettings;
-  plugin: TasksMapPlugin;
+  pluginSettings: ProjectPlannerSettings;
+  plugin: ProjectPlannerPlugin;
   onFilterStateChange: (_state: FilterState) => void;
 }) {
-  const [settings, setSettings] = useState<TasksMapSettings>({
+  const [settings, setSettings] = useState<ProjectPlannerSettings>({
     ...pluginSettings,
   });
 
   useEffect(() => {
     const handler = () => setSettings({ ...plugin.settings });
-    window.addEventListener("tasks-map:settings-changed", handler);
+    window.addEventListener("project-planner:settings-changed", handler);
     return () =>
-      window.removeEventListener("tasks-map:settings-changed", handler);
+      window.removeEventListener("project-planner:settings-changed", handler);
   }, [plugin]);
 
   const [filterState, setFilterState] = useState<FilterState>({
@@ -49,7 +49,7 @@ function TaskMapGraphWrapper({
 
   return (
     <ReactFlowProvider>
-      <TaskMapGraphView
+      <GraphView
         settings={settings}
         filterState={filterState}
         setFilterState={handleSetFilterState}
@@ -61,7 +61,7 @@ function TaskMapGraphWrapper({
 
 export const VIEW_TYPE = MAP_VIEW_TYPE;
 
-export default class TaskMapGraphItemView extends ItemView {
+export default class ProjectPlannerGraphItemView extends ItemView {
   root: Root | null = null;
   private filterState: FilterState = { ...DEFAULT_FILTER_STATE };
 
@@ -77,7 +77,7 @@ export default class TaskMapGraphItemView extends ItemView {
     return t("view.title");
   }
 
-  /** Returns the current filter state of the open Tasks Map view. */
+  /** Returns the current filter state of the open graph view. */
   getFilterState(): FilterState {
     return structuredClone(this.filterState);
   }
@@ -89,16 +89,16 @@ export default class TaskMapGraphItemView extends ItemView {
 
     if (!dataviewCheck.isReady) {
       this.root.render(
-        <div className="tasks-map-centered-message-container">
-          <div className="tasks-map-centered-message-content">
-            <div className="tasks-map-message-icon">⚠️</div>
-            <h3 className="tasks-map-message-title">
+        <div className="project-planner-centered-message-container">
+          <div className="project-planner-centered-message-content">
+            <div className="project-planner-message-icon">⚠️</div>
+            <h3 className="project-planner-message-title">
               {t("view.dataview_required")}
             </h3>
-            <p className="tasks-map-message-description">
+            <p className="project-planner-message-description">
               {dataviewCheck.getMessage()}
             </p>
-            <p className="tasks-map-message-description">
+            <p className="project-planner-message-description">
               {t("view.visit_community_plugins")}
             </p>
           </div>
@@ -110,19 +110,19 @@ export default class TaskMapGraphItemView extends ItemView {
     // Get the plugin instance to access settings
     const plugin = (
       this.app as unknown as {
-        plugins: { plugins: Record<string, TasksMapPlugin> };
+        plugins: { plugins: Record<string, ProjectPlannerPlugin> };
       }
-    ).plugins.plugins["tasks-map"];
+    ).plugins.plugins["project-planner"];
 
     if (!plugin) {
       this.root.render(
-        <div className="tasks-map-centered-message-container">
-          <div className="tasks-map-centered-message-content">
-            <div className="tasks-map-message-icon">⚠️</div>
-            <h3 className="tasks-map-message-title">
+        <div className="project-planner-centered-message-container">
+          <div className="project-planner-centered-message-content">
+            <div className="project-planner-message-icon">⚠️</div>
+            <h3 className="project-planner-message-title">
               {t("view.plugin_not_found")}
             </h3>
-            <p className="tasks-map-message-description">
+            <p className="project-planner-message-description">
               {t("view.plugin_not_found_description")}
             </p>
           </div>
@@ -133,7 +133,7 @@ export default class TaskMapGraphItemView extends ItemView {
 
     this.root.render(
       <AppContext.Provider value={this.app}>
-        <TaskMapGraphWrapper
+        <GraphWrapper
           pluginSettings={plugin.settings}
           plugin={plugin}
           onFilterStateChange={(state) => {

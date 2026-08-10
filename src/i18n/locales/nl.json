@@ -1,11 +1,11 @@
 {
   "plugin": {
-    "name": "Taken Kaart",
-    "description": "Een grafische weergave van je taken"
+    "name": "Project Planner",
+    "description": "Plan projecten vanuit je Markdown-taken"
   },
   "commands": {
-    "open_map_view": "Kaartweergave openen",
-    "insert_filter_as_code_block": "Huidig filter invoegen als ingesloten Taken Kaart",
+    "open_map_view": "Grafiekweergave openen",
+    "insert_filter_as_code_block": "Huidig filter invoegen als ingesloten grafiek",
     "open_gantt_view": "Gantt-weergave openen",
     "open_kanban_view": "Bordweergave openen",
     "retrofit_companion_notes": "Notities maken voor bestaande taken",
@@ -13,19 +13,19 @@
     "create_rate_note": "Tariefnotitie aanmaken"
   },
   "ribbon": {
-    "open_tasks_map": "Taken kaartweergave openen",
+    "open_tasks_map": "Projectgrafiek openen",
     "open_tasks_gantt": "Takengantt openen",
     "open_tasks_kanban": "Takenbord openen",
     "open_tasks_finance": "Taakfinanciën openen"
   },
   "view": {
-    "title": "Taken kaart",
-    "dataview_required": "Taken Kaart vereist dat de Dataview-plugin is geïnstalleerd en ingeschakeld.",
+    "title": "Projectgrafiek",
+    "dataview_required": "Project Planner vereist dat de Dataview-plugin is geïnstalleerd en ingeschakeld.",
     "dataview_not_installed": "De Dataview-plugin is momenteel niet geïnstalleerd.",
     "dataview_disabled": "De Dataview-plugin is geïnstalleerd maar niet ingeschakeld.",
     "visit_community_plugins": "Ga naar het gedeelte Community Plugins in Instellingen om Dataview te installeren of in te schakelen.",
-    "plugin_not_found": "Taken Kaart kan niet worden geladen",
-    "plugin_not_found_description": "De instantie van de Taken Kaart-plugin kon niet worden gevonden. Probeer de weergave te sluiten en opnieuw te openen."
+    "plugin_not_found": "Project Planner kan niet worden geladen",
+    "plugin_not_found_description": "De instantie van de Project Planner-plugin kon niet worden gevonden. Probeer de weergave te sluiten en opnieuw te openen."
   },
   "gantt": {
     "view_title": "Takengantt",
@@ -41,7 +41,7 @@
     "export_done": "{{file}} opgeslagen ({{width}}×{{height}})",
     "export_done_copied": "{{file}} opgeslagen ({{width}}×{{height}}) en naar het klembord gekopieerd",
     "export_subtitle": "{{n}} taken · {{start}} tot {{end}}",
-    "export_footer": "{{vault}} · geëxporteerd op {{date}} · Tasks Map",
+    "export_footer": "{{vault}} · geëxporteerd op {{date}} · Project Planner",
     "export_modal_title": "Grafiek exporteren",
     "export_modal_desc": "Een eenvoudige, afdrukklare afbeelding van de grafiek zoals hij nu is — dezelfde rijen, volgorde en filters, met de hele tijdlijn passend op één liggende pagina.",
     "export_modal_heading": "Kop",
@@ -280,7 +280,7 @@
     "modal_placeholder": "Wat moet er gebeuren?",
     "modal_submit": "Taak toevoegen",
     "modal_cancel": "Annuleren",
-    "no_target_note": "Open eerst een notitie, of zet er een taak in, zodat Tasks Map weet waar te schrijven",
+    "no_target_note": "Open eerst een notitie, of zet er een taak in, zodat Project Planner weet waar te schrijven",
     "could_not_read": "Die taak kon niet worden teruggelezen — er is niets gewijzigd",
     "failed": "Kon de taak niet aanmaken",
     "created": "Taak toegevoegd aan {{note}}",
@@ -509,9 +509,9 @@
   },
   "embed": {
     "pick_note_placeholder": "Kies een notitie...",
-    "dataview_required": "Taken Kaart vereist de Dataview-plugin.",
-    "invalid_json": "Dit Taken Kaart-blok bevat ongeldige JSON. Voeg het opnieuw in via het opdrachtenpalet om het te herstellen.",
-    "legacy_format": "Dit Taken Kaart-blok gebruikt een verouderd formaat. Voeg het opnieuw in via het opdrachtenpalet om het te migreren."
+    "dataview_required": "Project Planner vereist de Dataview-plugin.",
+    "invalid_json": "Dit Project Planner-blok bevat ongeldige JSON. Voeg het opnieuw in via het opdrachtenpalet om het te herstellen.",
+    "legacy_format": "Dit Project Planner-blok gebruikt een verouderd formaat. Voeg het opnieuw in via het opdrachtenpalet om het te migreren."
   },
   "finance": {
     "menu_item": "Financiën…",

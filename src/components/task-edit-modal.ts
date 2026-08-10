@@ -103,7 +103,7 @@ export class TaskEditModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this;
-    contentEl.addClass("tasks-map-task-edit-modal");
+    contentEl.addClass("project-planner-task-edit-modal");
     contentEl.createEl("h3", { text: t("task_edit.modal_title") });
 
     this.renderText(contentEl);
@@ -112,7 +112,7 @@ export class TaskEditModal extends Modal {
     this.renderProgress(contentEl);
 
     this.errorEl = contentEl.createEl("p", {
-      cls: "tasks-map-task-edit-modal__error",
+      cls: "project-planner-task-edit-modal__error",
     });
     this.errorEl.hide();
 
@@ -134,7 +134,7 @@ export class TaskEditModal extends Modal {
       input.onChange((value) => {
         this.text = value;
       });
-      input.inputEl.addClass("tasks-map-task-edit-modal__text");
+      input.inputEl.addClass("project-planner-task-edit-modal__text");
       input.inputEl.addEventListener("keydown", (event: KeyboardEvent) => {
         if (event.key !== "Enter") return;
         event.preventDefault();
@@ -188,7 +188,7 @@ export class TaskEditModal extends Modal {
 
     if (!locked && this.options.suggested) {
       container.createEl("p", {
-        cls: "tasks-map-task-edit-modal__hint",
+        cls: "project-planner-task-edit-modal__hint",
         text: t("task_edit.dates_suggested", {
           start: this.options.suggested.start,
           end: this.options.suggested.due,
@@ -203,7 +203,7 @@ export class TaskEditModal extends Modal {
       .setDesc(t("task_edit.progress_desc"))
       .addText((input) => {
         input.inputEl.type = "number";
-        input.inputEl.addClass("tasks-map-task-edit-modal__progress");
+        input.inputEl.addClass("project-planner-task-edit-modal__progress");
         input.setPlaceholder(t("task_edit.progress_placeholder"));
         input.setValue(this.progress === null ? "" : String(this.progress));
         input.onChange((value) => {

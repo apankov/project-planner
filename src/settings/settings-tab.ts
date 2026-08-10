@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import TasksMapPlugin from "../main";
+import ProjectPlannerPlugin from "../main";
 import {
   TagColorName,
   TagColorPalette,
@@ -37,10 +37,10 @@ const CURRENCY_CODES = [
   "ZAR",
 ];
 
-export class TasksMapSettingTab extends PluginSettingTab {
-  plugin: TasksMapPlugin;
+export class ProjectPlannerSettingTab extends PluginSettingTab {
+  plugin: ProjectPlannerPlugin;
 
-  constructor(app: App, plugin: TasksMapPlugin) {
+  constructor(app: App, plugin: ProjectPlannerPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -53,12 +53,12 @@ export class TasksMapSettingTab extends PluginSettingTab {
     container.empty();
 
     const previewDiv = container.createDiv({
-      cls: "tasks-map-tag-preview-container",
+      cls: "project-planner-tag-preview-container",
     });
 
     tags.forEach((tag) => {
       previewDiv.createSpan({
-        cls: `tasks-map-tag ${getTagColorClass(tag, palette)}`,
+        cls: `project-planner-tag ${getTagColorClass(tag, palette)}`,
         text: tag,
       });
     });
@@ -73,7 +73,7 @@ export class TasksMapSettingTab extends PluginSettingTab {
    */
   private displayFinanceSettings(containerEl: HTMLElement): void {
     const rateNoteStatus = containerEl.createDiv({
-      cls: "tasks-map-setting-status",
+      cls: "project-planner-setting-status",
     });
 
     new Setting(containerEl)
@@ -160,11 +160,11 @@ export class TasksMapSettingTab extends PluginSettingTab {
 
     if (!found) {
       container.setText(t("settings.finance_rate_note_missing"));
-      container.addClass("tasks-map-setting-status--warning");
+      container.addClass("project-planner-setting-status--warning");
       return;
     }
 
-    container.removeClass("tasks-map-setting-status--warning");
+    container.removeClass("project-planner-setting-status--warning");
     container.setText(
       t("settings.finance_rate_note_status", {
         grades: book.grades.length,
@@ -213,7 +213,7 @@ export class TasksMapSettingTab extends PluginSettingTab {
 
     if (visibleTags.length === 0) {
       container.createDiv({
-        cls: "tasks-map-tag-color-empty",
+        cls: "project-planner-tag-color-empty",
         text:
           tags.length === 0
             ? t("settings.no_tags_found")
@@ -224,9 +224,9 @@ export class TasksMapSettingTab extends PluginSettingTab {
 
     visibleTags.forEach((tag) => {
       const setting = new Setting(container);
-      setting.settingEl.addClass("tasks-map-tag-color-row");
+      setting.settingEl.addClass("project-planner-tag-color-row");
       const chip = setting.nameEl.createSpan({
-        cls: `tasks-map-tag ${getTagColorClass(
+        cls: `project-planner-tag ${getTagColorClass(
           tag,
           this.plugin.settings.tagColorPalette,
           this.plugin.settings.tagColorOverrides
@@ -250,7 +250,7 @@ export class TasksMapSettingTab extends PluginSettingTab {
               value as TagColorName | typeof TAG_COLOR_DEFAULT
             );
             await this.plugin.saveSettings();
-            chip.className = `tasks-map-tag ${getTagColorClass(
+            chip.className = `project-planner-tag ${getTagColorClass(
               tag,
               this.plugin.settings.tagColorPalette,
               this.plugin.settings.tagColorOverrides
@@ -443,7 +443,7 @@ export class TasksMapSettingTab extends PluginSettingTab {
     });
 
     const tagColorList = containerEl.createDiv({
-      cls: "tasks-map-tag-color-list",
+      cls: "project-planner-tag-color-list",
     });
     this.createTagColorRows(tagColorList, knownTags, tagColorQuery);
 
@@ -518,54 +518,54 @@ export class TasksMapSettingTab extends PluginSettingTab {
 
     // Create preview container
     const previewContainer = containerEl.createDiv();
-    previewContainer.addClass("tasks-map-preview-container");
+    previewContainer.addClass("project-planner-preview-container");
 
     const updatePreview = (style: "individual" | "csv" | "dataview") => {
       previewContainer.empty();
 
       if (style === "individual") {
         const title = previewContainer.createDiv({
-          cls: "tasks-map-preview-title",
+          cls: "project-planner-preview-title",
         });
         title.textContent = t("settings.linking_individual_title");
 
         const desc = previewContainer.createDiv({
-          cls: "tasks-map-preview-desc",
+          cls: "project-planner-preview-desc",
         });
         desc.textContent = t("settings.linking_individual_desc");
 
         const example = previewContainer.createDiv({
-          cls: "tasks-map-preview-example",
+          cls: "project-planner-preview-example",
         });
         example.textContent = t("settings.linking_individual_example");
       } else if (style === "dataview") {
         const title = previewContainer.createDiv({
-          cls: "tasks-map-preview-title",
+          cls: "project-planner-preview-title",
         });
         title.textContent = t("settings.linking_dataview_title");
 
         const desc = previewContainer.createDiv({
-          cls: "tasks-map-preview-desc",
+          cls: "project-planner-preview-desc",
         });
         desc.textContent = t("settings.linking_dataview_desc");
 
         const example = previewContainer.createDiv({
-          cls: "tasks-map-preview-example",
+          cls: "project-planner-preview-example",
         });
         example.textContent = t("settings.linking_dataview_example");
       } else {
         const title = previewContainer.createDiv({
-          cls: "tasks-map-preview-title",
+          cls: "project-planner-preview-title",
         });
         title.textContent = t("settings.linking_csv_title");
 
         const desc = previewContainer.createDiv({
-          cls: "tasks-map-preview-desc",
+          cls: "project-planner-preview-desc",
         });
         desc.textContent = t("settings.linking_csv_desc");
 
         const example = previewContainer.createDiv({
-          cls: "tasks-map-preview-example",
+          cls: "project-planner-preview-example",
         });
         example.textContent = t("settings.linking_csv_example");
       }

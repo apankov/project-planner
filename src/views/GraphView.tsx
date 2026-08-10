@@ -72,7 +72,7 @@ import { GraphEmptyState } from "src/components/graph-empty-state";
 import ControlsPanel from "src/components/controls-panel";
 import GraphActionBar from "src/components/graph-action-bar";
 import { t } from "../i18n";
-import TasksMapPlugin from "../main";
+import ProjectPlannerPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
   MAP_VIEW_TYPE,
@@ -80,30 +80,30 @@ import {
 } from "src/lib/view-focus";
 
 import { TaskStatus } from "src/types/task";
-import { TasksMapSettings } from "src/types/settings";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { FilterState } from "src/types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "src/types/embed-config";
 import { TaskInsertPosition } from "src/types/base-task";
 
 const ALL_STATUSES: TaskStatus[] = ["todo", "in_progress", "done", "canceled"];
 
-interface TaskMapGraphViewProps {
-  settings: TasksMapSettings;
+interface GraphViewProps {
+  settings: ProjectPlannerSettings;
   filterState: FilterState;
   setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
-  plugin: TasksMapPlugin;
+  plugin: ProjectPlannerPlugin;
   embedConfig?: EmbedConfig;
   reloadRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function TaskMapGraphView({
+export default function GraphView({
   settings,
   filterState,
   setFilterState,
   plugin,
   embedConfig,
   reloadRef,
-}: TaskMapGraphViewProps) {
+}: GraphViewProps) {
   const embed = { ...DEFAULT_EMBED_CONFIG, ...embedConfig };
   const app = useApp();
   const vault = app.vault;
@@ -203,9 +203,9 @@ export default function TaskMapGraphView({
   React.useEffect(() => {
     if (containerRef.current) {
       if (hideTags) {
-        containerRef.current.classList.add("tasks-map--hide-tags");
+        containerRef.current.classList.add("project-planner--hide-tags");
       } else {
-        containerRef.current.classList.remove("tasks-map--hide-tags");
+        containerRef.current.classList.remove("project-planner--hide-tags");
       }
     }
   }, [hideTags]);
@@ -1944,7 +1944,7 @@ export default function TaskMapGraphView({
   return (
     <TagsContext.Provider value={tagsContextValue}>
       <div
-        className="tasks-map-graph-container"
+        className="project-planner-graph-container"
         ref={containerRef}
         onDrop={(e) => void onDrop(e)}
         onDragOver={onDragOver}
@@ -1953,9 +1953,9 @@ export default function TaskMapGraphView({
           <UnlinkedTasksPanel tasks={sidebarTasks} />
         )}
         {isLoading && (
-          <div className="tasks-map-loading-container">
-            <div className="tasks-map-spinner" />
-            <div className="tasks-map-loading-text">Loading tasks...</div>
+          <div className="project-planner-loading-container">
+            <div className="project-planner-spinner" />
+            <div className="project-planner-loading-text">Loading tasks...</div>
           </div>
         )}
         {!isLoading && tasks.length === 0 && (
@@ -1991,7 +1991,7 @@ export default function TaskMapGraphView({
           multiSelectionKeyCode="Shift"
           selectionKeyCode="Shift"
         >
-          <div className="tasks-map-panels-stack">
+          <div className="project-planner-panels-stack">
             {embed.showPresetsPanel && (
               <FilterPresetsPanel
                 presets={settings.filterPresets}

@@ -63,7 +63,7 @@ export const LinkButton = ({
 
   return (
     <button
-      className={`tasks-map-link-button tasks-map-link-button--${status}`}
+      className={`project-planner-link-button project-planner-link-button--${status}`}
       onClick={(e) => void handleClick(e)}
     >
       <ArrowUpRight size={16} />

@@ -21,23 +21,23 @@ export function TaskBackground({
   const getStatusClass = () => {
     switch (status) {
       case "done":
-        return "tasks-map-task-background--done";
+        return "project-planner-task-background--done";
       case "in_progress":
-        return "tasks-map-task-background--in-progress";
+        return "project-planner-task-background--in-progress";
       case "canceled":
-        return "tasks-map-task-background--canceled";
+        return "project-planner-task-background--canceled";
       default:
-        return "tasks-map-task-background--todo";
+        return "project-planner-task-background--todo";
     }
   };
 
   const className = [
-    "tasks-map-task-background",
+    "project-planner-task-background",
     getStatusClass(),
-    starred && "tasks-map-task-background--starred",
-    expanded && "tasks-map-task-background--expanded",
-    debugVisualization && "tasks-map-task-background--debug",
-    selected && "tasks-map-task-background--selected",
+    starred && "project-planner-task-background--starred",
+    expanded && "project-planner-task-background--expanded",
+    debugVisualization && "project-planner-task-background--debug",
+    selected && "project-planner-task-background--selected",
   ]
     .filter(Boolean)
     .join(" ");

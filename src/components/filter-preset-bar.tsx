@@ -3,13 +3,13 @@ import Select, { SingleValue } from "react-select";
 import { Check, FileDown, Pencil, Trash2, X } from "lucide-react";
 import { FilterPreset } from "src/types/settings";
 import { FilterState } from "src/types/filter-state";
-import type TasksMapPlugin from "../main";
+import type ProjectPlannerPlugin from "../main";
 import { t } from "../i18n";
 
 interface FilterPresetBarProps {
   presets: FilterPreset[];
   filterState: FilterState;
-  plugin: TasksMapPlugin;
+  plugin: ProjectPlannerPlugin;
   onApply: (_filter: FilterState) => void;
   onSave: (_name: string, _filter: FilterState) => Promise<void>;
   onRename: (_id: string, _name: string) => Promise<void>;
@@ -158,9 +158,9 @@ export default function FilterPresetBar({
     : null;
 
   return (
-    <div className="tasks-map-preset-section">
-      <div className="tasks-map-preset-row">
-        <div className="tasks-map-preset-select-wrapper">
+    <div className="project-planner-preset-section">
+      <div className="project-planner-preset-row">
+        <div className="project-planner-preset-select-wrapper">
           <Select
             options={options}
             value={selectedOption}
@@ -238,9 +238,9 @@ export default function FilterPresetBar({
         </div>
 
         {selectedPreset && !isRenaming && !isSaving && (
-          <div className="tasks-map-preset-actions">
+          <div className="project-planner-preset-actions">
             <button
-              className="tasks-map-preset-action-btn"
+              className="project-planner-preset-action-btn"
               onClick={handleInsert}
               title={t("presets.insert_into_note")}
               aria-label={t("presets.insert_into_note")}
@@ -248,7 +248,7 @@ export default function FilterPresetBar({
               <FileDown size={13} />
             </button>
             <button
-              className="tasks-map-preset-action-btn"
+              className="project-planner-preset-action-btn"
               onClick={handleRenameClick}
               title={t("presets.rename")}
               aria-label={t("presets.rename")}
@@ -256,7 +256,7 @@ export default function FilterPresetBar({
               <Pencil size={13} />
             </button>
             <button
-              className="tasks-map-preset-action-btn tasks-map-preset-action-btn--danger"
+              className="project-planner-preset-action-btn project-planner-preset-action-btn--danger"
               onClick={() => void handleDelete()}
               title={t("presets.delete")}
               aria-label={t("presets.delete")}
@@ -268,17 +268,17 @@ export default function FilterPresetBar({
       </div>
 
       {isRenaming && (
-        <div className="tasks-map-preset-inline-input">
+        <div className="project-planner-preset-inline-input">
           <input
             ref={renameInputRef}
-            className="tasks-map-preset-text-input"
+            className="project-planner-preset-text-input"
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
             onKeyDown={handleRenameKeyDown}
             maxLength={40}
           />
           <button
-            className="tasks-map-preset-action-btn"
+            className="project-planner-preset-action-btn"
             onClick={() => void handleRenameConfirm()}
             title={t("presets.confirm_rename")}
             aria-label={t("presets.confirm_rename")}
@@ -287,7 +287,7 @@ export default function FilterPresetBar({
             <Check size={13} />
           </button>
           <button
-            className="tasks-map-preset-action-btn"
+            className="project-planner-preset-action-btn"
             onClick={handleRenameCancel}
             title={t("presets.cancel")}
             aria-label={t("presets.cancel")}
@@ -298,10 +298,10 @@ export default function FilterPresetBar({
       )}
 
       {isSaving ? (
-        <div className="tasks-map-preset-inline-input">
+        <div className="project-planner-preset-inline-input">
           <input
             ref={newNameInputRef}
-            className="tasks-map-preset-text-input"
+            className="project-planner-preset-text-input"
             placeholder={t("presets.name_placeholder")}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
@@ -309,7 +309,7 @@ export default function FilterPresetBar({
             maxLength={40}
           />
           <button
-            className="tasks-map-preset-action-btn"
+            className="project-planner-preset-action-btn"
             onClick={() => void handleSaveConfirm()}
             title={t("presets.confirm_save")}
             aria-label={t("presets.confirm_save")}
@@ -318,7 +318,7 @@ export default function FilterPresetBar({
             <Check size={13} />
           </button>
           <button
-            className="tasks-map-preset-action-btn"
+            className="project-planner-preset-action-btn"
             onClick={handleSaveCancel}
             title={t("presets.cancel")}
             aria-label={t("presets.cancel")}
@@ -329,7 +329,7 @@ export default function FilterPresetBar({
       ) : (
         !isRenaming && (
           <button
-            className="tasks-map-preset-save-btn"
+            className="project-planner-preset-save-btn"
             onClick={handleSaveClick}
           >
             {t("presets.save_current")}

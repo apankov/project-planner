@@ -2,32 +2,32 @@ import React, { useEffect, useState } from "react";
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { createRoot, Root } from "react-dom/client";
 import { AppContext } from "src/contexts/context";
-import { TasksMapSettings } from "src/types/settings";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { KANBAN_VIEW_TYPE } from "src/lib/view-focus";
 import { checkDataviewPlugin } from "../lib/utils";
-import TasksMapPlugin from "../main";
+import ProjectPlannerPlugin from "../main";
 import KanbanView from "./KanbanView";
 import { t } from "../i18n";
 
 export { KANBAN_VIEW_TYPE };
 
 /** Keeps the board in step with the settings tab, like the other views do. */
-function KanbanViewWrapper({ plugin }: { plugin: TasksMapPlugin }) {
-  const [settings, setSettings] = useState<TasksMapSettings>({
+function KanbanViewWrapper({ plugin }: { plugin: ProjectPlannerPlugin }) {
+  const [settings, setSettings] = useState<ProjectPlannerSettings>({
     ...plugin.settings,
   });
 
   useEffect(() => {
     const handler = () => setSettings({ ...plugin.settings });
-    window.addEventListener("tasks-map:settings-changed", handler);
+    window.addEventListener("project-planner:settings-changed", handler);
     return () =>
-      window.removeEventListener("tasks-map:settings-changed", handler);
+      window.removeEventListener("project-planner:settings-changed", handler);
   }, [plugin]);
 
   return <KanbanView settings={settings} plugin={plugin} />;
 }
 
-export default class TasksMapKanbanItemView extends ItemView {
+export default class ProjectPlannerKanbanItemView extends ItemView {
   root: Root | null = null;
 
   constructor(leaf: WorkspaceLeaf) {
@@ -53,13 +53,13 @@ export default class TasksMapKanbanItemView extends ItemView {
 
     if (!dataviewCheck.isReady) {
       this.root.render(
-        <div className="tasks-map-centered-message-container">
-          <div className="tasks-map-centered-message-content">
-            <div className="tasks-map-message-icon">⚠️</div>
-            <h3 className="tasks-map-message-title">
+        <div className="project-planner-centered-message-container">
+          <div className="project-planner-centered-message-content">
+            <div className="project-planner-message-icon">⚠️</div>
+            <h3 className="project-planner-message-title">
               {t("view.dataview_required")}
             </h3>
-            <p className="tasks-map-message-description">
+            <p className="project-planner-message-description">
               {dataviewCheck.getMessage()}
             </p>
           </div>
@@ -70,19 +70,19 @@ export default class TasksMapKanbanItemView extends ItemView {
 
     const plugin = (
       this.app as unknown as {
-        plugins: { plugins: Record<string, TasksMapPlugin> };
+        plugins: { plugins: Record<string, ProjectPlannerPlugin> };
       }
-    ).plugins.plugins["tasks-map"];
+    ).plugins.plugins["project-planner"];
 
     if (!plugin) {
       this.root.render(
-        <div className="tasks-map-centered-message-container">
-          <div className="tasks-map-centered-message-content">
-            <div className="tasks-map-message-icon">⚠️</div>
-            <h3 className="tasks-map-message-title">
+        <div className="project-planner-centered-message-container">
+          <div className="project-planner-centered-message-content">
+            <div className="project-planner-message-icon">⚠️</div>
+            <h3 className="project-planner-message-title">
               {t("view.plugin_not_found")}
             </h3>
-            <p className="tasks-map-message-description">
+            <p className="project-planner-message-description">
               {t("view.plugin_not_found_description")}
             </p>
           </div>

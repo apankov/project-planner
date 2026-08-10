@@ -47,9 +47,9 @@ export default function FinanceToolbar({
   total,
 }: FinanceToolbarProps) {
   return (
-    <div className="tasks-map-finance-toolbar">
+    <div className="project-planner-finance-toolbar">
       <button
-        className="tasks-map-finance-toolbar__icon"
+        className="project-planner-finance-toolbar__icon"
         onClick={onReload}
         aria-label={t("finance.reload")}
         title={t("finance.reload")}
@@ -58,7 +58,7 @@ export default function FinanceToolbar({
         <RefreshCw size={14} />
       </button>
 
-      <div className="tasks-map-finance-toolbar__search">
+      <div className="project-planner-finance-toolbar__search">
         <Search size={13} />
         <input
           type="search"
@@ -68,7 +68,7 @@ export default function FinanceToolbar({
         />
       </div>
 
-      <label className="tasks-map-finance-toolbar__field">
+      <label className="project-planner-finance-toolbar__field">
         {t("finance.group_by")}
         <select
           value={dimension}
@@ -84,7 +84,7 @@ export default function FinanceToolbar({
         </select>
       </label>
 
-      <label className="tasks-map-finance-toolbar__field">
+      <label className="project-planner-finance-toolbar__field">
         {t("finance.over_time")}
         <select
           value={bucket}
@@ -98,7 +98,7 @@ export default function FinanceToolbar({
         </select>
       </label>
 
-      <label className="tasks-map-finance-toolbar__toggle">
+      <label className="project-planner-finance-toolbar__toggle">
         <input
           type="checkbox"
           checked={hideCompleted}
@@ -107,7 +107,7 @@ export default function FinanceToolbar({
         {t("finance.hide_completed")}
       </label>
 
-      <label className="tasks-map-finance-toolbar__toggle">
+      <label className="project-planner-finance-toolbar__toggle">
         <input
           type="checkbox"
           checked={includeInferred}
@@ -119,13 +119,13 @@ export default function FinanceToolbar({
       {/* Toggling working days in the Gantt moves every figure here, so which
           mode is in force has to be visible rather than inferred */}
       <span
-        className="tasks-map-finance-toolbar__chip"
+        className="project-planner-finance-toolbar__chip"
         title={t("finance.day_mode_desc")}
       >
         {skipWeekends ? t("finance.working_days") : t("finance.calendar_days")}
       </span>
 
-      <span className="tasks-map-finance-toolbar__total">{total}</span>
+      <span className="project-planner-finance-toolbar__total">{total}</span>
     </div>
   );
 }

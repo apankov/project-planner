@@ -1,6 +1,6 @@
 # Documentation
 
-The documentation site is built with [Zensical](https://github.com/NicoKNL/zensical) and hosted on GitHub Pages at [nicoknl.github.io/tasks-map](https://nicoknl.github.io/tasks-map/).
+The documentation site is built with [Zensical](https://github.com/NicoKNL/zensical) and hosted on GitHub Pages at [hmil1151.github.io/project-planner](https://hmil1151.github.io/project-planner/).
 
 ## Setup
 
@@ -34,7 +34,7 @@ zensical serve
 
 ## Deployment
 
-Documentation is deployed automatically. On every push to `main`, the [Documentation workflow](https://github.com/NicoKNL/tasks-map/blob/main/.github/workflows/docs.yaml) builds the site with `zensical build --clean` and deploys it to GitHub Pages.
+Documentation is deployed automatically. On every push to `main`, the [Documentation workflow](https://github.com/HMIL1151/project-planner/blob/main/.github/workflows/docs.yaml) builds the site with `zensical build --clean` and deploys it to GitHub Pages.
 
 ## Adding Pages
 

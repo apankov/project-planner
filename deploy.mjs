@@ -34,7 +34,7 @@ if (!target) {
       `Create a ${TARGET_FILE} file (git-ignored) containing the path to your`,
       "vault's plugin folder, for example:",
       "",
-      "  C:\\Users\\you\\MyVault\\.obsidian\\plugins\\tasks-map",
+      "  C:\\Users\\you\\MyVault\\.obsidian\\plugins\\project-planner",
       "",
       "or set the OBSIDIAN_PLUGIN_DIR environment variable to the same path.",
     ].join("\n")
@@ -50,9 +50,9 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-if (path.basename(target.dir) !== "tasks-map") {
+if (path.basename(target.dir) !== "project-planner") {
   console.warn(
-    `Warning: target folder is not named "tasks-map" (${target.dir}).`
+    `Warning: target folder is not named "project-planner" (${target.dir}).`
   );
 }
 

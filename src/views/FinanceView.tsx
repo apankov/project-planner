@@ -22,13 +22,13 @@ import FinanceKpis, { Kpi } from "src/components/finance-kpis";
 import FinanceBarList, { BarItem } from "src/components/finance-bar-list";
 import FinanceTimeline from "src/components/finance-timeline";
 import FinanceIssues, { IssueGroup } from "src/components/finance-issues";
-import { TasksMapSettings } from "src/types/settings";
-import TasksMapPlugin from "../main";
+import { ProjectPlannerSettings } from "src/types/settings";
+import ProjectPlannerPlugin from "../main";
 import { t } from "../i18n";
 
 interface FinanceViewProps {
-  settings: TasksMapSettings;
-  plugin: TasksMapPlugin;
+  settings: ProjectPlannerSettings;
+  plugin: ProjectPlannerPlugin;
 }
 
 /** Shown before the list turns into an "everything else" row. */
@@ -356,14 +356,14 @@ export default function FinanceView({ settings, plugin }: FinanceViewProps) {
 
   if (isLoading) {
     return (
-      <div className="tasks-map-finance">
-        <p className="tasks-map-finance__empty">{t("finance.loading")}</p>
+      <div className="project-planner-finance">
+        <p className="project-planner-finance__empty">{t("finance.loading")}</p>
       </div>
     );
   }
 
   return (
-    <div className="tasks-map-finance">
+    <div className="project-planner-finance">
       <FinanceToolbar
         onReload={() => void load({ notify: true })}
         searchQuery={searchQuery}
@@ -380,9 +380,9 @@ export default function FinanceView({ settings, plugin }: FinanceViewProps) {
         total={formatMoney(report.total)}
       />
 
-      <div className="tasks-map-finance__body">
+      <div className="project-planner-finance__body">
         {!rateNoteFound && (
-          <div className="tasks-map-finance__callout">
+          <div className="project-planner-finance__callout">
             <span>
               {t("finance.no_rate_note", {
                 path: settings.financeRateNotePath,
@@ -396,19 +396,21 @@ export default function FinanceView({ settings, plugin }: FinanceViewProps) {
 
         <FinanceKpis kpis={kpis} />
 
-        <section className="tasks-map-finance__section">
+        <section className="project-planner-finance__section">
           <h3>{t("finance.split_title")}</h3>
           <FinanceBarList items={splitItems} emptyLabel={t("finance.empty")} />
         </section>
 
-        <section className="tasks-map-finance__section">
+        <section className="project-planner-finance__section">
           <h3>{t(`finance.breakdown_${dimension}`)}</h3>
           <FinanceBarList items={breakdown} emptyLabel={t("finance.empty")} />
         </section>
 
-        <section className="tasks-map-finance__section">
+        <section className="project-planner-finance__section">
           <h3>{t("finance.over_time_title")}</h3>
-          <p className="tasks-map-finance__note">{t("finance.spread_note")}</p>
+          <p className="project-planner-finance__note">
+            {t("finance.spread_note")}
+          </p>
           <FinanceTimeline
             buckets={buckets}
             formatLabel={formatBucketLabel}
@@ -419,12 +421,12 @@ export default function FinanceView({ settings, plugin }: FinanceViewProps) {
           />
         </section>
 
-        <section className="tasks-map-finance__section">
+        <section className="project-planner-finance__section">
           <h3>{t("finance.drivers_title")}</h3>
           <FinanceBarList items={drivers} emptyLabel={t("finance.empty")} />
         </section>
 
-        <section className="tasks-map-finance__section">
+        <section className="project-planner-finance__section">
           <h3>{t("finance.problems_title")}</h3>
           <FinanceIssues
             groups={issueGroups}

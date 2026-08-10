@@ -12,7 +12,7 @@ import {
 describe("getTagColorClass", () => {
   it("derives a palette class from the tag name", () => {
     const cls = getTagColorClass("frontend", "ocean");
-    expect(cls).toMatch(/^tasks-map-tag--ocean-[0-7]$/);
+    expect(cls).toMatch(/^project-planner-tag--ocean-[0-7]$/);
   });
 
   it("is stable for the same tag and palette", () => {
@@ -38,27 +38,27 @@ describe("getTagColorClass", () => {
   it("uses the manual color when the tag has an override", () => {
     const overrides: TagColorOverrides = { bug: "red" };
     expect(getTagColorClass("bug", "ocean", overrides)).toBe(
-      "tasks-map-tag--custom-red"
+      "project-planner-tag--custom-red"
     );
   });
 
   it("falls back to the palette for tags without an override", () => {
     const overrides: TagColorOverrides = { bug: "red" };
     expect(getTagColorClass("feature", "ocean", overrides)).toMatch(
-      /^tasks-map-tag--ocean-[0-7]$/
+      /^project-planner-tag--ocean-[0-7]$/
     );
   });
 
   it("ignores an unknown color name from stale settings", () => {
     const overrides = { bug: "chartreuse" } as unknown as TagColorOverrides;
     expect(getTagColorClass("bug", "forest", overrides)).toMatch(
-      /^tasks-map-tag--forest-[0-7]$/
+      /^project-planner-tag--forest-[0-7]$/
     );
   });
 
   it.each(TAG_COLOR_NAMES)("supports the %s override color", (color) => {
     expect(getTagColorClass("tag", "rainbow", { tag: color })).toBe(
-      `tasks-map-tag--custom-${color}`
+      `project-planner-tag--custom-${color}`
     );
     expect(TAG_OVERRIDE_COLORS[color]).toMatch(/^#[0-9a-f]{6}$/i);
   });

@@ -30,18 +30,18 @@ export function EdgeStylePopover({
   const setArrows = (arrows: EdgeArrows) => onChange({ ...edgeStyle, arrows });
 
   return (
-    <div className="tasks-map-edge-style">
-      <div className="tasks-map-edge-style__row">
-        <span className="tasks-map-edge-style__label">
+    <div className="project-planner-edge-style">
+      <div className="project-planner-edge-style__row">
+        <span className="project-planner-edge-style__label">
           {t("edge_actions.colour")}
         </span>
-        <div className="tasks-map-edge-style__swatches">
+        <div className="project-planner-edge-style__swatches">
           {EDGE_COLOR_NAMES.map((color) => (
             <button
               key={color}
-              className={`tasks-map-edge-style__swatch tasks-map-edge-style__swatch--${color} ${
+              className={`project-planner-edge-style__swatch project-planner-edge-style__swatch--${color} ${
                 edgeStyle.color === color
-                  ? "tasks-map-edge-style__swatch--active"
+                  ? "project-planner-edge-style__swatch--active"
                   : ""
               }`}
               title={t(`edge_actions.colour_${color}`)}
@@ -52,17 +52,17 @@ export function EdgeStylePopover({
         </div>
       </div>
 
-      <div className="tasks-map-edge-style__row">
-        <span className="tasks-map-edge-style__label">
+      <div className="project-planner-edge-style__row">
+        <span className="project-planner-edge-style__label">
           {t("edge_actions.line")}
         </span>
-        <div className="tasks-map-edge-style__group">
+        <div className="project-planner-edge-style__group">
           {EDGE_LINE_PATTERNS.map((pattern) => (
             <button
               key={pattern}
-              className={`tasks-map-edge-style__option ${
+              className={`project-planner-edge-style__option ${
                 edgeStyle.pattern === pattern
-                  ? "tasks-map-edge-style__option--active"
+                  ? "project-planner-edge-style__option--active"
                   : ""
               }`}
               onClick={() => setPattern(pattern)}
@@ -73,17 +73,17 @@ export function EdgeStylePopover({
         </div>
       </div>
 
-      <div className="tasks-map-edge-style__row">
-        <span className="tasks-map-edge-style__label">
+      <div className="project-planner-edge-style__row">
+        <span className="project-planner-edge-style__label">
           {t("edge_actions.arrows")}
         </span>
-        <div className="tasks-map-edge-style__group">
+        <div className="project-planner-edge-style__group">
           {EDGE_ARROW_OPTIONS.map((arrows) => (
             <button
               key={arrows}
-              className={`tasks-map-edge-style__option ${
+              className={`project-planner-edge-style__option ${
                 edgeStyle.arrows === arrows
-                  ? "tasks-map-edge-style__option--active"
+                  ? "project-planner-edge-style__option--active"
                   : ""
               }`}
               onClick={() => setArrows(arrows)}
@@ -94,7 +94,7 @@ export function EdgeStylePopover({
         </div>
       </div>
 
-      <button className="tasks-map-edge-style__reset" onClick={onReset}>
+      <button className="project-planner-edge-style__reset" onClick={onReset}>
         {t("edge_actions.reset_style")}
       </button>
     </div>

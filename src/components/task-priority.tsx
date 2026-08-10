@@ -6,7 +6,7 @@ interface TaskPriorityProps {
 
 export function TaskPriority({ priority }: TaskPriorityProps) {
   return (
-    <span title="Priority" className="tasks-map-task-priority">
+    <span title="Priority" className="project-planner-task-priority">
       {priority}
     </span>
   );

@@ -176,7 +176,11 @@ interface GanttChartProps {
 function GanttLabelText({ summary, app }: { summary: string; app: App }) {
   const ref = useSummaryRenderer(summary, app);
   return (
-    <span className="tasks-map-gantt__label-text" title={summary} ref={ref} />
+    <span
+      className="project-planner-gantt__label-text"
+      title={summary}
+      ref={ref}
+    />
   );
 }
 
@@ -201,7 +205,7 @@ function RiskBadge({ messages }: { messages: string[] }) {
   const title = messages.join("\n");
   return (
     <span
-      className="tasks-map-gantt__risk"
+      className="project-planner-gantt__risk"
       title={title}
       aria-label={title}
       role="img"
@@ -232,7 +236,7 @@ function RowLabel({
   return (
     <>
       <span
-        className={`tasks-map-gantt__status tasks-map-gantt__status--${effectiveTaskStatus(
+        className={`project-planner-gantt__status project-planner-gantt__status--${effectiveTaskStatus(
           row.task.status,
           row.task.progress
         )}`}
@@ -240,7 +244,7 @@ function RowLabel({
       {riskMessages.length > 0 && <RiskBadge messages={riskMessages} />}
       <GanttLabelText summary={row.task.summary} app={app} />
       {showTags && row.task.tags.length > 0 && (
-        <span className="tasks-map-gantt__label-tags">
+        <span className="project-planner-gantt__label-tags">
           {row.task.tags.slice(0, 2).map((tag) => (
             <Tag
               key={tag}
@@ -425,7 +429,7 @@ export function GanttChart({
         const row = rowById.get(id);
         if (!element || !row) continue;
         element.style.setProperty("--bar-offset", String(offsetOf(row)));
-        element.classList.remove("tasks-map-gantt-bar--cascading");
+        element.classList.remove("project-planner-gantt-bar--cascading");
       }
       cascadingIds.current = [];
 
@@ -444,7 +448,7 @@ export function GanttChart({
           "--bar-offset",
           String(offsetOf(row) + plan.days)
         );
-        element.classList.add("tasks-map-gantt-bar--cascading");
+        element.classList.add("project-planner-gantt-bar--cascading");
       }
       cascadingIds.current = carried;
     },
@@ -813,7 +817,7 @@ export function GanttChart({
   const gripProps = (orderId: string) =>
     reorderable
       ? {
-          className: "tasks-map-gantt__grip",
+          className: "project-planner-gantt__grip",
           title: t("gantt.reorder_hint"),
           onPointerDown: handleReorderDown(orderId),
           onPointerMove: handleReorderMove,
@@ -821,7 +825,8 @@ export function GanttChart({
           onPointerCancel: handleReorderUp,
         }
       : {
-          className: "tasks-map-gantt__grip tasks-map-gantt__grip--locked",
+          className:
+            "project-planner-gantt__grip project-planner-gantt__grip--locked",
           title: t("gantt.reorder_locked"),
         };
 
@@ -842,22 +847,25 @@ export function GanttChart({
       .join(" ");
 
   return (
-    <div className="tasks-map-gantt" ref={gridRef}>
+    <div className="project-planner-gantt" ref={gridRef}>
       {/* One scroll container for both panes: vertical scrolling keeps the
           labels aligned with their rows, and the label column stays pinned
           during horizontal scrolling via `position: sticky`. */}
-      <div className="tasks-map-gantt__scroll" ref={scrollRef}>
-        <div className="tasks-map-gantt__labels" ref={labelsRef}>
-          <div className="tasks-map-gantt__labels-header">
+      <div className="project-planner-gantt__scroll" ref={scrollRef}>
+        <div className="project-planner-gantt__labels" ref={labelsRef}>
+          <div className="project-planner-gantt__labels-header">
             {t("gantt.column_task")}
           </div>
           {lines.map((line) =>
             line.kind === "header" ? (
-              <div key={line.key} className="tasks-map-gantt__group-header">
-                <span className="tasks-map-gantt__group-label">
+              <div
+                key={line.key}
+                className="project-planner-gantt__group-header"
+              >
+                <span className="project-planner-gantt__group-label">
                   {line.label}
                 </span>
-                <span className="tasks-map-gantt__group-count">
+                <span className="project-planner-gantt__group-count">
                   {line.count}
                 </span>
               </div>
@@ -870,7 +878,7 @@ export function GanttChart({
                 key={line.key}
                 className={milestoneLineClassName(
                   line.orderId,
-                  "tasks-map-gantt__label"
+                  "project-planner-gantt__label"
                 )}
                 onClick={() => onEditMilestone(line.milestone.id)}
               >
@@ -883,15 +891,15 @@ export function GanttChart({
                   <GripVertical size={12} />
                 </span>
                 <span
-                  className="tasks-map-gantt__twisty tasks-map-gantt__twisty--empty"
+                  className="project-planner-gantt__twisty project-planner-gantt__twisty--empty"
                   aria-hidden="true"
                 />
                 <span
-                  className="tasks-map-gantt__milestone-dot"
+                  className="project-planner-gantt__milestone-dot"
                   aria-hidden="true"
                 />
                 <span
-                  className="tasks-map-gantt__label-text"
+                  className="project-planner-gantt__label-text"
                   title={t("gantt.milestone_tooltip", {
                     label: line.milestone.label,
                     date: line.milestone.date,
@@ -899,7 +907,7 @@ export function GanttChart({
                 >
                   {line.milestone.label}
                 </span>
-                <span className="tasks-map-gantt__milestone-date">
+                <span className="project-planner-gantt__milestone-date">
                   {line.milestone.date}
                 </span>
               </div>
@@ -909,8 +917,10 @@ export function GanttChart({
                 ref={setDepthRef(line.depth)}
                 className={rowClassName(
                   line.row,
-                  "tasks-map-gantt__label",
-                  line.hasChildren ? "tasks-map-gantt__label--summary" : ""
+                  "project-planner-gantt__label",
+                  line.hasChildren
+                    ? "project-planner-gantt__label--summary"
+                    : ""
                 )}
                 onClick={(event) =>
                   onSelect(
@@ -927,7 +937,7 @@ export function GanttChart({
                     of a childless task at the same depth still line up */}
                 {line.hasChildren ? (
                   <button
-                    className="tasks-map-gantt__twisty"
+                    className="project-planner-gantt__twisty"
                     title={
                       line.collapsed ? t("gantt.expand") : t("gantt.collapse")
                     }
@@ -948,13 +958,13 @@ export function GanttChart({
                   </button>
                 ) : (
                   <span
-                    className="tasks-map-gantt__twisty tasks-map-gantt__twisty--empty"
+                    className="project-planner-gantt__twisty project-planner-gantt__twisty--empty"
                     aria-hidden="true"
                   />
                 )}
                 {taggingId === line.row.task.id ? (
                   <span
-                    className="tasks-map-gantt__tag-input"
+                    className="project-planner-gantt__tag-input"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <TagInput
@@ -984,14 +994,14 @@ export function GanttChart({
                     in the accessibility tree; CSS floats them over the right
                     of the row and reveals them on hover or focus. */}
                 <span
-                  className={`tasks-map-gantt__row-actions${
+                  className={`project-planner-gantt__row-actions${
                     taggingId === line.row.task.id
-                      ? " tasks-map-gantt__row-actions--hidden"
+                      ? " project-planner-gantt__row-actions--hidden"
                       : ""
                   }`}
                 >
                   <button
-                    className="tasks-map-gantt__row-action"
+                    className="project-planner-gantt__row-action"
                     title={t("gantt.add_tag")}
                     aria-label={t("gantt.add_tag")}
                     onClick={(event) => {
@@ -1004,7 +1014,7 @@ export function GanttChart({
                     <TagIcon size={12} />
                   </button>
                   <button
-                    className="tasks-map-gantt__row-action"
+                    className="project-planner-gantt__row-action"
                     title={t("gantt.show_in_map")}
                     aria-label={t("gantt.show_in_map")}
                     onClick={(event) => {
@@ -1015,7 +1025,7 @@ export function GanttChart({
                     <Network size={12} />
                   </button>
                   <button
-                    className="tasks-map-gantt__row-action"
+                    className="project-planner-gantt__row-action"
                     title={t("gantt.link_from")}
                     aria-label={t("gantt.link_from")}
                     onClick={(event) => {
@@ -1026,7 +1036,7 @@ export function GanttChart({
                     <Link2 size={12} />
                   </button>
                   <button
-                    className="tasks-map-gantt__row-action"
+                    className="project-planner-gantt__row-action"
                     title={t("gantt.set_parent")}
                     aria-label={t("gantt.set_parent")}
                     onClick={(event) => {
@@ -1038,7 +1048,7 @@ export function GanttChart({
                   </button>
                   {onEditFinance && (
                     <button
-                      className="tasks-map-gantt__row-action"
+                      className="project-planner-gantt__row-action"
                       title={t("finance.menu_item")}
                       aria-label={t("finance.menu_item")}
                       onClick={(event) => {
@@ -1050,7 +1060,7 @@ export function GanttChart({
                     </button>
                   )}
                   <button
-                    className="tasks-map-gantt__row-action"
+                    className="project-planner-gantt__row-action"
                     title={t("gantt.add_task_after")}
                     aria-label={t("gantt.add_task_after")}
                     onClick={(event) => {
@@ -1065,7 +1075,7 @@ export function GanttChart({
             )
           )}
           <div
-            className="tasks-map-gantt__resizer"
+            className="project-planner-gantt__resizer"
             onPointerDown={handleResizeDown}
             onPointerMove={handleResizeMove}
             onPointerUp={handleResizeUp}
@@ -1074,28 +1084,28 @@ export function GanttChart({
           />
         </div>
 
-        <div className="tasks-map-gantt__timeline">
-          <div className="tasks-map-gantt__header">
-            <div className="tasks-map-gantt__months">
+        <div className="project-planner-gantt__timeline">
+          <div className="project-planner-gantt__header">
+            <div className="project-planner-gantt__months">
               {months.map((month) => (
                 <div
                   key={month.iso}
-                  className="tasks-map-gantt__month"
+                  className="project-planner-gantt__month"
                   ref={setRowRef(month.offset, month.days)}
                 >
-                  <span className="tasks-map-gantt__month-label">
+                  <span className="project-planner-gantt__month-label">
                     {formatMonth(month.iso)}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="tasks-map-gantt__ticks">
+            <div className="project-planner-gantt__ticks">
               {ticks.map((tick) => (
                 <div
                   key={tick.iso}
-                  className={`tasks-map-gantt__tick ${
-                    tick.major ? "tasks-map-gantt__tick--major" : ""
-                  } ${isWeekend(tick.iso) ? "tasks-map-gantt__tick--weekend" : ""}`}
+                  className={`project-planner-gantt__tick ${
+                    tick.major ? "project-planner-gantt__tick--major" : ""
+                  } ${isWeekend(tick.iso) ? "project-planner-gantt__tick--weekend" : ""}`}
                   ref={setRowRef(tick.offset, 1)}
                 >
                   {tick.label}
@@ -1104,13 +1114,13 @@ export function GanttChart({
             </div>
             {laneFlags.length > 0 && (
               <div
-                className="tasks-map-gantt__milestone-lane"
+                className="project-planner-gantt__milestone-lane"
                 aria-hidden="true"
               />
             )}
           </div>
 
-          <div className="tasks-map-gantt__body">
+          <div className="project-planner-gantt__body">
             {scale.id === "days" &&
               Array.from({ length: totalDays }, (_, offset) => {
                 const iso = addDays(timelineStart, offset);
@@ -1118,16 +1128,16 @@ export function GanttChart({
                 return (
                   <div
                     key={iso}
-                    className="tasks-map-gantt__weekend"
+                    className="project-planner-gantt__weekend"
                     ref={setRowRef(offset, 1)}
                   />
                 );
               })}
 
-            {todayVisible && <div className="tasks-map-gantt__today" />}
+            {todayVisible && <div className="project-planner-gantt__today" />}
 
             <svg
-              className="tasks-map-gantt__arrows"
+              className="project-planner-gantt__arrows"
               width={totalDays * scale.dayWidth}
               height={Math.max(lines.length, 1) * ROW_HEIGHT}
             >
@@ -1135,13 +1145,13 @@ export function GanttChart({
                 <path
                   key={path.key}
                   d={path.d}
-                  className={`tasks-map-gantt__arrow ${path.className}`}
-                  markerEnd="url(#tasks-map-gantt-arrowhead)"
+                  className={`project-planner-gantt__arrow ${path.className}`}
+                  markerEnd="url(#project-planner-gantt-arrowhead)"
                 />
               ))}
               <defs>
                 <marker
-                  id="tasks-map-gantt-arrowhead"
+                  id="project-planner-gantt-arrowhead"
                   markerWidth="6"
                   markerHeight="6"
                   refX="5"
@@ -1150,7 +1160,7 @@ export function GanttChart({
                 >
                   <path
                     d="M0,0 L6,3 L0,6 z"
-                    className="tasks-map-gantt__arrowhead"
+                    className="project-planner-gantt__arrowhead"
                   />
                 </marker>
               </defs>
@@ -1160,7 +1170,7 @@ export function GanttChart({
               line.kind === "header" ? (
                 <div
                   key={line.key}
-                  className="tasks-map-gantt__group-spacer"
+                  className="project-planner-gantt__group-spacer"
                   aria-hidden="true"
                 />
               ) : line.kind === "milestone" ? (
@@ -1168,7 +1178,7 @@ export function GanttChart({
                   key={line.key}
                   className={milestoneLineClassName(
                     line.orderId,
-                    "tasks-map-gantt__row"
+                    "project-planner-gantt__row"
                   )}
                 >
                   <GanttMilestoneRow
@@ -1183,7 +1193,10 @@ export function GanttChart({
               ) : (
                 <div
                   key={line.key}
-                  className={rowClassName(line.row, "tasks-map-gantt__row")}
+                  className={rowClassName(
+                    line.row,
+                    "project-planner-gantt__row"
+                  )}
                 >
                   <GanttBar
                     task={line.row.task}
@@ -1210,7 +1223,7 @@ export function GanttChart({
           {/* Above both the header and the rows, so a milestone's flag stays
               in its lane while its guide line runs the length of the chart. */}
           {laneFlags.length > 0 && (
-            <div className="tasks-map-gantt__milestones">
+            <div className="project-planner-gantt__milestones">
               {laneFlags.map((milestone) => (
                 <GanttMilestoneMarker
                   key={milestone.id}
@@ -1278,16 +1291,16 @@ function buildArrowPaths(
     const highlightClass = !highlighting
       ? ""
       : direction
-        ? `tasks-map-gantt__arrow--${direction}`
+        ? `project-planner-gantt__arrow--${direction}`
         : highlight.edgeKeys.has(key)
-          ? "tasks-map-gantt__arrow--connected"
-          : "tasks-map-gantt__arrow--dimmed";
+          ? "project-planner-gantt__arrow--connected"
+          : "project-planner-gantt__arrow--dimmed";
 
     // The critical marking survives a selection dimming the rest of the chart:
     // it is the one thing worth seeing whatever else is going on
     const className = [
       highlightClass,
-      criticalEdgeKeys.has(key) ? "tasks-map-gantt__arrow--critical" : "",
+      criticalEdgeKeys.has(key) ? "project-planner-gantt__arrow--critical" : "",
     ]
       .filter(Boolean)
       .join(" ");

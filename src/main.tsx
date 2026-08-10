@@ -5,29 +5,32 @@ import {
   TFile,
   FuzzySuggestModal,
   MarkdownRenderChild,
+  MarkdownPostProcessorContext,
 } from "obsidian";
 import { createRoot } from "react-dom/client";
 
-import TaskMapGraphItemView, { VIEW_TYPE } from "./views/TaskMapGraphItemView";
-import TasksMapGanttItemView, {
+import ProjectPlannerGraphItemView, {
+  VIEW_TYPE,
+} from "./views/ProjectPlannerGraphItemView";
+import ProjectPlannerGanttItemView, {
   GANTT_VIEW_TYPE,
-} from "./views/TasksMapGanttItemView";
-import TasksMapFinanceItemView, {
+} from "./views/ProjectPlannerGanttItemView";
+import ProjectPlannerFinanceItemView, {
   FINANCE_VIEW_TYPE,
-} from "./views/TasksMapFinanceItemView";
-import TasksMapKanbanItemView, {
+} from "./views/ProjectPlannerFinanceItemView";
+import ProjectPlannerKanbanItemView, {
   KANBAN_VIEW_TYPE,
-} from "./views/TasksMapKanbanItemView";
-import TaskMapGraphEmbedView, {
-  TaskMapEmbedError,
+} from "./views/ProjectPlannerKanbanItemView";
+import GraphEmbedView, {
+  EmbedError,
   filterStateFromSource,
-} from "./views/TaskMapGraphEmbedView";
+} from "./views/GraphEmbedView";
 import {
-  TasksMapSettings,
+  ProjectPlannerSettings,
   DEFAULT_SETTINGS,
   FilterPreset,
 } from "./types/settings";
-import { TasksMapSettingTab } from "./settings/settings-tab";
+import { ProjectPlannerSettingTab } from "./settings/settings-tab";
 import { initI18n, changeLanguage, t } from "./i18n";
 import { FilterState, DEFAULT_FILTER_STATE } from "./types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "./types/embed-config";
@@ -45,7 +48,13 @@ import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 import { GanttMilestone } from "./lib/gantt-milestones";
 import { KanbanGroupBy } from "./lib/kanban-buckets";
 
-const EMBED_CODE_BLOCK = "tasks-map";
+const EMBED_CODE_BLOCK = "project-planner";
+
+/**
+ * The block name this plugin used before it was renamed from Tasks Map.
+ * Still rendered, so embeds already written into vaults keep working.
+ */
+const LEGACY_EMBED_CODE_BLOCK = "tasks-map";
 
 class NoteSuggestModal extends FuzzySuggestModal<TFile> {
   private onChoose: (_file: TFile) => void;
@@ -72,8 +81,8 @@ class NoteSuggestModal extends FuzzySuggestModal<TFile> {
   }
 }
 
-export default class TasksMapPlugin extends Plugin {
-  settings: TasksMapSettings = {
+export default class ProjectPlannerPlugin extends Plugin {
+  settings: ProjectPlannerSettings = {
     ...DEFAULT_SETTINGS,
     filterPresets: [...DEFAULT_SETTINGS.filterPresets],
   };
@@ -91,28 +100,28 @@ export default class TasksMapPlugin extends Plugin {
     // Always register the view - it will handle the Dataview check internally
     this.registerView(
       VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new TaskMapGraphItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerGraphItemView(leaf)
     );
 
     this.registerView(
       GANTT_VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new TasksMapGanttItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerGanttItemView(leaf)
     );
 
     this.registerView(
       FINANCE_VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new TasksMapFinanceItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerFinanceItemView(leaf)
     );
 
     this.registerView(
       KANBAN_VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new TasksMapKanbanItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerKanbanItemView(leaf)
     );
 
-    this.addSettingTab(new TasksMapSettingTab(this.app, this));
+    this.addSettingTab(new ProjectPlannerSettingTab(this.app, this));
 
     this.addCommand({
-      id: "open-tasks-map-view",
+      id: "open-graph-view",
       name: t("commands.open_map_view"),
       callback: () => {
         void this.activateViewInMainArea();
@@ -120,7 +129,7 @@ export default class TasksMapPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "open-tasks-map-gantt-view",
+      id: "open-gantt-view",
       name: t("commands.open_gantt_view"),
       callback: () => {
         void this.activateGanttViewInMainArea();
@@ -131,7 +140,7 @@ export default class TasksMapPlugin extends Plugin {
     // stay out of the way until somebody turns it on
     if (this.settings.financeEnabled) {
       this.addCommand({
-        id: "open-tasks-map-finance-view",
+        id: "open-finance-view",
         name: t("commands.open_finance_view"),
         callback: () => {
           void this.activateFinanceViewInMainArea();
@@ -139,7 +148,7 @@ export default class TasksMapPlugin extends Plugin {
       });
 
       this.addCommand({
-        id: "create-tasks-map-rate-note",
+        id: "create-rate-note",
         name: t("commands.create_rate_note"),
         callback: () => {
           void this.createRateNote();
@@ -152,7 +161,7 @@ export default class TasksMapPlugin extends Plugin {
     }
 
     this.addCommand({
-      id: "open-tasks-map-kanban-view",
+      id: "open-kanban-view",
       name: t("commands.open_kanban_view"),
       callback: () => {
         void this.activateKanbanViewInMainArea();
@@ -187,47 +196,54 @@ export default class TasksMapPlugin extends Plugin {
       void this.activateKanbanViewInMainArea();
     });
 
-    // Register the tasks-map fenced code block processor
-    this.registerMarkdownCodeBlockProcessor(
-      EMBED_CODE_BLOCK,
-      (source, el, ctx) => {
-        const dataviewCheck = checkDataviewPlugin(this.app);
+    // Both names render the same embed. The pre-rename one is still
+    // registered so notes written before this plugin was renamed keep working.
+    for (const lang of [EMBED_CODE_BLOCK, LEGACY_EMBED_CODE_BLOCK]) {
+      this.registerMarkdownCodeBlockProcessor(lang, (source, el, ctx) => {
+        this.renderEmbed(source, el, ctx);
+      });
+    }
+  }
 
-        const root = createRoot(el);
+  /** Renders one fenced embed block into `el`. */
+  private renderEmbed(
+    source: string,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext
+  ): void {
+    const dataviewCheck = checkDataviewPlugin(this.app);
 
-        // Register cleanup via MarkdownRenderChild so the root is unmounted
-        // when the embed is removed or the preview re-renders
-        const child = new MarkdownRenderChild(el);
-        child.onunload = () => root.unmount();
-        ctx.addChild(child);
+    const root = createRoot(el);
 
-        if (!dataviewCheck.isReady) {
-          root.render(
-            <TaskMapEmbedError message={t("embed.dataview_required")} />
-          );
-          return;
-        }
+    // Register cleanup via MarkdownRenderChild so the root is unmounted
+    // when the embed is removed or the preview re-renders
+    const child = new MarkdownRenderChild(el);
+    child.onunload = () => root.unmount();
+    ctx.addChild(child);
 
-        const parsed = filterStateFromSource(source);
+    if (!dataviewCheck.isReady) {
+      root.render(<EmbedError message={t("embed.dataview_required")} />);
+      return;
+    }
 
-        if (parsed.kind === "invalid") {
-          root.render(<TaskMapEmbedError message={t("embed.invalid_json")} />);
-          return;
-        }
+    const parsed = filterStateFromSource(source);
 
-        if (parsed.kind === "legacy") {
-          root.render(<TaskMapEmbedError message={t("embed.legacy_format")} />);
-          return;
-        }
+    if (parsed.kind === "invalid") {
+      root.render(<EmbedError message={t("embed.invalid_json")} />);
+      return;
+    }
 
-        root.render(
-          <TaskMapGraphEmbedView
-            plugin={this}
-            initialFilter={parsed.filter}
-            embedConfig={parsed.config}
-          />
-        );
-      }
+    if (parsed.kind === "legacy") {
+      root.render(<EmbedError message={t("embed.legacy_format")} />);
+      return;
+    }
+
+    root.render(
+      <GraphEmbedView
+        plugin={this}
+        initialFilter={parsed.filter}
+        embedConfig={parsed.config}
+      />
     );
   }
 
@@ -240,7 +256,7 @@ export default class TasksMapPlugin extends Plugin {
     // Update language when settings change
     changeLanguage(this.settings.language);
     // Notify open views of settings change
-    window.dispatchEvent(new Event("tasks-map:settings-changed"));
+    window.dispatchEvent(new Event("project-planner:settings-changed"));
   }
 
   /**
@@ -421,10 +437,10 @@ export default class TasksMapPlugin extends Plugin {
 
   private getCurrentFilterState(): FilterState {
     const leaf = this.app.workspace.getMostRecentLeaf();
-    if (leaf?.view instanceof TaskMapGraphItemView) {
+    if (leaf?.view instanceof ProjectPlannerGraphItemView) {
       return leaf.view.getFilterState();
     }
-    // Fall back to an empty filter if no active Tasks Map view is found
+    // Fall back to an empty filter if no active graph view is found
     return { ...DEFAULT_FILTER_STATE };
   }
 

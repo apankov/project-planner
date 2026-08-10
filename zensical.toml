@@ -1,6 +1,6 @@
 [project]
-site_name = "Tasks Map"
-site_url = "https://nicoknl.github.io/tasks-map/"
+site_name = "Project Planner"
+site_url = "https://hmil1151.github.io/project-planner/"
 
 nav = [
   { "Home" = "index.md" },

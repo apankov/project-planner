@@ -111,10 +111,10 @@ export function clearEdgeStyleOverride(
 export function getEdgeStyleClasses(style: EdgeStyleOverride): string[] {
   const classes: string[] = [];
   if (style.color !== "default") {
-    classes.push(`tasks-map-hash-edge-path--color-${style.color}`);
+    classes.push(`project-planner-hash-edge-path--color-${style.color}`);
   }
   if (style.pattern !== "solid") {
-    classes.push(`tasks-map-hash-edge-path--${style.pattern}`);
+    classes.push(`project-planner-hash-edge-path--${style.pattern}`);
   }
   return classes;
 }
@@ -132,5 +132,5 @@ export function showsArrowAtEnd(style: EdgeStyleOverride): boolean {
  * is one per colour, defined once per view.
  */
 export function edgeMarkerId(color: EdgeColorName): string {
-  return `tasks-map-edge-arrow-${color}`;
+  return `project-planner-edge-arrow-${color}`;
 }

@@ -2,10 +2,10 @@
 
 ## Opening the View
 
-Open the Tasks Map view in one of two ways:
+Open the Project Planner view in one of two ways:
 
 - Click the **map** icon in the left ribbon.
-- Open the command palette (`Ctrl+P` / `Cmd+P`) and run **Tasks Map: Open map view**.
+- Open the command palette (`Ctrl+P` / `Cmd+P`) and run **Project Planner: Open map view**.
 
 The view opens in the main editor area and displays all tasks from your vault as an interactive graph.
 
@@ -92,4 +92,4 @@ Both checkboxes can be active at the same time.
 
 Click **Reload Tasks** to re-read all tasks from the vault. Use this after making changes to notes outside the graph view.
 
-You can also embed a Tasks Map directly in a note — see [Embedding a Tasks Map](embedding.md).
+You can also embed a Project Planner directly in a note — see [Embedding a Project Planner](embedding.md).

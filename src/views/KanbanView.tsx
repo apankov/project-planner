@@ -51,13 +51,13 @@ import { promptForTaskEdit } from "src/components/task-edit-modal";
 import { DropPlacement, CardCallbacks } from "src/components/kanban-card";
 import { KanbanColumn } from "src/components/kanban-column";
 import { KanbanToolbar } from "src/components/kanban-toolbar";
-import { TasksMapSettings } from "src/types/settings";
-import TasksMapPlugin from "../main";
+import { ProjectPlannerSettings } from "src/types/settings";
+import ProjectPlannerPlugin from "../main";
 import { t } from "../i18n";
 
 interface KanbanViewProps {
-  settings: TasksMapSettings;
-  plugin: TasksMapPlugin;
+  settings: ProjectPlannerSettings;
+  plugin: ProjectPlannerPlugin;
 }
 
 /** What a card is doing while it is in the air. */
@@ -828,15 +828,17 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
 
   if (isLoading) {
     return (
-      <div className="tasks-map-loading-container">
-        <div className="tasks-map-spinner" />
-        <div className="tasks-map-loading-text">{t("kanban.loading")}</div>
+      <div className="project-planner-loading-container">
+        <div className="project-planner-spinner" />
+        <div className="project-planner-loading-text">
+          {t("kanban.loading")}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="tasks-map-kanban-container">
+    <div className="project-planner-kanban-container">
       <KanbanToolbar
         groupBy={groupBy}
         onGroupByChange={handleGroupByChange}
@@ -859,11 +861,11 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
           them: four empty status columns are a worse answer to an empty vault
           than saying so. */}
       {visibleTasks.length === 0 ? (
-        <div className="tasks-map-kanban-empty">
+        <div className="project-planner-kanban-empty">
           {tasks.length === 0 ? t("kanban.empty") : t("kanban.empty_filtered")}
         </div>
       ) : (
-        <div className="tasks-map-kanban-board">
+        <div className="project-planner-kanban-board">
           {buckets.map((bucket) => (
             <KanbanColumn
               key={bucket.key}
