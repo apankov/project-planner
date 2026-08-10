@@ -39,6 +39,7 @@ import {
   resizeBar,
   shiftBar,
 } from "src/lib/gantt-schedule";
+import { planCascade } from "src/lib/gantt-cascade";
 import {
   GanttRow,
   buildGanttRows,
@@ -625,34 +626,75 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const handleCommit = useCallback(
-    async ({ taskId, mode, days }: BarDragResult) => {
+    async ({ taskId, mode, days, cascade }: BarDragResult) => {
       const row = rows.find((candidate) => candidate.task.id === taskId);
       if (!row) return;
 
+      // Shift-dragging pushes the slip through the rest of the plan, which is
+      // the whole point of the gesture — so it wins over the selection, which
+      // is a different and more deliberate way of saying which bars move.
+      const plan =
+        cascade && mode === "move" ? planCascade(taskId, rows, days) : null;
+
+      if (plan && plan.days === 0) {
+        new Notice(t("gantt.cascade_blocked"));
+        return;
+      }
+
       // Moving one of several selected bars carries the rest along, which is
-      // how a slipped date gets pushed through the tasks that follow it
+      // another way to push a slipped date through the tasks that follow it
       const movingTogether =
+        !plan &&
         mode === "move" &&
         selectedTaskIds.size > 1 &&
         selectedTaskIds.has(taskId);
 
-      const moving = movingTogether
-        ? rows.filter((candidate) => selectedTaskIds.has(candidate.task.id))
-        : [row];
+      const moving = plan
+        ? rows.filter((candidate) => plan.movingIds.includes(candidate.task.id))
+        : movingTogether
+          ? rows.filter((candidate) => selectedTaskIds.has(candidate.task.id))
+          : [row];
 
+      const effectiveDays = plan ? plan.days : days;
       const snapshots = moving.map(capturePreviousDates);
 
       for (const target of moving) {
-        await commitRowDates(target, mode, days);
+        await commitRowDates(target, mode, effectiveDays);
       }
 
       plugin.undoHistory.push({
-        label:
-          moving.length > 1
+        label: plan
+          ? t("gantt.undo_cascade", { n: moving.length })
+          : moving.length > 1
             ? t("gantt.undo_move_many", { n: moving.length })
             : t("gantt.undo_move_one", { task: row.task.summary }),
         undo: () => restoreDates(snapshots),
       });
+
+      if (plan) {
+        // One line, however many ways the plan had to give: a drag that was
+        // held back *and* left work behind should not stack up notices
+        const left = [
+          plan.clamped
+            ? t("gantt.cascade_clamped", { n: Math.abs(plan.days) })
+            : null,
+          plan.skippedInferredIds.length > 0
+            ? t("gantt.cascade_skipped", { n: plan.skippedInferredIds.length })
+            : null,
+          plan.skippedCompletedIds.length > 0
+            ? t("gantt.cascade_skipped_done", {
+                n: plan.skippedCompletedIds.length,
+              })
+            : null,
+        ];
+
+        new Notice(
+          [t("gantt.cascade_moved", { n: moving.length }), ...left]
+            .filter(Boolean)
+            .join(" — ")
+        );
+        return;
+      }
 
       if (moving.length > 1) {
         new Notice(t("gantt.moved_together", { n: moving.length }));

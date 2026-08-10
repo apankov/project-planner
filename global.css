@@ -3896,6 +3896,14 @@ If your plugin does not need CSS, delete this file.
   box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
+/* Carried along by a shift-drag rather than dragged: dashed, so it reads as a
+   consequence of the bar under the pointer and not as another grabbed bar. */
+.tasks-map-gantt-bar--cascading {
+  opacity: 0.85;
+  outline: 1px dashed var(--interactive-accent);
+  outline-offset: 1px;
+}
+
 .tasks-map-gantt-bar--saving {
   opacity: 0.6;
   cursor: progress;

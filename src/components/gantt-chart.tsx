@@ -27,6 +27,7 @@ import {
   dayOfWeek,
 } from "src/lib/date-utils";
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
+import { planCascade } from "src/lib/gantt-cascade";
 import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
 import { HierarchyGroup } from "src/lib/task-hierarchy";
 import { buildLines, visibleRowsOf } from "src/lib/gantt-lines";
@@ -385,6 +386,70 @@ export function GanttChart({
   } | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [taggingId, setTaggingId] = useState<string | null>(null);
+
+  /** Every bar on screen, so a shift-drag can move the ones it carries. */
+  const barElements = useRef(new Map<string, HTMLDivElement>());
+  /** Bars currently shifted by a preview, so they can be put back. */
+  const cascadingIds = useRef<string[]>([]);
+
+  const registerBar = useCallback(
+    (taskId: string, element: HTMLDivElement | null) => {
+      if (element) barElements.current.set(taskId, element);
+      else barElements.current.delete(taskId);
+    },
+    []
+  );
+
+  const rowById = useMemo(
+    () => new Map(rows.map((row) => [row.task.id, row])),
+    [rows]
+  );
+
+  /**
+   * Moves the bars a shift-drag is carrying along, and puts them back.
+   *
+   * These bars are not the ones being dragged, so they have no drag state to
+   * read it from: the chart nudges their offsets directly, exactly the way each
+   * bar drives its own. Nothing re-renders — a preview is undone by the next
+   * call, and by the one `endDrag` always makes. If a carried bar does happen
+   * to re-render mid-drag it simply snaps back to its real dates, and the next
+   * pointer move picks it up again.
+   */
+  const previewCascade = useCallback(
+    (seedId: string, days: number | null) => {
+      const offsetOf = (row: GanttRow) =>
+        diffDays(timelineStart, row.bar.start);
+
+      for (const id of cascadingIds.current) {
+        const element = barElements.current.get(id);
+        const row = rowById.get(id);
+        if (!element || !row) continue;
+        element.style.setProperty("--bar-offset", String(offsetOf(row)));
+        element.classList.remove("tasks-map-gantt-bar--cascading");
+      }
+      cascadingIds.current = [];
+
+      if (days === null) return;
+
+      const plan = planCascade(seedId, rows, days);
+      // The seed is already moving itself; the rest follow by the same clamped
+      // amount, so what is on screen is what a release would write
+      const carried = plan.movingIds.filter((id) => id !== seedId);
+
+      for (const id of carried) {
+        const element = barElements.current.get(id);
+        const row = rowById.get(id);
+        if (!element || !row) continue;
+        element.style.setProperty(
+          "--bar-offset",
+          String(offsetOf(row) + plan.days)
+        );
+        element.classList.add("tasks-map-gantt-bar--cascading");
+      }
+      cascadingIds.current = carried;
+    },
+    [rowById, rows, timelineStart]
+  );
 
   const lines = useMemo(
     () => buildLines(groups, milestones, order),
@@ -1129,6 +1194,8 @@ export function GanttChart({
                     timelineStart={timelineStart}
                     dayWidth={scale.dayWidth}
                     onCommit={onCommit}
+                    onCascadePreview={previewCascade}
+                    onRegister={registerBar}
                     onOpen={onOpenTask}
                     onVerticalPreview={handleVerticalPreview}
                     onVerticalDrop={handleVerticalDrop}
