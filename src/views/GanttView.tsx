@@ -1643,10 +1643,6 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           label: milestone.label,
           date: milestone.date,
         })),
-        dependencies: dependencies.map((dependency) => ({
-          fromId: dependency.fromId,
-          toId: dependency.toId,
-        })),
         timelineStart: timeline.start,
         timelineEnd: timeline.end,
         today,
@@ -1666,7 +1662,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         options: {
           paper: draft.paper,
           pixelRatio: draft.pixelRatio,
-          showDependencies: draft.showDependencies,
+          showToday: draft.showToday,
         },
       });
 
@@ -1700,7 +1696,6 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     app,
     chartLines,
     criticalPath.criticalIds,
-    dependencies,
     exportDraft,
     exporting,
     laneFlags,

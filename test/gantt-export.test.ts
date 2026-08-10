@@ -56,7 +56,6 @@ function makeInput(
     footer: "Vault · Tasks Map",
     lines,
     laneMilestones: [],
-    dependencies: [],
     timelineStart: "2026-06-01",
     timelineEnd: "2026-06-30",
     today: "2026-06-05",
@@ -144,6 +143,16 @@ describe("buildGanttSvg", () => {
       const { svg } = buildGanttSvg(
         makeInput([makeTask()], { today: "2027-01-01" })
       );
+      expect(svg).not.toContain(">Today<");
+    });
+
+    it("is left off, legend and all, when it was not asked for", () => {
+      const { svg } = buildGanttSvg(
+        makeInput([makeTask()], {
+          options: { ...DEFAULT_EXPORT_OPTIONS, showToday: false },
+        })
+      );
+
       expect(svg).not.toContain(">Today<");
     });
   });
@@ -240,38 +249,16 @@ describe("buildGanttSvg", () => {
   });
 
   describe("dependencies", () => {
-    const lines = [
-      makeTask({ id: "a", start: "2026-06-01", end: "2026-06-05" }),
-      makeTask({ id: "b", start: "2026-06-08", end: "2026-06-12" }),
-    ];
-    const dependencies = [{ fromId: "a", toId: "b" }];
-
-    it("are left out unless they were asked for", () => {
-      const { svg } = buildGanttSvg(makeInput(lines, { dependencies }));
-      expect(svg).not.toContain("<path");
-    });
-
-    it("are drawn as elbows with an arrowhead when they were", () => {
+    it("are never drawn: the picture has no arrow layer at all", () => {
       const { svg } = buildGanttSvg(
-        makeInput(lines, {
-          dependencies,
-          options: { ...DEFAULT_EXPORT_OPTIONS, showDependencies: true },
-        })
-      );
-
-      expect(svg).toContain("<path");
-      expect(svg).toContain("marker-end=");
-    });
-
-    it("drops a link to a task that is not on the chart", () => {
-      const { svg } = buildGanttSvg(
-        makeInput(lines, {
-          dependencies: [{ fromId: "a", toId: "missing" }],
-          options: { ...DEFAULT_EXPORT_OPTIONS, showDependencies: true },
-        })
+        makeInput([
+          makeTask({ id: "a", start: "2026-06-01", end: "2026-06-05" }),
+          makeTask({ id: "b", start: "2026-06-08", end: "2026-06-12" }),
+        ])
       );
 
       expect(svg).not.toContain("<path");
+      expect(svg).not.toContain("marker-end");
     });
   });
 

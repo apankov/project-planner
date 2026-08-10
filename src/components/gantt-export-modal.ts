@@ -13,13 +13,13 @@ export interface GanttExportDraft {
   title: string;
   paper: GanttExportPaper;
   pixelRatio: number;
-  showDependencies: boolean;
+  showToday: boolean;
 }
 
 export const DEFAULT_EXPORT_DRAFT: Omit<GanttExportDraft, "title"> = {
   paper: DEFAULT_EXPORT_OPTIONS.paper,
   pixelRatio: DEFAULT_EXPORT_OPTIONS.pixelRatio,
-  showDependencies: DEFAULT_EXPORT_OPTIONS.showDependencies,
+  showToday: DEFAULT_EXPORT_OPTIONS.showToday,
 };
 
 function readPaper(value: string): GanttExportPaper {
@@ -113,12 +113,12 @@ export class GanttExportModal extends Modal {
       });
 
     new Setting(contentEl)
-      .setName(t("gantt.export_modal_dependencies"))
-      .setDesc(t("gantt.export_modal_dependencies_desc"))
+      .setName(t("gantt.export_modal_today"))
+      .setDesc(t("gantt.export_modal_today_desc"))
       .addToggle((toggle) => {
-        toggle.setValue(this.draft.showDependencies);
+        toggle.setValue(this.draft.showToday);
         toggle.onChange((value) => {
-          this.draft.showDependencies = value;
+          this.draft.showToday = value;
         });
       });
 

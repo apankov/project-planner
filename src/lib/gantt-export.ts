@@ -13,6 +13,8 @@
  *   critical path — four colours in total, all chosen for white paper
  * - no weekend bands, no day ticks, no row buttons, no selection or highlight
  *   state; month rules and a today line are all the grid a reader needs
+ * - no dependency arrows: on a page-wide chart they are the first thing to
+ *   turn into noise, and what they say is already said by the bars lining up
  * - the parts that carry the meaning are made *bigger*, not smaller: a title,
  *   the span it covers, group headings, milestone names and a legend that only
  *   lists what the chart actually uses
@@ -57,17 +59,18 @@ export interface GanttExportOptions {
   paper: GanttExportPaper;
   pixelRatio: number;
   /**
-   * Whether to draw the dependency arrows. Off by default: on a page-wide
-   * chart they are the first thing to turn into noise, and the reader of a
-   * plan usually wants the dates rather than the wiring.
+   * Whether to mark today across the chart. On for a plan being tracked, and
+   * worth turning off for one that is not: a printed schedule for a project
+   * that has not begun, or a picture that will be read long after the day it
+   * was made, is better off without a line claiming to be "now".
    */
-  showDependencies: boolean;
+  showToday: boolean;
 }
 
 export const DEFAULT_EXPORT_OPTIONS: GanttExportOptions = {
   paper: "a4",
   pixelRatio: DEFAULT_EXPORT_RATIO,
-  showDependencies: false,
+  showToday: true,
 };
 
 /** One task, already reduced to what the picture needs to draw it. */
@@ -111,11 +114,6 @@ export interface GanttExportMilestone {
   date: string;
 }
 
-export interface GanttExportDependency {
-  fromId: string;
-  toId: string;
-}
-
 /**
  * Every user-facing word the picture needs, already translated. The layout
  * decides which of them appear — a legend entry for a status nothing uses is
@@ -138,7 +136,6 @@ export interface GanttExportInput {
   footer: string;
   lines: GanttExportLine[];
   laneMilestones: GanttExportMilestone[];
-  dependencies: GanttExportDependency[];
   timelineStart: string;
   timelineEnd: string;
   today: string;
@@ -526,10 +523,21 @@ function drawAxis(input: GanttExportInput, layout: Layout): string {
   return parts.join("");
 }
 
+/**
+ * Whether today gets a line at all: only when it was asked for, and only when
+ * it falls inside the span being drawn. Asked in one place so the marker and
+ * its legend entry can never disagree about it.
+ */
+function marksToday(input: GanttExportInput, layout: Layout): boolean {
+  if (!input.options.showToday) return false;
+
+  const offset = diffDays(input.timelineStart, input.today);
+  return offset >= 0 && offset < layout.totalDays;
+}
+
 /** The today line, drawn over the grid and under the bars. */
 function drawToday(input: GanttExportInput, layout: Layout): string {
-  const offset = diffDays(input.timelineStart, input.today);
-  if (offset < 0 || offset >= layout.totalDays) return "";
+  if (!marksToday(input, layout)) return "";
 
   const x = dayX(layout, input.timelineStart, input.today);
   const bottom = layout.plotTop + layout.plotHeight;
@@ -792,46 +800,6 @@ function drawRows(input: GanttExportInput, layout: Layout): string {
   return parts.join("");
 }
 
-/**
- * Dependency arrows, when asked for: elbows from the end of a blocker to the
- * start of what it blocks. Drawn under the bars and in a light grey, so on a
- * busy plan they read as a background texture rather than fighting the bars.
- */
-function drawDependencies(input: GanttExportInput, layout: Layout): string {
-  if (!input.options.showDependencies) return "";
-
-  const rows = new Map<string, { index: number; task: GanttExportTask }>();
-  input.lines.forEach((entry, index) => {
-    if (entry.kind === "task") rows.set(entry.id, { index, task: entry });
-  });
-
-  const paths = input.dependencies.flatMap((dependency) => {
-    const from = rows.get(dependency.fromId);
-    const to = rows.get(dependency.toId);
-    if (!from || !to) return [];
-
-    const fromX = dayX(layout, input.timelineStart, addDays(from.task.end, 1));
-    const fromY = layout.plotTop + (from.index + 0.5) * layout.rowHeight;
-    const toX = dayX(layout, input.timelineStart, to.task.start);
-    const toY = layout.plotTop + (to.index + 0.5) * layout.rowHeight;
-
-    const gutter = Math.max(6, layout.dayWidth / 2);
-    const midX = toX - gutter > fromX ? toX - gutter : fromX + gutter;
-    const d = `M ${num(fromX)} ${num(fromY)} H ${num(midX)} V ${num(toY)} H ${num(toX - 4)}`;
-
-    return [
-      `<path d="${d}" fill="none" stroke="${MUTED}" stroke-width="0.9" opacity="0.55" marker-end="url(#tasks-map-export-arrow)" />`,
-    ];
-  });
-
-  if (paths.length === 0) return "";
-
-  return [
-    `<defs><marker id="tasks-map-export-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill="${MUTED}" opacity="0.55" /></marker></defs>`,
-    ...paths,
-  ].join("");
-}
-
 interface LegendEntry {
   label: string;
   /** How the swatch is drawn, which is how that thing is drawn in the chart. */
@@ -846,7 +814,7 @@ interface LegendEntry {
  * line styles and a marker, most of them explaining something that is not on
  * the page. So every entry has to be earned by a line above it.
  */
-function legendEntries(input: GanttExportInput): LegendEntry[] {
+function legendEntries(input: GanttExportInput, layout: Layout): LegendEntry[] {
   const entries: LegendEntry[] = [];
   const tasks = input.lines.filter(
     (entry): entry is GanttExportTask => entry.kind === "task"
@@ -880,11 +848,7 @@ function legendEntries(input: GanttExportInput): LegendEntry[] {
     entries.push({ label: input.labels.milestone, swatch: "milestone" });
   }
 
-  const todayOffset = diffDays(input.timelineStart, input.today);
-  if (
-    todayOffset >= 0 &&
-    todayOffset < inclusiveDayCount(input.timelineStart, input.timelineEnd)
-  ) {
+  if (marksToday(input, layout)) {
     entries.push({ label: input.labels.today, swatch: "today" });
   }
 
@@ -892,7 +856,7 @@ function legendEntries(input: GanttExportInput): LegendEntry[] {
 }
 
 function drawLegend(input: GanttExportInput, layout: Layout): string {
-  const entries = legendEntries(input);
+  const entries = legendEntries(input, layout);
   if (entries.length === 0) return "";
 
   const parts: string[] = [
@@ -977,7 +941,6 @@ export function buildGanttSvg(input: GanttExportInput): GanttExportImage {
       size: SUBTITLE_SIZE,
     }),
     drawAxis(input, layout),
-    drawDependencies(input, layout),
     drawRows(input, layout),
     drawToday(input, layout),
     drawLaneMilestones(input, layout),
