@@ -3722,6 +3722,13 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-error);
 }
 
+/* Says what the exported picture is before the questions about it */
+.tasks-map-gantt-export-modal__desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .tasks-map-task-edit-modal__error {
   margin: 0 0 8px;
   font-size: 12px;

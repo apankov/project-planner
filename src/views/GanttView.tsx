@@ -77,6 +77,7 @@ import {
   GanttMilestone,
   addMilestone,
   findMilestone,
+  laneMilestones,
   milestoneOrderKey,
   readMilestones,
   removeMilestone,
@@ -84,6 +85,19 @@ import {
   shiftMilestone,
   updateMilestone,
 } from "src/lib/gantt-milestones";
+import { buildLines } from "src/lib/gantt-lines";
+import {
+  GanttExportLine,
+  buildGanttSvg,
+  exportFileName,
+  formatExportDate,
+} from "src/lib/gantt-export";
+import {
+  DEFAULT_EXPORT_DRAFT,
+  GanttExportDraft,
+  exportGanttPng,
+  promptForGanttExport,
+} from "src/components/gantt-export-modal";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { findCriticalPath } from "src/lib/critical-path";
 import { ScheduleRisk, findScheduleRisks } from "src/lib/schedule-risk";
@@ -95,7 +109,7 @@ import { TasksMapSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import { useUndoHistory } from "src/hooks/use-undo-history";
 import { TaskDateProperty, findTaskDate } from "src/lib/task-dates";
-import { TaskProgress } from "src/lib/task-progress";
+import { TaskProgress, effectiveTaskStatus } from "src/lib/task-progress";
 import { TaskStatus } from "src/types/task";
 import TasksMapPlugin from "../main";
 import {
@@ -170,6 +184,13 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
   const [savingTaskIds, setSavingTaskIds] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  // Remembered for the session, so exporting the same plan twice does not mean
+  // retyping its heading and picking its page size again
+  const [exportDraft, setExportDraft] = useState<GanttExportDraft>({
+    title: "",
+    ...DEFAULT_EXPORT_DRAFT,
+  });
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   // Undo runs long after its action, so it reads tasks through a ref
@@ -388,6 +409,24 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       })),
     ]);
   }, [hierarchy, milestones, order, settings.ganttDateOrder]);
+
+  /**
+   * The lines exactly as the chart draws them — headings, rows and the
+   * milestones filed among them, nested, folded and in order.
+   *
+   * The chart works this out for itself from the same three inputs, so this is
+   * the same list rather than a second opinion on it. The export reads it
+   * because a picture of the chart has to be a picture of *this* chart: what
+   * was filtered out, folded away or dragged into place is what the reader of
+   * the exported page should see too.
+   */
+  const chartLines = useMemo(
+    () => buildLines(hierarchyGroups, milestones, lineOrder),
+    [hierarchyGroups, milestones, lineOrder]
+  );
+
+  /** Milestones marked across the chart rather than filed in the list. */
+  const laneFlags = useMemo(() => laneMilestones(milestones), [milestones]);
 
   // Which tasks decide the finish date, and how much room the rest have. Run
   // over the rows on screen, so filtering the chart re-asks the question of the
@@ -1507,6 +1546,171 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     );
   }, [applying, inferredRows, writeRowDates]);
 
+  /**
+   * The chart as a picture, for a document.
+   *
+   * The drawing is built from scratch rather than captured off the screen, so
+   * it can be plainer than the view it comes from: no hover controls, no
+   * selection, no theme colours, and the whole timeline fitted to the page
+   * instead of a slice of it. What it keeps is what a reader needs — the
+   * order, the nesting, the states, today, the milestones and a key.
+   */
+  const handleExport = useCallback(async () => {
+    if (exporting) return;
+    if (chartLines.length === 0) {
+      new Notice(t("gantt.export_empty"));
+      return;
+    }
+
+    const vaultName = app.vault.getName();
+    const draft = await promptForGanttExport(app, {
+      ...exportDraft,
+      title: exportDraft.title || vaultName,
+    });
+    if (!draft) return;
+
+    setExportDraft(draft);
+    setExporting(true);
+
+    const title = draft.title || vaultName;
+
+    try {
+      const lines: GanttExportLine[] = chartLines.map((line) => {
+        if (line.kind === "header") {
+          return { kind: "heading", label: line.label, count: line.count };
+        }
+        if (line.kind === "milestone") {
+          return {
+            kind: "milestone",
+            label: line.milestone.label,
+            date: line.milestone.date,
+          };
+        }
+
+        const { task, bar, inferred } = line.row;
+        return {
+          kind: "task",
+          id: task.id,
+          label: plainTaskText(task.summary),
+          depth: line.depth,
+          start: bar.start,
+          end: bar.end,
+          // The reading the chart shows, so a task carrying progress but still
+          // ticked off as to-do exports as underway, the way it looks on screen
+          status: effectiveTaskStatus(task.status, task.progress),
+          percent: task.progress.percent,
+          inferred,
+          rollup: line.hasChildren,
+          critical:
+            settings.showCriticalPath && criticalPath.criticalIds.has(task.id),
+        };
+      });
+
+      // The span the plan actually covers, rather than the padded range the
+      // chart is drawn over: the subtitle is a claim about the work
+      const dates = [
+        ...lines.flatMap((line) =>
+          line.kind === "task"
+            ? [line.start, line.end]
+            : line.kind === "milestone"
+              ? [line.date]
+              : []
+        ),
+        ...laneFlags.map((milestone) => milestone.date),
+      ];
+      const first = dates.reduce(
+        (earliest, date) => (diffDays(earliest, date) < 0 ? date : earliest),
+        dates[0] ?? timeline.start
+      );
+      const last = dates.reduce(
+        (latest, date) => (diffDays(latest, date) > 0 ? date : latest),
+        dates[0] ?? timeline.end
+      );
+
+      const image = buildGanttSvg({
+        title,
+        subtitle: t("gantt.export_subtitle", {
+          n: rows.length,
+          start: formatExportDate(first),
+          end: formatExportDate(last),
+        }),
+        footer: t("gantt.export_footer", {
+          vault: vaultName,
+          date: formatExportDate(today),
+        }),
+        lines,
+        laneMilestones: laneFlags.map((milestone) => ({
+          label: milestone.label,
+          date: milestone.date,
+        })),
+        dependencies: dependencies.map((dependency) => ({
+          fromId: dependency.fromId,
+          toId: dependency.toId,
+        })),
+        timelineStart: timeline.start,
+        timelineEnd: timeline.end,
+        today,
+        labels: {
+          today: t("gantt.legend_today"),
+          statuses: {
+            todo: t("gantt.legend_todo"),
+            in_progress: t("gantt.legend_in_progress"),
+            done: t("gantt.legend_done"),
+            canceled: t("gantt.legend_canceled"),
+          },
+          suggested: t("gantt.legend_suggested"),
+          summary: t("gantt.legend_summary"),
+          milestone: t("gantt.legend_milestone"),
+          critical: t("gantt.legend_critical"),
+        },
+        options: {
+          paper: draft.paper,
+          pixelRatio: draft.pixelRatio,
+          showDependencies: draft.showDependencies,
+        },
+      });
+
+      const result = await exportGanttPng(
+        app,
+        image,
+        exportFileName(title, today),
+        draft.pixelRatio
+      );
+
+      new Notice(
+        result.copied
+          ? t("gantt.export_done_copied", {
+              file: result.file.name,
+              width: result.width,
+              height: result.height,
+            })
+          : t("gantt.export_done", {
+              file: result.file.name,
+              width: result.width,
+              height: result.height,
+            })
+      );
+    } catch (error) {
+      console.error("Could not export the Gantt chart", error);
+      new Notice(t("gantt.export_failed"));
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    app,
+    chartLines,
+    criticalPath.criticalIds,
+    dependencies,
+    exportDraft,
+    exporting,
+    laneFlags,
+    rows.length,
+    settings.showCriticalPath,
+    timeline.end,
+    timeline.start,
+    today,
+  ]);
+
   if (isLoading) {
     return (
       <div className="tasks-map-loading-container">
@@ -1543,6 +1747,8 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         onToggleDateOrder={handleToggleDateOrder}
         onAddTask={() => void addTask(null)}
         onAddMilestone={() => void handleAddMilestone()}
+        onExport={() => void handleExport()}
+        exporting={exporting}
         onUndoOrder={() => void handleUndo()}
         canUndoOrder={canUndo}
         undoLabel={undoLabel}

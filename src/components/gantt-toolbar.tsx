@@ -4,6 +4,7 @@ import {
   CalendarArrowDown,
   CalendarCheck,
   Flag,
+  ImageDown,
   Plus,
   RefreshCw,
   Search,
@@ -42,6 +43,9 @@ interface GanttToolbarProps {
   onToggleDateOrder: () => void;
   onAddTask: () => void;
   onAddMilestone: () => void;
+  /** Draws the chart as it stands into a PNG for a document. */
+  onExport: () => void;
+  exporting: boolean;
   onUndoOrder: () => void;
   canUndoOrder: boolean;
   /** What pressing undo would reverse, for the tooltip. */
@@ -71,6 +75,8 @@ export function GanttToolbar({
   onToggleDateOrder,
   onAddTask,
   onAddMilestone,
+  onExport,
+  exporting,
   onUndoOrder,
   canUndoOrder,
   undoLabel,
@@ -235,6 +241,19 @@ export function GanttToolbar({
           <span>{t("gantt.apply_inferred", { n: inferredCount })}</span>
         </button>
       )}
+
+      {/* Beside the other things that leave the chart rather than change it,
+          and away from the editing controls: exporting writes a picture, not
+          a task. */}
+      <button
+        className="tasks-map-gantt-toolbar__button"
+        onClick={onExport}
+        disabled={exporting}
+        title={t("gantt.export_desc")}
+      >
+        <ImageDown size={14} />
+        <span>{exporting ? t("gantt.exporting") : t("gantt.export")}</span>
+      </button>
 
       <button
         className="tasks-map-gantt-toolbar__button"
