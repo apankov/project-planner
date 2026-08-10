@@ -70,6 +70,7 @@ import UnlinkedTasksPanel, {
 } from "src/components/unlinked-tasks-panel";
 import { GraphEmptyState } from "src/components/graph-empty-state";
 import ControlsPanel from "src/components/controls-panel";
+import GraphActionBar from "src/components/graph-action-bar";
 import { t } from "../i18n";
 import TasksMapPlugin from "../main";
 import {
@@ -1911,6 +1912,14 @@ export default function TaskMapGraphView({
     void plugin.activateGanttViewInMainArea();
   }, [plugin]);
 
+  const handleOpenKanban = useCallback(() => {
+    void plugin.activateKanbanViewInMainArea();
+  }, [plugin]);
+
+  const handleOpenFinance = useCallback(() => {
+    void plugin.activateFinanceViewInMainArea();
+  }, [plugin]);
+
   const handleSavePreset = useCallback(
     async (name: string, filter: FilterState): Promise<void> => {
       await plugin.savePreset(name, filter);
@@ -2011,8 +2020,6 @@ export default function TaskMapGraphView({
                 showTags={settings.showTags}
                 hideTags={hideTags}
                 setHideTags={toggleHideTags}
-                reloadTasks={reloadTasks}
-                fitView={handleFitView}
                 showUnlinkedPanel={embed.showUnlinkedPanel}
                 hideUnlinkedTasks={hideUnlinkedTasks}
                 setHideUnlinkedTasks={setHideUnlinkedTasks}
@@ -2023,13 +2030,23 @@ export default function TaskMapGraphView({
                 setShowCriticalPath={(show) =>
                   void plugin.setShowCriticalPath(show)
                 }
-                onOpenGantt={embedConfig ? undefined : handleOpenGantt}
-                onUndo={() => void handleUndo()}
-                canUndo={canUndo}
-                undoLabel={undoLabel}
               />
             )}
           </div>
+          <GraphActionBar
+            reloadTasks={reloadTasks}
+            fitView={handleFitView}
+            onUndo={() => void handleUndo()}
+            canUndo={canUndo}
+            undoLabel={undoLabel}
+            onOpenGantt={embedConfig ? undefined : handleOpenGantt}
+            onOpenKanban={embedConfig ? undefined : handleOpenKanban}
+            onOpenFinance={
+              embedConfig || !settings.financeEnabled
+                ? undefined
+                : handleOpenFinance
+            }
+          />
           {embed.showMinimap && <TaskMinimap />}
           <Background />
           <EdgeMarkerDefs />

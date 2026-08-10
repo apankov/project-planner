@@ -47,7 +47,8 @@ export default function GuiOverlay(props: GuiOverlayProps) {
     return "match";
   };
 
-  const [isMinimized, setIsMinimized] = useState(false);
+  // Collapsed on open: the canvas is the point, the panels are on request
+  const [isMinimized, setIsMinimized] = useState(true);
   const [searchQuery, setSearchQuery] = useState(filterState.searchQuery);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
