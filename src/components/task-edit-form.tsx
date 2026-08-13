@@ -16,6 +16,7 @@ import {
 import { TaskStatus } from "src/types/task";
 import { effectiveTaskStatus } from "src/lib/task-progress";
 import { knownPeople } from "src/lib/rate-book";
+import { selectProps } from "./select-styles";
 import { t } from "../i18n";
 
 /** One task offered as a parent or a dependency. */
@@ -89,7 +90,7 @@ function readNumber(value: string): number | null {
 }
 
 /** react-select needs its own theming to sit inside an Obsidian modal. */
-const SELECT_CLASSES = { classNamePrefix: "project-planner-task-edit-select" };
+const SELECT_CLASSES = selectProps("project-planner-task-edit-select");
 
 /**
  * The one task editor.

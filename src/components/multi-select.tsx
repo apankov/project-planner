@@ -1,4 +1,5 @@
 import Select, { MultiValue } from "react-select";
+import { selectProps } from "./select-styles";
 import { t } from "../i18n";
 
 interface MultiSelectProps<T extends string> {
@@ -10,6 +11,7 @@ interface MultiSelectProps<T extends string> {
 
 type OptionType = { value: string; label: string };
 
+/** The theming lives in `select-styles`, shared with the task editor's pickers. */
 export default function MultiSelect<T extends string>({
   options,
   selected,
@@ -18,6 +20,7 @@ export default function MultiSelect<T extends string>({
 }: MultiSelectProps<T>) {
   return (
     <Select
+      {...selectProps("project-planner-multi-select")}
       isMulti
       options={options.map((o) => ({ value: o, label: o }))}
       value={selected.map((o) => ({ value: o, label: o }))}
@@ -25,59 +28,6 @@ export default function MultiSelect<T extends string>({
         setSelected(opts.map((o) => o.value as T))
       }
       placeholder={placeholder}
-      styles={{
-        menu: (base) => ({
-          ...base,
-          zIndex: 9999,
-          background: "var(--background-secondary)",
-          color: "var(--text-normal)",
-          border: "1px solid var(--background-modifier-border)",
-        }),
-        control: (base, state) => ({
-          ...base,
-          background: "var(--background-primary)",
-          color: "var(--text-normal)",
-          borderColor: "var(--background-modifier-border)",
-          boxShadow: state.isFocused
-            ? "0 0 0 1px var(--interactive-accent)"
-            : base.boxShadow,
-          "&:hover": {
-            borderColor: "var(--interactive-accent)",
-          },
-        }),
-        option: (base, state) => ({
-          ...base,
-          background: state.isFocused
-            ? "var(--background-modifier-hover)"
-            : "var(--background-secondary)",
-          color: "var(--text-normal)",
-        }),
-        multiValue: (base) => ({
-          ...base,
-          background: "var(--background-modifier-active)",
-          color: "var(--text-normal)",
-        }),
-        multiValueLabel: (base) => ({
-          ...base,
-          color: "var(--text-normal)",
-        }),
-        multiValueRemove: (base) => ({
-          ...base,
-          color: "var(--text-faint)",
-          ":hover": {
-            background: "var(--background-modifier-hover)",
-            color: "var(--text-normal)",
-          },
-        }),
-        placeholder: (base) => ({
-          ...base,
-          color: "var(--text-faint)",
-        }),
-        input: (base) => ({
-          ...base,
-          color: "var(--text-normal)",
-        }),
-      }}
     />
   );
 }

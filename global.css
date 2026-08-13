@@ -4621,37 +4621,3 @@ If your plugin does not need CSS, delete this file.
   justify-content: flex-end;
   padding-top: 4px;
 }
-
-/* react-select sits inside an Obsidian modal here, so it takes the theme's
-   own variables rather than its default white-on-white. */
-.project-planner-task-edit-select__control {
-  min-height: 30px;
-  background: var(--background-primary);
-  border-color: var(--background-modifier-border);
-  color: var(--text-normal);
-}
-
-.project-planner-task-edit-select__menu {
-  z-index: 9999;
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  color: var(--text-normal);
-}
-
-.project-planner-task-edit-select__option--is-focused {
-  background: var(--background-modifier-hover);
-}
-
-.project-planner-task-edit-select__multi-value {
-  background: var(--background-modifier-active-hover);
-}
-
-.project-planner-task-edit-select__multi-value__label,
-.project-planner-task-edit-select__single-value,
-.project-planner-task-edit-select__input {
-  color: var(--text-normal);
-}
-
-.project-planner-task-edit-select__placeholder {
-  color: var(--text-faint);
-}
