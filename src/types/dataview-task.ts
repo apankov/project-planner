@@ -2,7 +2,19 @@ import { App, Vault } from "obsidian";
 import { BaseTask } from "./base-task";
 import { TaskStatus } from "./task";
 import { TaskInsertPosition, TaskDateUpdate } from "./base-task";
-import { findTaskDate, getTaskDateProperties } from "../lib/task-dates";
+import {
+  TaskDateProperty,
+  TaskDateType,
+  findTaskDate,
+  getTaskDateProperties,
+} from "../lib/task-dates";
+import {
+  TaskNoteChanges,
+  companionNoteFor,
+  taskNotePatch,
+} from "../lib/task-note";
+import { writeFrontmatterPatch } from "../lib/frontmatter-write";
+import { normalizeOwner, writeOwnerToTaskLine } from "../lib/task-owner";
 import {
   findTaskLineByIdOrText,
   statusSymbols,
@@ -20,12 +32,30 @@ import {
   TAG_REMOVAL,
   WHITESPACE_NORMALIZE,
 } from "../lib/task-regex";
-import { TaskFinance, writeFinanceToTaskLine } from "../lib/task-finance";
-import { clampProgress, writeProgressToTaskLine } from "../lib/task-progress";
+import {
+  EMPTY_TASK_FINANCE,
+  TaskFinance,
+  writeFinanceToTaskLine,
+} from "../lib/task-finance";
+import {
+  TaskProgress,
+  clampProgress,
+  writeProgressToTaskLine,
+} from "../lib/task-progress";
 import { normalizeParentId, writeParentToTaskLine } from "../lib/task-parent";
 
+/** Fields `copyWith` can swap on a task without re-reading it from the vault. */
+interface DataviewTaskChanges {
+  dates?: TaskDateProperty[];
+  finance?: TaskFinance;
+  progress?: TaskProgress;
+  owner?: string | null;
+  parentId?: string | null;
+}
+
 /**
- * Dataview-style task that stores metadata inline in the task text
+ * Dataview-style task, whose properties live either on its line or — when the
+ * line links to one — in its companion note. See `lib/task-note`.
  */
 export class DataviewTask extends BaseTask {
   readonly type = "dataview" as const;
@@ -87,93 +117,22 @@ export class DataviewTask extends BaseTask {
     });
   }
 
-  async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {
-    if (!this.link || !this.text) return null;
-    const vault = app?.vault;
-    if (!vault) return null;
-    const file = vault.getFileByPath(this.link);
-    if (!file) return null;
+  /* ---------------------------------------------------------------------- */
+  /* Where a property goes                                                  */
+  /* ---------------------------------------------------------------------- */
 
-    // Held in an object so the assignment inside the callback survives
-    // TypeScript's control-flow narrowing
-    const written: { line: string | null } = { line: null };
-
-    await vault.process(file, (fileContent) => {
-      const lines = fileContent.split(/\r?\n/);
-      const taskLineIdx = findTaskLineByIdOrText(lines, this.id, this.text);
-
-      if (taskLineIdx === -1) return fileContent;
-
-      let line = lines[taskLineIdx];
-      for (const [type, date] of Object.entries(dates)) {
-        if (date === undefined) continue;
-        line =
-          date === null
-            ? removeDateFromTask(line, type)
-            : addDateToTask(line, type, date);
-      }
-
-      lines[taskLineIdx] = line;
-      written.line = line;
-      return lines.join("\n");
-    });
-
-    const updatedLine = written.line;
-    if (!updatedLine) return null;
-
-    const updatedTask = parseTaskLine(updatedLine, this.link);
-    if (!updatedTask) return null;
-
-    // The line keeps its ID, but re-parsing a line without one would mint a
-    // random replacement and orphan the task's dependencies.
-    if (!updatedLine.includes(updatedTask.id)) {
-      updatedTask.id = this.id;
-    }
-    updatedTask.projects = this.projects;
-    return updatedTask;
-  }
-
-  async setFinance(finance: TaskFinance, app: App): Promise<BaseTask | null> {
-    if (!this.link || !this.text) return null;
-    const vault = app?.vault;
-    if (!vault) return null;
-    const file = vault.getFileByPath(this.link);
-    if (!file) return null;
-
-    // Held in an object so the assignment inside the callback survives
-    // TypeScript's control-flow narrowing
-    const written: { line: string | null } = { line: null };
-
-    await vault.process(file, (fileContent) => {
-      const lines = fileContent.split(/\r?\n/);
-      const taskLineIdx = findTaskLineByIdOrText(lines, this.id, this.text);
-
-      if (taskLineIdx === -1) return fileContent;
-
-      const line = writeFinanceToTaskLine(lines[taskLineIdx], finance);
-      lines[taskLineIdx] = line;
-      written.line = line;
-      return lines.join("\n");
-    });
-
-    const updatedLine = written.line;
-    if (!updatedLine) return null;
-
-    const updatedTask = parseTaskLine(updatedLine, this.link);
-    if (!updatedTask) return null;
-
-    // The line keeps its ID, but re-parsing a line without one would mint a
-    // random replacement and orphan the task's dependencies.
-    if (!updatedLine.includes(updatedTask.id)) {
-      updatedTask.id = this.id;
-    }
-    updatedTask.projects = this.projects;
-    return updatedTask;
-  }
-
-  async setProgress(
-    progress: number | null,
-    app: App
+  /**
+   * Rewrites this task's line and reports the task as the line now reads.
+   *
+   * Every line-backed setter used to carry its own copy of this: find the
+   * line, rewrite it, re-parse, put the ID and the projects back. The only
+   * part that ever differed was the rewrite itself, so that is all a caller
+   * passes.
+   */
+  private async rewriteLine(
+    app: App,
+    // eslint-disable-next-line no-unused-vars -- a callback's parameter name
+    rewrite: (line: string) => string
   ): Promise<BaseTask | null> {
     if (!this.link || !this.text) return null;
     const vault = app?.vault;
@@ -181,8 +140,6 @@ export class DataviewTask extends BaseTask {
     const file = vault.getFileByPath(this.link);
     if (!file) return null;
 
-    const percent = clampProgress(progress);
-
     // Held in an object so the assignment inside the callback survives
     // TypeScript's control-flow narrowing
     const written: { line: string | null } = { line: null };
@@ -193,7 +150,7 @@ export class DataviewTask extends BaseTask {
 
       if (taskLineIdx === -1) return fileContent;
 
-      const line = writeProgressToTaskLine(lines[taskLineIdx], { percent });
+      const line = rewrite(lines[taskLineIdx]);
       lines[taskLineIdx] = line;
       written.line = line;
       return lines.join("\n");
@@ -214,44 +171,158 @@ export class DataviewTask extends BaseTask {
     return updatedTask;
   }
 
-  async setParent(parentId: string | null, app: App): Promise<BaseTask | null> {
-    if (!this.link || !this.text) return null;
-    const vault = app?.vault;
-    if (!vault) return null;
-    const file = vault.getFileByPath(this.link);
-    if (!file) return null;
+  /**
+   * Writes one property wherever this task keeps its properties.
+   *
+   * A task whose line links to a companion note keeps them there, in
+   * frontmatter, and the line has the matching field taken *off* — two places
+   * holding one fact is two places to disagree, and the note is the one that
+   * wins. A task with no note keeps working exactly as it did, with everything
+   * on the line.
+   *
+   * The clean-up of the line is deliberately best-effort. Once the note is
+   * written the property is stored; failing the whole call because the line
+   * could not also be tidied would report a save that actually happened as a
+   * failure, and the views would roll their display back over good data.
+   */
+  private async writeProperty(
+    app: App,
+    options: {
+      /** What the note should be made to say. */
+      note: TaskNoteChanges;
+      /** The task as it reads once the write lands. */
+      applied: DataviewTaskChanges;
+      /** The line carrying the value itself, for a task with no note. */
+      // eslint-disable-next-line no-unused-vars -- a callback's parameter name
+      write: (line: string) => string;
+      /** The line with the field taken off, for a task that has one. */
+      // eslint-disable-next-line no-unused-vars -- a callback's parameter name
+      clear: (line: string) => string;
+    }
+  ): Promise<BaseTask | null> {
+    const noteFile = companionNoteFor(app, this);
+    if (!noteFile) return this.rewriteLine(app, options.write);
 
+    const wrote = await writeFrontmatterPatch(
+      app,
+      noteFile,
+      taskNotePatch(options.note)
+    );
+    if (!wrote) return null;
+
+    await this.rewriteLine(app, options.clear);
+
+    return this.copyWith(options.applied);
+  }
+
+  async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {
+    const entries = Object.entries(dates).filter(
+      ([, date]) => date !== undefined
+    ) as Array<[TaskDateType, string | null]>;
+    if (entries.length === 0) return null;
+
+    const onLine = (line: string) => {
+      let next = line;
+      for (const [type, date] of entries) {
+        next =
+          date === null
+            ? removeDateFromTask(next, type)
+            : addDateToTask(next, type, date);
+      }
+      return next;
+    };
+
+    return this.writeProperty(app, {
+      note: { dates: Object.fromEntries(entries) },
+      applied: { dates: this.datesWith(entries) },
+      write: onLine,
+      // Dates are the one property mirrored rather than cleared. The Tasks
+      // plugin reads them off the line, and a schedule the note knows about
+      // but Tasks does not is a schedule half the vault cannot see.
+      clear: onLine,
+    });
+  }
+
+  async setFinance(finance: TaskFinance, app: App): Promise<BaseTask | null> {
+    return this.writeProperty(app, {
+      note: { finance },
+      applied: { finance },
+      write: (line) => writeFinanceToTaskLine(line, finance),
+      clear: (line) => writeFinanceToTaskLine(line, EMPTY_TASK_FINANCE),
+    });
+  }
+
+  async setProgress(
+    progress: number | null,
+    app: App
+  ): Promise<BaseTask | null> {
+    const percent = clampProgress(progress);
+
+    return this.writeProperty(app, {
+      note: { progress: { percent } },
+      applied: { progress: { percent } },
+      write: (line) => writeProgressToTaskLine(line, { percent }),
+      clear: (line) => writeProgressToTaskLine(line, { percent: null }),
+    });
+  }
+
+  async setParent(parentId: string | null, app: App): Promise<BaseTask | null> {
     const id = normalizeParentId(parentId);
 
-    // Held in an object so the assignment inside the callback survives
-    // TypeScript's control-flow narrowing
-    const written: { line: string | null } = { line: null };
-
-    await vault.process(file, (fileContent) => {
-      const lines = fileContent.split(/\r?\n/);
-      const taskLineIdx = findTaskLineByIdOrText(lines, this.id, this.text);
-
-      if (taskLineIdx === -1) return fileContent;
-
-      const line = writeParentToTaskLine(lines[taskLineIdx], id);
-      lines[taskLineIdx] = line;
-      written.line = line;
-      return lines.join("\n");
+    return this.writeProperty(app, {
+      note: { parentId: id },
+      applied: { parentId: id },
+      write: (line) => writeParentToTaskLine(line, id),
+      clear: (line) => writeParentToTaskLine(line, null),
     });
+  }
 
-    const updatedLine = written.line;
-    if (!updatedLine) return null;
+  async setOwner(owner: string | null, app: App): Promise<BaseTask | null> {
+    const name = normalizeOwner(owner);
 
-    const updatedTask = parseTaskLine(updatedLine, this.link);
-    if (!updatedTask) return null;
+    return this.writeProperty(app, {
+      note: { owner: name },
+      applied: { owner: name },
+      write: (line) => writeOwnerToTaskLine(line, name),
+      clear: (line) => writeOwnerToTaskLine(line, null),
+    });
+  }
 
-    // The line keeps its ID, but re-parsing a line without one would mint a
-    // random replacement and orphan the task's dependencies.
-    if (!updatedLine.includes(updatedTask.id)) {
-      updatedTask.id = this.id;
+  /** A copy of this task with a few fields swapped and the rest carried over. */
+  private copyWith(changes: DataviewTaskChanges): DataviewTask {
+    return new DataviewTask({
+      id: this.id,
+      summary: this.summary,
+      text: this.text,
+      tags: this.tags,
+      status: this.status,
+      priority: this.priority,
+      link: this.link,
+      incomingLinks: this.incomingLinks,
+      starred: this.starred,
+      projects: this.projects,
+      dates: this.dates,
+      finance: this.finance,
+      progress: this.progress,
+      owner: this.owner,
+      parentId: this.parentId,
+      ...changes,
+    });
+  }
+
+  /** This task's dates, with the given types replaced. */
+  private datesWith(
+    entries: Array<[TaskDateType, string | null]>
+  ): TaskDateProperty[] {
+    const next = this.dates.filter(
+      (entry) => !entries.some(([type]) => type === entry.type)
+    );
+
+    for (const [type, date] of entries) {
+      if (date !== null) next.push({ type, date });
     }
-    updatedTask.projects = this.projects;
-    return updatedTask;
+
+    return next;
   }
 
   async addTaskLine(

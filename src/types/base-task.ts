@@ -39,6 +39,13 @@ export abstract class BaseTask {
   /** How far along the task is, from the task line or from frontmatter. */
   progress: TaskProgress;
   /**
+   * The one person answerable for the task, or null when nobody is named.
+   * Deliberately not the same question as `finance.allocations`, which is who
+   * does the work and in what proportion — a task is often owned by one person
+   * and worked by several.
+   */
+  owner: string | null;
+  /**
    * The task this one sits inside, named by ID, or null when it stands alone.
    * Held on the child so there is only ever one place saying who owns whom;
    * whether the ID resolves, or loops, is `task-hierarchy`'s problem.
@@ -59,6 +66,7 @@ export abstract class BaseTask {
     dates?: TaskDateProperty[];
     finance?: TaskFinance;
     progress?: TaskProgress;
+    owner?: string | null;
     parentId?: string | null;
   }) {
     this.id = data.id;
@@ -74,6 +82,7 @@ export abstract class BaseTask {
     this.dates = data.dates ?? [];
     this.finance = data.finance ?? EMPTY_TASK_FINANCE;
     this.progress = data.progress ?? EMPTY_TASK_PROGRESS;
+    this.owner = data.owner ?? null;
     this.parentId = data.parentId ?? null;
   }
 
@@ -146,6 +155,12 @@ export abstract class BaseTask {
   ): Promise<BaseTask | null>;
 
   /**
+   * Name the person answerable for the task, returning the updated task.
+   * `null` clears the field, so one call can also leave a task unowned.
+   */
+  abstract setOwner(_owner: string | null, _app: App): Promise<BaseTask | null>;
+
+  /**
    * Name the task this one sits inside, returning the updated task. `null`
    * clears the field entirely, so one call can also lift a task back out to
    * standing on its own.
@@ -188,6 +203,7 @@ export abstract class BaseTask {
       dates: this.dates,
       finance: this.finance,
       progress: this.progress,
+      owner: this.owner,
       parentId: this.parentId,
     };
   }

@@ -19,6 +19,12 @@ import { getFrontmatterDateProperties } from "./task-dates";
 import { FINANCE_FIELD_REMOVAL, getFrontmatterFinance } from "./task-finance";
 import { getFrontmatterProgress } from "./task-progress";
 import { getFrontmatterParentId } from "./task-parent";
+import { getFrontmatterOwner } from "./task-owner";
+import {
+  companionNoteFor,
+  readTaskNoteProperties,
+  withNoteProperties,
+} from "./task-note";
 import { writeTextToTaskLine } from "./task-text";
 import {
   ConnectionHighlight,
@@ -1578,7 +1584,31 @@ export function getAllDataviewTasks(app: App): BaseTask[] {
   const parsedTasks = tasks.map((rawTask) => factory.parse(rawTask));
 
   // Filter out empty tasks (tasks with no meaningful content after stripping metadata)
-  return parsedTasks.filter((task) => !factory.isEmptyTask(task));
+  return parsedTasks
+    .filter((task) => !factory.isEmptyTask(task))
+    .map((task) => withCompanionNoteProperties(app, task));
+}
+
+/**
+ * A task with whatever its companion note says laid over what its line said.
+ *
+ * The note is the store, so it wins wherever it has an answer — except for
+ * status, which stays the checkbox's. Ticking a box in the task list is the
+ * fastest edit in the plugin and has to keep working without the note being
+ * rewritten first, so `updateStatus` mirrors the checkbox into the note rather
+ * than the other way round.
+ *
+ * A task with no note, or one whose link points at an ordinary note, comes back
+ * exactly as it was parsed.
+ */
+function withCompanionNoteProperties(app: App, task: BaseTask): BaseTask {
+  const note = companionNoteFor(app, task);
+  if (!note) return task;
+
+  const frontmatter = app.metadataCache.getFileCache(note)?.frontmatter;
+  if (!frontmatter) return task;
+
+  return withNoteProperties(task, readTaskNoteProperties(frontmatter));
 }
 
 export function getNoteTasks(app: App): BaseTask[] {
@@ -1689,6 +1719,7 @@ function parseTaskNote(
     // frontmatter, and a parent written to a note but never read back would
     // quietly vanish on the next reload
     task.parentId = getFrontmatterParentId(frontmatter);
+    task.owner = getFrontmatterOwner(frontmatter);
 
     // Collect all incoming links from various sources
     const allIncomingLinks: string[] = [];

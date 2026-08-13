@@ -50,13 +50,69 @@ export class Vault {
   getFileContent(path: string): string {
     return this.files.get(path) || "";
   }
+
+  listFiles(): string[] {
+    return Array.from(this.files.keys());
+  }
+}
+
+/**
+ * Enough of Obsidian's metadata cache to resolve a wiki-link and read a note's
+ * frontmatter, which is what the companion-note property store runs on.
+ */
+export class MetadataCache {
+  private vault: Vault;
+  private frontmatter: Map<string, Record<string, unknown>> = new Map();
+
+  constructor(vault: Vault) {
+    this.vault = vault;
+  }
+
+  /**
+   * Obsidian resolves a link by trying the path as given, then with `.md`, then
+   * by basename anywhere in the vault. The source path only matters for
+   * relative links, which the plugin never writes.
+   */
+  getFirstLinkpathDest(linkpath: string, _sourcePath: string): TFile | null {
+    const candidates = [linkpath, `${linkpath}.md`];
+    for (const path of candidates) {
+      const file = this.vault.getFileByPath(path);
+      if (file) return file;
+    }
+
+    const basename = linkpath.split("/").pop();
+    for (const path of this.vault.listFiles()) {
+      if (new TFile(path).basename === basename) return new TFile(path);
+    }
+
+    return null;
+  }
+
+  getFileCache(file: TFile): { frontmatter?: Record<string, unknown> } | null {
+    const stored = this.frontmatter.get(file.path);
+    if (stored) return { frontmatter: stored };
+
+    // Fall back to reading the note, so a test can just write a file
+    const content = this.vault.getFileContent(file.path);
+    const match = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!match) return null;
+
+    return { frontmatter: parseYaml(match[1]) || {} };
+  }
+
+  // Test utility method
+  setFrontmatter(path: string, frontmatter: Record<string, unknown>): void {
+    this.frontmatter.set(path, frontmatter);
+  }
 }
 
 export class App {
   vault: Vault;
+  metadataCache: MetadataCache;
 
   constructor() {
     this.vault = new Vault();
+    this.metadataCache = new MetadataCache(this.vault);
   }
 }
 

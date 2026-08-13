@@ -81,6 +81,32 @@ export const PARENT_FIELD_REMOVAL = new RegExp(
   "gi"
 );
 
+// Owner field names recognized on a task line and in frontmatter. A task has
+// at most one owner — the person answerable for it — which is what separates
+// it from the contributors sharing out its hours. The first entry is
+// canonical: it is the only spelling ever written back.
+export const OWNER_FIELD_NAMES =
+  "owner|assignee|assignedTo|assigned-to|assignedto";
+
+// A field value that may be a wiki-link. A plain "anything but a bracket"
+// value would stop at the first `]` of `[[Alice]]` and read the owner as an
+// unterminated link, so the link form is matched whole.
+const LINKABLE_FIELD_VALUE = "(?:\\[\\[[^\\]]*\\]\\]|[^\\])])*";
+
+// Dataview owner field: [owner:: Alice], [owner:: [[Alice]]], (owner:: Alice)
+// Capturing, for reading the value (no 'g' flag, for .match())
+export const OWNER_FIELD_PATTERN = new RegExp(
+  `[[(]{1,2}(?:${OWNER_FIELD_NAMES})::\\s*(${LINKABLE_FIELD_VALUE})[\\])]{1,2}`,
+  "i"
+);
+
+// The same field, for stripping it out of a displayed summary and out of a
+// line before rewriting it
+export const OWNER_FIELD_REMOVAL = new RegExp(
+  `[[(]{1,2}(?:${OWNER_FIELD_NAMES})::\\s*${LINKABLE_FIELD_VALUE}[\\])]{1,2}`,
+  "gi"
+);
+
 // Emoji date fields: 📅 2025-01-01, ⏳ 2025-01-01, 🛫, ➕, ✅, ❌. The emoji
 // forms are not covered by the Dataview or plain-text date patterns above.
 export const EMOJI_DATE_FIELD_REMOVAL =
@@ -134,6 +160,7 @@ export const TASK_METADATA_PATTERNS: RegExp[] = [
   TEXT_DATE_FIELD_REMOVAL,
   PROGRESS_FIELD_REMOVAL,
   PARENT_FIELD_REMOVAL,
+  OWNER_FIELD_REMOVAL,
   PRIORITY_PATTERN_GLOBAL,
   STAR_PATTERN_GLOBAL,
 ];
