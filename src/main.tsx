@@ -100,22 +100,22 @@ export default class ProjectPlannerPlugin extends Plugin {
     // Always register the view - it will handle the Dataview check internally
     this.registerView(
       VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new ProjectPlannerGraphItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerGraphItemView(leaf, this)
     );
 
     this.registerView(
       GANTT_VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new ProjectPlannerGanttItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerGanttItemView(leaf, this)
     );
 
     this.registerView(
       FINANCE_VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new ProjectPlannerFinanceItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerFinanceItemView(leaf, this)
     );
 
     this.registerView(
       KANBAN_VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => new ProjectPlannerKanbanItemView(leaf)
+      (leaf: WorkspaceLeaf) => new ProjectPlannerKanbanItemView(leaf, this)
     );
 
     this.addSettingTab(new ProjectPlannerSettingTab(this.app, this));

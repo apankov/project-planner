@@ -29,9 +29,18 @@ function GanttViewWrapper({ plugin }: { plugin: ProjectPlannerPlugin }) {
 
 export default class ProjectPlannerGanttItemView extends ItemView {
   root: Root | null = null;
+  plugin: ProjectPlannerPlugin;
 
-  constructor(leaf: WorkspaceLeaf) {
+  /**
+   * The plugin is handed in rather than looked up. It used to be fetched
+   * out of `app.plugins.plugins` by a hard-coded id, which tied the view to
+   * the folder name the plugin happened to be installed under — rename the
+   * folder, or install it beside an older copy, and every view opened onto
+   * an error instead. `registerView` already runs on the plugin.
+   */
+  constructor(leaf: WorkspaceLeaf, plugin: ProjectPlannerPlugin) {
     super(leaf);
+    this.plugin = plugin;
   }
 
   getViewType() {
@@ -68,32 +77,9 @@ export default class ProjectPlannerGanttItemView extends ItemView {
       return;
     }
 
-    const plugin = (
-      this.app as unknown as {
-        plugins: { plugins: Record<string, ProjectPlannerPlugin> };
-      }
-    ).plugins.plugins["project-planner"];
-
-    if (!plugin) {
-      this.root.render(
-        <div className="project-planner-centered-message-container">
-          <div className="project-planner-centered-message-content">
-            <div className="project-planner-message-icon">⚠️</div>
-            <h3 className="project-planner-message-title">
-              {t("view.plugin_not_found")}
-            </h3>
-            <p className="project-planner-message-description">
-              {t("view.plugin_not_found_description")}
-            </p>
-          </div>
-        </div>
-      );
-      return;
-    }
-
     this.root.render(
       <AppContext.Provider value={this.app}>
-        <GanttViewWrapper plugin={plugin} />
+        <GanttViewWrapper plugin={this.plugin} />
       </AppContext.Provider>
     );
   }
