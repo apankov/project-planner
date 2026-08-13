@@ -15,13 +15,13 @@ import { traverseGraph } from "./traverse-graph";
  * dates read, so a dependent that is mis-dated to start early is not left
  * behind by the date rule.
  *
- * The shift is rigid on purpose: every relationship inside the moving set is
- * preserved exactly, and what lands on screen is what the drag promised.
- * Working out which tasks could have absorbed the slip in their float is a
- * different job, and a rescheduling command is the honest place for it — not a
- * gesture that showed the whole plan moving as one.
+ * **The drag always lands.** The bar under the pointer goes exactly where it
+ * was dropped — a plain drag has never been second-guessed, and holding shift
+ * is not a reason to start. The rest of the set follows as far as it can and
+ * settles where it must, so a single awkward predecessor slows one task down
+ * instead of cancelling the whole gesture.
  *
- * Three things hold the move back from what was asked for:
+ * Two things keep a task out of the move entirely:
  *
  * - **Proposals stay put.** A bar whose dates were only inferred is a
  *   suggestion, and moving it would write dates the user never set as a side
@@ -32,40 +32,48 @@ import { traverseGraph } from "./traverse-graph";
  *   under the date rule than it did under a dependency walk, which rarely
  *   reached completed work at all.
  *
- * - **Tasks left behind can object.** Dragging backwards can push the moving
- *   set in front of a blocker that is not coming with it, so the move is
- *   clamped to the room actually available.
+ * and one thing shortens how far a task travels:
  *
- * The clamp is measured in calendar days even when the chart is in
- * working-days mode. That direction is safe: skipping weekends only ever
- * nudges a start *later*, which is the legal direction, so a clamp computed on
- * calendar days can leave a day of room unused but can never permit an overlap
- * it should have caught.
+ * - **Tasks left behind can object.** Dragging backwards can push a carried
+ *   task in front of a blocker that is not coming with it, so that task stops
+ *   the day after its blocker ends. Its own dependents are then measured
+ *   against where it actually landed, so the set arrives in an order that
+ *   still holds together rather than sliding through itself.
+ *
+ * Room is measured in calendar days even when the chart is in working-days
+ * mode. That direction is safe: skipping weekends only ever nudges a start
+ * *later*, which is the legal direction, so room computed on calendar days can
+ * leave a day unused but can never permit an overlap it should have caught.
  */
 
 export interface CascadePlan {
-  /** Every task that moves, seed included, in row order. */
+  /** Every task that actually moves, seed included, in row order. */
   movingIds: string[];
-  /**
-   * The shift actually applied, in days — never further than was asked for.
-   * Zero means a blocker left the plan no room to move at all.
-   */
+  /** The shift the dragged bar takes, in days — always what was asked for. */
   days: number;
+  /**
+   * How far each moving task travels, in days. Everything moves by `days`
+   * unless a blocker staying behind stopped it short.
+   */
+  shiftById: Map<string, number>;
   /** Rows left where they are because their dates are only proposals. */
   skippedInferredIds: string[];
   /** Rows left where they are because the work is already finished. */
   skippedCompletedIds: string[];
-  /** Whether a task outside the moving set shortened the drag. */
-  clamped: boolean;
+  /** Rows a blocker stopped short of the full shift, some of them entirely. */
+  heldIds: string[];
 }
 
-const EMPTY_PLAN: CascadePlan = {
-  movingIds: [],
-  days: 0,
-  skippedInferredIds: [],
-  skippedCompletedIds: [],
-  clamped: false,
-};
+function emptyPlan(): CascadePlan {
+  return {
+    movingIds: [],
+    days: 0,
+    shiftById: new Map(),
+    skippedInferredIds: [],
+    skippedCompletedIds: [],
+    heldIds: [],
+  };
+}
 
 /** Work that has already happened, whose dates are a record rather than a plan. */
 function isFinished(status: GanttRow["task"]["status"]): boolean {
@@ -86,7 +94,7 @@ export function planCascade(
 ): CascadePlan {
   const rowById = new Map(rows.map((row) => [row.task.id, row]));
   const seed = rowById.get(seedId);
-  if (!seed) return EMPTY_PLAN;
+  if (!seed) return emptyPlan();
 
   const dependents = new Set(
     traverseGraph(
@@ -128,58 +136,87 @@ export function planCascade(
     movingIds.push(id);
   }
 
-  const clampedDays = clampToBlockers(movingIds, rowById, days);
+  const shiftById = resolveShifts(seedId, movingIds, rowById, days);
 
   return {
-    movingIds,
-    days: clampedDays,
+    // A task a blocker stopped dead is not moving, whatever the plan wanted
+    movingIds: movingIds.filter((id) => shiftById.get(id) !== 0),
+    days,
+    shiftById,
     skippedInferredIds,
     skippedCompletedIds,
-    clamped: clampedDays !== days,
+    heldIds: movingIds.filter((id) => shiftById.get(id) !== days),
   };
 }
 
 /**
- * Shortens a backwards drag until it no longer pushes any moving row in front
- * of a blocker that is staying where it is.
+ * Works out how far each moving row can actually travel.
  *
- * Only blockers outside the moving set are consulted — links inside it survive
- * a rigid shift untouched — and inferred blockers are ignored, since their
- * dates are the scheduler's guess and will simply be recomputed after the
- * write rather than standing as a commitment to respect.
+ * A backwards drag is the only one that can run into anything: moving work
+ * later never puts it in front of a blocker. So a forwards drag is uniform,
+ * and a backwards one is resolved blocker-first — each row stops the day after
+ * whatever blocks it, and its own dependents are then measured against where
+ * it landed rather than where it was asked to go. Relationships inside the set
+ * therefore survive even when part of the set could not keep up.
+ *
+ * Inferred blockers are ignored: their dates are the scheduler's guess and
+ * will simply be recomputed after the write rather than standing as a
+ * commitment to respect.
+ *
+ * Cycles are broken by ignoring the edge that closes them, the same way
+ * `scheduleTasks` does when it lays the bars out in the first place.
  */
-function clampToBlockers(
+function resolveShifts(
+  seedId: string,
   movingIds: string[],
   rowById: Map<string, GanttRow>,
   days: number
-): number {
-  if (days >= 0) return days;
+): Map<string, number> {
+  // The bar under the pointer goes where it was dropped, blockers or not —
+  // that is what a plain drag does, and shift is not a reason to disagree
+  const shifts = new Map<string, number>([[seedId, days]]);
 
-  const moving = new Set(movingIds);
-  let room = Number.POSITIVE_INFINITY;
-
-  for (const id of movingIds) {
-    const row = rowById.get(id);
-    if (!row) continue;
-
-    for (const blockerId of row.task.incomingLinks) {
-      if (moving.has(blockerId)) continue;
-
-      const blocker = rowById.get(blockerId);
-      if (!blocker || blocker.inferred) continue;
-
-      // Days between the earliest legal start and where this row sits now.
-      // A row already overlapping its blocker reports no room: the drag must
-      // not deepen a conflict, and quietly repairing one is not its job.
-      const available = diffDays(addDays(blocker.bar.end, 1), row.bar.start);
-      room = Math.min(room, Math.max(0, available));
-    }
+  if (days >= 0) {
+    for (const id of movingIds) shifts.set(id, days);
+    return shifts;
   }
 
-  if (room === Number.POSITIVE_INFINITY) return days;
+  const moving = new Set(movingIds);
+  const resolving = new Set<string>();
 
-  // `Math.max` hands back -0 when the room runs out, which reads as a negative
-  // day count everywhere it is later formatted
-  const clamped = Math.max(days, -room);
-  return clamped === 0 ? 0 : clamped;
+  function shiftOf(id: string): number {
+    const known = shifts.get(id);
+    if (known !== undefined) return known;
+
+    const row = rowById.get(id);
+    if (!row) return days;
+
+    resolving.add(id);
+
+    let shift = days;
+    for (const blockerId of row.task.incomingLinks) {
+      const blocker = rowById.get(blockerId);
+      if (!blocker || blocker.inferred || resolving.has(blockerId)) continue;
+
+      // Days between where this row sits now and the earliest start its
+      // blocker allows, once the blocker has taken its own shift
+      const room = diffDays(addDays(blocker.bar.end, 1), row.bar.start);
+      const blockerShift = moving.has(blockerId) ? shiftOf(blockerId) : 0;
+      shift = Math.max(shift, blockerShift - room);
+    }
+
+    resolving.delete(id);
+
+    // Never further back than asked, and never forwards: a row already
+    // overlapping its blocker stays where it is, because a drag asked to move
+    // work back has no business quietly repairing a conflict it did not make.
+    // `Math.max` also hands back -0 when the room runs out, which reads as a
+    // negative day count everywhere it is later formatted.
+    const settled = Math.min(0, shift) || 0;
+    shifts.set(id, settled);
+    return settled;
+  }
+
+  for (const id of movingIds) shiftOf(id);
+  return shifts;
 }

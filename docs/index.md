@@ -50,8 +50,8 @@ plain Markdown, in the same Tasks and Dataview syntax you were already using.
 
 ### Board
 
-- **Seven groupings** — status, due date, person, tag, project, priority, note
-  — each writing back the thing its columns stand for.
+- **Eight groupings** — status, due date, start date, person, tag, project,
+  priority, note — each writing back the thing its columns stand for.
 
 ### Finance
 

@@ -436,8 +436,8 @@ export function GanttChart({
       if (days === null) return;
 
       const plan = planCascade(seedId, rows, days);
-      // The seed is already moving itself; the rest follow by the same clamped
-      // amount, so what is on screen is what a release would write
+      // The seed is already moving itself; the rest follow by however far each
+      // of them got, so what is on screen is what a release would write
       const carried = plan.movingIds.filter((id) => id !== seedId);
 
       for (const id of carried) {
@@ -446,7 +446,7 @@ export function GanttChart({
         if (!element || !row) continue;
         element.style.setProperty(
           "--bar-offset",
-          String(offsetOf(row) + plan.days)
+          String(offsetOf(row) + (plan.shiftById.get(id) ?? plan.days))
         );
         element.classList.add("project-planner-gantt-bar--cascading");
       }

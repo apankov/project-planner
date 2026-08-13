@@ -102,7 +102,7 @@ describe("planCascade", () => {
       const plan = planCascade("b", rows, 3);
 
       expect(plan.movingIds).toEqual(["b", "c"]);
-      expect(plan.clamped).toBe(false);
+      expect(plan.heldIds).toEqual([]);
     });
 
     it("returns an empty plan for a task that is not on the chart", () => {
@@ -121,6 +121,7 @@ describe("planCascade", () => {
       ]);
 
       expect(planCascade("a", rows, 2).movingIds).toEqual(["a", "b"]);
+      expect(planCascade("a", rows, -2).movingIds).toEqual(["a", "b"]);
     });
   });
 
@@ -175,92 +176,115 @@ describe("planCascade", () => {
     });
   });
 
-  describe("clamping a backwards drag", () => {
-    it("stops at the room a task left behind allows", () => {
-      const rows = rowsOf([
-        dated("a", "2026-08-10", "2026-08-12"),
-        // Four days of room: 08-13 is the earliest legal start
-        dated("b", "2026-08-17", "2026-08-18", { blockers: ["a"] }),
+  describe("how far a backwards drag gets", () => {
+    /**
+     * A seed with a carried task behind a blocker that is staying put: `x`
+     * starts before the seed, so it never joins the move, and it finishes the
+     * day before `c` starts — one day of room, whatever the drag asks for.
+     */
+    function heldChain() {
+      return rowsOf([
+        dated("x", "2026-08-10", "2026-08-23"),
+        dated("s", "2026-08-20", "2026-08-21"),
+        dated("c", "2026-08-25", "2026-08-26", { blockers: ["x", "s"] }),
+        dated("d", "2026-08-28", "2026-08-29", { blockers: ["c"] }),
       ]);
+    }
 
-      const plan = planCascade("b", rows, -6);
-
-      expect(plan.days).toBe(-4);
-      expect(plan.clamped).toBe(true);
-    });
-
-    it("leaves a backwards drag alone when there is room for it", () => {
-      const rows = rowsOf([
-        dated("a", "2026-08-10", "2026-08-12"),
-        dated("b", "2026-08-17", "2026-08-18", { blockers: ["a"] }),
-      ]);
-
-      const plan = planCascade("b", rows, -3);
-
-      expect(plan.days).toBe(-3);
-      expect(plan.clamped).toBe(false);
-    });
-
-    it("takes the tightest blocker across the whole moving set", () => {
-      const rows = rowsOf([
-        dated("a", "2026-08-10", "2026-08-12"),
-        // d starts before the seed, so it stays behind and constrains c
-        dated("d", "2026-08-15", "2026-08-25"),
-        dated("b", "2026-08-20", "2026-08-21", { blockers: ["a"] }),
-        dated("c", "2026-08-27", "2026-08-28", { blockers: ["b", "d"] }),
-      ]);
-
-      const plan = planCascade("b", rows, -5);
-
-      expect(plan.movingIds).toEqual(["b", "c"]);
-      // a leaves b seven days, but d leaves c only one
-      expect(plan.days).toBe(-1);
-      expect(plan.clamped).toBe(true);
-    });
-
-    it("never deepens an overlap that was already there", () => {
+    it("drops the dragged bar exactly where it was let go", () => {
       const rows = rowsOf([
         dated("a", "2026-08-10", "2026-08-20"),
-        // Already starts before a finishes
+        // Dragged in front of the blocker it is already overlapping
         dated("b", "2026-08-14", "2026-08-15", { blockers: ["a"] }),
       ]);
 
-      const plan = planCascade("b", rows, -3);
+      const plan = planCascade("b", rows, -9);
 
-      expect(plan.days).toBe(0);
-      expect(plan.clamped).toBe(true);
+      expect(plan.days).toBe(-9);
+      expect(plan.shiftById.get("b")).toBe(-9);
+      expect(plan.heldIds).toEqual([]);
     });
 
-    it("does not clamp a forwards drag", () => {
+    it("carries a task only as far as its own blocker allows", () => {
+      const plan = planCascade("s", heldChain(), -10);
+
+      expect(plan.shiftById.get("s")).toBe(-10);
+      expect(plan.shiftById.get("c")).toBe(-1);
+      expect(plan.heldIds).toEqual(["c", "d"]);
+    });
+
+    it("keeps a dependent behind the task that was held back", () => {
+      const plan = planCascade("s", heldChain(), -10);
+
+      // c stops at 08-24..08-25, so d follows it to 08-26 rather than
+      // running the full ten days and landing on top of it
+      expect(plan.shiftById.get("d")).toBe(-2);
+    });
+
+    it("moves the whole set the full distance when nothing is in the way", () => {
+      const plan = planCascade("s", heldChain(), -1);
+
+      expect(plan.movingIds).toEqual(["s", "c", "d"]);
+      expect(plan.heldIds).toEqual([]);
+      expect([...plan.shiftById.values()]).toEqual([-1, -1, -1]);
+    });
+
+    it("leaves a task already overlapping its blocker where it is", () => {
       const rows = rowsOf([
-        dated("a", "2026-08-10", "2026-08-20"),
-        dated("b", "2026-08-14", "2026-08-15", { blockers: ["a"] }),
+        // Runs past c, which therefore has no room at all
+        dated("x", "2026-08-10", "2026-08-25"),
+        dated("s", "2026-08-14", "2026-08-15"),
+        dated("c", "2026-08-20", "2026-08-21", { blockers: ["x"] }),
       ]);
 
-      const plan = planCascade("b", rows, 7);
+      const plan = planCascade("s", rows, -5);
 
-      expect(plan.days).toBe(7);
-      expect(plan.clamped).toBe(false);
+      expect(plan.movingIds).toEqual(["s"]);
+      expect(plan.heldIds).toEqual(["c"]);
+      // A plain zero, not the -0 that would later format as a negative day
+      expect(Object.is(plan.shiftById.get("c"), 0)).toBe(true);
+    });
+
+    it("reports a plain zero for a task with exactly no room left", () => {
+      const rows = rowsOf([
+        dated("x", "2026-08-10", "2026-08-19"),
+        dated("s", "2026-08-14", "2026-08-15"),
+        // Starts the day after x ends: legal, but not a day earlier
+        dated("c", "2026-08-20", "2026-08-21", { blockers: ["x"] }),
+      ]);
+
+      const plan = planCascade("s", rows, -5);
+
+      expect(Object.is(plan.shiftById.get("c"), 0)).toBe(true);
+    });
+
+    it("does not hold back a forwards drag", () => {
+      const plan = planCascade("s", heldChain(), 7);
+
+      expect(plan.heldIds).toEqual([]);
+      expect(plan.shiftById.get("c")).toBe(7);
     });
 
     it("ignores a blocker whose own dates are only a proposal", () => {
       const rows = rowsOf([
         makeTask("a"),
-        dated("b", "2026-08-14", "2026-08-15", { blockers: ["a"] }),
+        dated("s", "2026-08-10", "2026-08-11"),
+        dated("c", "2026-08-14", "2026-08-15", { blockers: ["a"] }),
       ]);
 
-      const plan = planCascade("b", rows, -5);
+      const plan = planCascade("s", rows, -5);
 
-      expect(plan.days).toBe(-5);
-      expect(plan.clamped).toBe(false);
+      expect(plan.shiftById.get("c")).toBe(-5);
+      expect(plan.heldIds).toEqual([]);
     });
 
     it("ignores blockers that are filtered out of the chart", () => {
       const rows = rowsOf([
-        dated("b", "2026-08-14", "2026-08-15", { blockers: ["missing"] }),
+        dated("s", "2026-08-10", "2026-08-11"),
+        dated("c", "2026-08-14", "2026-08-15", { blockers: ["missing"] }),
       ]);
 
-      expect(planCascade("b", rows, -5).days).toBe(-5);
+      expect(planCascade("s", rows, -5).shiftById.get("c")).toBe(-5);
     });
   });
 });

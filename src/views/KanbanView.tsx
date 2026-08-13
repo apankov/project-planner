@@ -23,7 +23,7 @@ import {
 import { todayIso } from "src/lib/date-utils";
 import { moveRelativeTo, normalizeOrderIds } from "src/lib/gantt-order";
 import {
-  DueBucketKey,
+  DateBucketKey,
   KanbanBucket,
   KanbanChange,
   KanbanGroupBy,
@@ -33,6 +33,7 @@ import {
   orderTasksByDue,
   retagForBucket,
   taskDueDate,
+  taskStartDate,
   taskTag,
 } from "src/lib/kanban-buckets";
 import {
@@ -183,7 +184,8 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
   const labels = useMemo(
     () => ({
       status: (status: TaskStatus) => t(`kanban.status_${status}`),
-      due: (key: DueBucketKey) => t(`kanban.due_${key}`),
+      due: (key: DateBucketKey) => t(`kanban.due_${key}`),
+      start: (key: DateBucketKey) => t(`kanban.start_${key}`),
       priority: (value: string) => t("kanban.priority", { symbol: value }),
       noTag: t("kanban.no_tag"),
       noPerson: t("kanban.no_person"),
@@ -306,6 +308,21 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
           return async () => {
             const current = currentTask(taskId, updated);
             const reverted = await current.setDates({ due: previous }, app);
+            if (reverted) applyTaskUpdate(taskId, reverted);
+          };
+        }
+
+        case "start": {
+          const previous = taskStartDate(task);
+          if (previous === change.start) return null;
+
+          const updated = await task.setDates({ start: change.start }, app);
+          if (!updated) return null;
+          applyTaskUpdate(taskId, updated);
+
+          return async () => {
+            const current = currentTask(taskId, updated);
+            const reverted = await current.setDates({ start: previous }, app);
             if (reverted) applyTaskUpdate(taskId, reverted);
           };
         }
