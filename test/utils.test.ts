@@ -14,9 +14,6 @@ import {
   partitionTasksByProject,
   addSignToTaskInFile,
   removeSignFromTaskInFile,
-  stripTaskLineTags,
-  restoreTaskLineTags,
-  editTaskWithTasksModal,
   getTaskDateProperties,
 } from "../src/lib/utils";
 import { NoteTask } from "../src/types/note-task";
@@ -85,113 +82,6 @@ function getAxisGap(
   }
   return 0;
 }
-
-describe("task line tags in Tasks editor", () => {
-  it("removes existing tags while preserving task indentation and metadata", () => {
-    const result = stripTaskLineTags(
-      "  - [ ] Write docs #work #project/docs [id:: abc123]"
-    );
-
-    expect(result).toEqual({
-      taskLine: "  - [ ] Write docs [id:: abc123]",
-      tags: ["work", "project/docs"],
-      financeFields: [],
-    });
-  });
-
-  it("carries finance fields out of the line and back in", () => {
-    const stripped = stripTaskLineTags(
-      "- [ ] Write docs #work [hours:: 12] [people:: Alice 60%, Bob 40%]"
-    );
-
-    expect(stripped.taskLine).toBe("- [ ] Write docs");
-    expect(stripped.financeFields).toEqual([
-      "[hours:: 12]",
-      "[people:: Alice 60%, Bob 40%]",
-    ]);
-
-    // What the Tasks modal hands back: reworded, with the fields gone
-    const restored = restoreTaskLineTags(
-      "- [ ] Write the docs 📅 2026-03-06",
-      stripped.tags,
-      stripped.financeFields
-    );
-
-    expect(restored).toBe(
-      "- [ ] Write the docs 📅 2026-03-06 #work [hours:: 12] [people:: Alice 60%, Bob 40%]"
-    );
-  });
-
-  it("does not duplicate a finance field the editor left alone", () => {
-    const restored = restoreTaskLineTags(
-      "- [ ] Write docs [hours:: 12]",
-      [],
-      ["[hours:: 12]"]
-    );
-
-    expect(restored).toBe("- [ ] Write docs [hours:: 12]");
-  });
-
-  it("restores original tags and keeps tags added in the Tasks editor", () => {
-    const result = restoreTaskLineTags("- [ ] Update docs #new", [
-      "work",
-      "project/docs",
-    ]);
-
-    expect(result).toBe("- [ ] Update docs #new #work #project/docs");
-  });
-
-  it("does not duplicate tags re-added in the Tasks editor", () => {
-    const result = restoreTaskLineTags("- [ ] Update docs #work", [
-      "Work",
-      "work",
-      "project",
-    ]);
-
-    expect(result).toBe("- [ ] Update docs #work #project");
-  });
-
-  it("hides original tags from the modal and restores them after editing", async () => {
-    const app = new App();
-    const editTaskLineModal = jest
-      .fn<Promise<string>, [string]>()
-      .mockResolvedValue("- [ ] Updated task #new [id:: abc123]");
-    const appWithPlugins = app as App & {
-      plugins: {
-        plugins: {
-          "obsidian-tasks-plugin": {
-            apiV1: { editTaskLineModal: typeof editTaskLineModal };
-          };
-        };
-      };
-    };
-    appWithPlugins.plugins = {
-      plugins: {
-        "obsidian-tasks-plugin": {
-          apiV1: { editTaskLineModal },
-        },
-      },
-    };
-    app.vault.setFileContent(
-      "tasks/test.md",
-      "- [ ] Original task #work #project/docs [id:: abc123]"
-    );
-    const task = makeTask({
-      text: "Original task #work #project/docs [id:: abc123]",
-      tags: ["work", "project/docs"],
-    });
-
-    const updatedTask = await editTaskWithTasksModal(task, appWithPlugins);
-
-    expect(editTaskLineModal).toHaveBeenCalledWith(
-      "- [ ] Original task [id:: abc123]"
-    );
-    expect(app.vault.getFileContent("tasks/test.md")).toBe(
-      "- [ ] Updated task #new [id:: abc123] #work #project/docs"
-    );
-    expect(updatedTask?.tags).toEqual(["new", "work", "project/docs"]);
-  });
-});
 
 describe("getTaskDateProperties", () => {
   it("extracts all Tasks emoji date properties in display order", () => {

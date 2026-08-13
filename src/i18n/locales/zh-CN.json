@@ -276,7 +276,28 @@
     "save": "保存",
     "date_invalid": "请选择有效的日期",
     "write_failed": "无法保存“{{task}}”",
-    "undo_edit": "编辑了“{{task}}”"
+    "undo_edit": "编辑了“{{task}}”",
+    "menu_item": "编辑任务",
+    "section_schedule": "计划",
+    "section_people": "人员",
+    "section_links": "关联",
+    "section_tags": "标签",
+    "open_note": "打开笔记",
+    "create_note": "创建笔记",
+    "no_note": "尚无笔记 — 属性仍保留在任务行上",
+    "note_created": "已创建任务笔记",
+    "note_failed": "无法创建任务笔记",
+    "owner": "负责人",
+    "owner_placeholder": "由谁负责？",
+    "parent": "隶属于",
+    "depends_on": "等待",
+    "depends_on_placeholder": "必须先完成的任务",
+    "tags_placeholder": "添加标签",
+    "person_readout": "{{hours}} 小时 · {{cost}}",
+    "totals": "人工 {{labour}} · 材料 {{materials}} · 合计 {{total}}",
+    "problem_text_required": "请填写任务内容",
+    "problem_date_invalid": "请选择有效日期",
+    "problem_dates_backwards": "结束日期早于开始日期"
   },
   "task_create": {
     "add_task_here": "在此添加任务",
@@ -302,11 +323,11 @@
   },
   "retrofit": {
     "title": "为现有任务创建笔记",
-    "body": "这将在“{{folder}}”中创建最多 {{n}} 篇笔记，并把相应任务行改写为指向它们的链接。已经是链接的任务不会改动。",
+    "body": "此操作将在“{{folder}}”中创建至多 {{n}} 条笔记，把这些任务行改写为指向笔记的链接，并将每项任务属性移入其笔记。复选框、链接和日期仍保留在任务行上。",
     "confirm": "创建笔记",
-    "nothing_to_do": "所有任务都已链接到笔记",
-    "done": "已将 {{n}} 个任务链接到其笔记",
-    "done_partial": "已链接 {{n}} 个任务；{{skipped}} 个无法更新"
+    "nothing_to_do": "没有可创建笔记的行内任务",
+    "done": "已将 {{n}} 个任务链接到笔记，并移动了 {{moved}} 个任务的属性",
+    "done_partial": "已链接 {{n}} 个任务并移动了 {{moved}} 个任务的属性；{{skipped}} 个未能更新"
   },
   "settings": {
     "display_options": "显示选项",

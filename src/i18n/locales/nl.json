@@ -276,7 +276,28 @@
     "save": "Opslaan",
     "date_invalid": "Kies een geldige datum",
     "write_failed": "Kon \"{{task}}\" niet opslaan",
-    "undo_edit": "\"{{task}}\" bewerkt"
+    "undo_edit": "\"{{task}}\" bewerkt",
+    "menu_item": "Taak bewerken",
+    "section_schedule": "Planning",
+    "section_people": "Mensen",
+    "section_links": "Koppelingen",
+    "section_tags": "Labels",
+    "open_note": "Notitie openen",
+    "create_note": "Notitie maken",
+    "no_note": "Nog geen notitie — eigenschappen blijven op de taakregel",
+    "note_created": "Taaknotitie gemaakt",
+    "note_failed": "Kon de taaknotitie niet maken",
+    "owner": "Eigenaar",
+    "owner_placeholder": "Wie is verantwoordelijk?",
+    "parent": "Onderdeel van",
+    "depends_on": "Wacht op",
+    "depends_on_placeholder": "Taken die eerst af moeten",
+    "tags_placeholder": "Label toevoegen",
+    "person_readout": "{{hours}} u · {{cost}}",
+    "totals": "Arbeid {{labour}} · Materiaal {{materials}} · Totaal {{total}}",
+    "problem_text_required": "Geef de taak een omschrijving",
+    "problem_date_invalid": "Kies een geldige datum",
+    "problem_dates_backwards": "De einddatum ligt voor de startdatum"
   },
   "task_create": {
     "add_task_here": "Hier een taak toevoegen",
@@ -302,11 +323,11 @@
   },
   "retrofit": {
     "title": "Notities maken voor bestaande taken",
-    "body": "Dit maakt maximaal {{n}} notities in \"{{folder}}\" en herschrijft die taakregels als links ernaartoe. Taken die al links zijn blijven ongewijzigd.",
+    "body": "Dit maakt maximaal {{n}} notities in \"{{folder}}\", laat die taakregels ernaar verwijzen en verplaatst elke taakeigenschap naar de bijbehorende notitie. Het vinkje, de koppeling en de datums blijven op de regel staan.",
     "confirm": "Notities maken",
-    "nothing_to_do": "Elke taak verwijst al naar een notitie",
-    "done": "{{n}} taken gekoppeld aan hun notities",
-    "done_partial": "{{n}} taken gekoppeld; {{skipped}} konden niet worden bijgewerkt"
+    "nothing_to_do": "Er zijn geen taakregels om notities voor te maken",
+    "done": "{{n}} taken gekoppeld aan hun notitie en de eigenschappen van {{moved}} verplaatst",
+    "done_partial": "{{n}} taken gekoppeld en de eigenschappen van {{moved}} verplaatst; {{skipped}} konden niet worden bijgewerkt"
   },
   "settings": {
     "display_options": "Weergaveopties",

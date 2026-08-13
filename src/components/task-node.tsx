@@ -25,7 +25,6 @@ import {
   removeTagFromTaskInVault,
   addTagToTaskInVault,
   addStarToTaskInVault,
-  editTaskWithTasksModal,
   getTaskDateProperties,
   removeStarFromTaskInVault,
   type TaskDateType,
@@ -92,8 +91,7 @@ interface TaskNodeData {
   onDeleteTask?: (taskId: string) => void;
   // eslint-disable-next-line no-unused-vars -- callback parameter convention
   onTaskCreated?: (_newTask: BaseTask) => void;
-  onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void;
-  onEditFinance?: (_task: BaseTask) => Promise<void>;
+  onEditTask?: (_task: BaseTask) => Promise<void>;
 }
 
 export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
@@ -113,8 +111,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     groupByProject = false,
     onDeleteTask,
     onTaskCreated,
-    onTaskEdited,
-    onEditFinance,
+    onEditTask,
   } = data;
 
   const { allTags, updateTaskTags } = useContext(TagsContext);
@@ -244,10 +241,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
     event.preventDefault();
     event.stopPropagation();
 
-    const updatedTask = await editTaskWithTasksModal(task, app);
-    if (updatedTask) {
-      onTaskEdited?.(task.id, updatedTask);
-    }
+    await onEditTask?.(task);
   };
 
   return (
@@ -312,8 +306,7 @@ export default function TaskNode({ data, selected }: NodeProps<TaskNodeData>) {
             onTaskDeleted={() => onDeleteTask?.(task.id)}
             onRequestDelete={onRequestDelete}
             onTaskCreated={onTaskCreated}
-            onTaskEdited={onTaskEdited}
-            onEditFinance={onEditFinance}
+            onEditTask={onEditTask}
           />
         </div>
 

@@ -16,7 +16,7 @@ import {
   TaskDateUpdate,
 } from "src/types/base-task";
 import { getFrontmatterDateProperties } from "./task-dates";
-import { FINANCE_FIELD_REMOVAL, getFrontmatterFinance } from "./task-finance";
+import { getFrontmatterFinance } from "./task-finance";
 import { getFrontmatterProgress } from "./task-progress";
 import { getFrontmatterParentId } from "./task-parent";
 import { getFrontmatterOwner } from "./task-owner";
@@ -319,133 +319,6 @@ export function parseTaskLine(
     text,
     link: { path: linkPath },
   });
-}
-
-/**
- * Takes the metadata the Tasks plugin does not understand off a line before
- * handing it to that plugin's edit modal, so it comes back intact.
- *
- * Tags were the original reason; finance fields are the same problem. The
- * modal treats `[people:: Alice 60%]` as description text and is free to move
- * or reword it, which would quietly corrupt a task's costing every time
- * somebody edited it the normal way.
- */
-export function stripTaskLineTags(taskLine: string): {
-  taskLine: string;
-  tags: string[];
-  financeFields: string[];
-} {
-  const financeFields = taskLine.match(FINANCE_FIELD_REMOVAL) ?? [];
-  taskLine = taskLine.replace(FINANCE_FIELD_REMOVAL, "");
-
-  const tagPattern = /(?:^|\s)#(\S+)/g;
-  const seenTags = new Set<string>();
-  const tags = Array.from(taskLine.matchAll(tagPattern))
-    .map((match) => match[1])
-    .filter((tag) => {
-      const normalizedTag = tag.toLowerCase();
-      if (seenTags.has(normalizedTag)) return false;
-      seenTags.add(normalizedTag);
-      return true;
-    });
-  const leadingWhitespace = taskLine.match(/^\s*/)?.[0] ?? "";
-  const content = taskLine
-    .slice(leadingWhitespace.length)
-    .replace(tagPattern, (match) => (match.startsWith("#") ? "" : " "))
-    .replace(/[ \t]{2,}/g, " ")
-    .trimEnd();
-
-  return {
-    taskLine: leadingWhitespace + content,
-    tags,
-    financeFields,
-  };
-}
-
-/** Puts back what `stripTaskLineTags` took off, minus anything already there. */
-export function restoreTaskLineTags(
-  taskLine: string,
-  originalTags: string[],
-  financeFields: string[] = []
-): string {
-  const existingTags = new Set(
-    Array.from(taskLine.matchAll(/(?:^|\s)#(\S+)/g)).map((match) =>
-      match[1].toLowerCase()
-    )
-  );
-  const tagsToRestore = originalTags.filter((tag) => {
-    const normalizedTag = tag.toLowerCase();
-    if (existingTags.has(normalizedTag)) return false;
-    existingTags.add(normalizedTag);
-    return true;
-  });
-
-  // The modal may have kept a field it did not understand; do not double it up
-  const fieldsToRestore = financeFields.filter(
-    (field) => !taskLine.includes(field)
-  );
-
-  const additions = [
-    ...tagsToRestore.map((tag) => `#${tag}`),
-    ...fieldsToRestore,
-  ];
-  if (additions.length === 0) return taskLine;
-
-  return `${taskLine.trimEnd()} ${additions.join(" ")}`;
-}
-
-export async function editTaskWithTasksModal(
-  task: BaseTask,
-  app: App
-): Promise<BaseTask | null> {
-  if (!task.link) return null;
-
-  const file = app.vault.getFileByPath(task.link);
-  if (!file) return null;
-
-  const tasksApi = getTasksApi(app);
-  if (!tasksApi) {
-    console.error("Tasks plugin not found or API not available");
-    return null;
-  }
-
-  try {
-    const fileContent = await app.vault.read(file);
-    const lines = fileContent.split(/\r?\n/);
-    const taskLineIdx = findTaskLineByIdOrText(lines, task.id, task.text);
-
-    if (taskLineIdx === -1) {
-      console.warn("Task line not found");
-      return null;
-    }
-
-    const preparedTask = stripTaskLineTags(lines[taskLineIdx]);
-    const editedTaskLine = await tasksApi.editTaskLineModal(
-      preparedTask.taskLine
-    );
-    if (!editedTaskLine?.trim()) return null;
-
-    const newTaskLine = restoreTaskLineTags(
-      editedTaskLine,
-      preparedTask.tags,
-      preparedTask.financeFields
-    );
-
-    lines[taskLineIdx] = newTaskLine;
-    await app.vault.modify(file, lines.join("\n"));
-
-    const updatedTask = parseTaskLine(newTaskLine, task.link);
-    if (!updatedTask) return null;
-
-    if (!newTaskLine.includes(updatedTask.id)) {
-      updatedTask.id = task.id;
-    }
-    updatedTask.projects = task.projects;
-    return updatedTask;
-  } catch (error) {
-    console.error("Error processing task:", error);
-    return null;
-  }
 }
 
 // Date parsing lives in `task-dates` so the task classes can use it without an
@@ -1871,7 +1744,6 @@ export function createNodesFromTasks(
   groupByProject: boolean = true,
   tagColorPalette: TagColorPalette = "rainbow",
   tagColorOverrides: TagColorOverrides = {},
-  onTaskEdited?: (_taskId: string, _updatedTask: BaseTask) => void,
   onTaskCreated?: (_newTask: BaseTask) => void,
   highlight: ConnectionHighlight = EMPTY_HIGHLIGHT,
   companionNoteOptions: CompanionNoteOptions = {
@@ -1879,7 +1751,7 @@ export function createNodesFromTasks(
     folder: DEFAULT_COMPANION_FOLDER,
   },
   onRequestDelete?: (_task: BaseTask) => Promise<void>,
-  onEditFinance?: (_task: BaseTask) => Promise<void>,
+  onEditTask?: (_task: BaseTask) => Promise<void>,
   /** Tasks with no slack; empty when the critical path is switched off. */
   criticalIds: Set<string> = new Set()
 ): TaskNode[] {
@@ -1906,9 +1778,8 @@ export function createNodesFromTasks(
       dimmed: highlighting && !highlight.taskIds.has(task.id),
       critical: criticalIds.has(task.id),
       onDeleteTask,
-      onTaskEdited,
       onTaskCreated,
-      onEditFinance,
+      onEditTask,
     },
     type: "task" as const,
     sourcePosition,

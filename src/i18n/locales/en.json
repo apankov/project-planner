@@ -276,7 +276,28 @@
     "save": "Save",
     "date_invalid": "Pick a valid date",
     "write_failed": "Could not save \"{{task}}\"",
-    "undo_edit": "edited \"{{task}}\""
+    "undo_edit": "edited \"{{task}}\"",
+    "menu_item": "Edit task",
+    "section_schedule": "Schedule",
+    "section_people": "People",
+    "section_links": "Links",
+    "section_tags": "Tags",
+    "open_note": "Open note",
+    "create_note": "Create note",
+    "no_note": "No note yet — properties stay on the task line",
+    "note_created": "Created the task note",
+    "note_failed": "Could not create the task note",
+    "owner": "Owner",
+    "owner_placeholder": "Who is answerable?",
+    "parent": "Part of",
+    "depends_on": "Waits for",
+    "depends_on_placeholder": "Tasks that must finish first",
+    "tags_placeholder": "Add a tag",
+    "person_readout": "{{hours}}h · {{cost}}",
+    "totals": "Labour {{labour}} · Materials {{materials}} · Total {{total}}",
+    "problem_text_required": "Give the task some text",
+    "problem_date_invalid": "Pick a valid date",
+    "problem_dates_backwards": "The end date is before the start date"
   },
   "task_create": {
     "add_task_here": "Add task here",
@@ -302,11 +323,11 @@
   },
   "retrofit": {
     "title": "Create notes for existing tasks",
-    "body": "This will create up to {{n}} notes in \"{{folder}}\" and rewrite those task lines to link to them. Tasks that are already links are left alone.",
+    "body": "This will create up to {{n}} notes in \"{{folder}}\", rewrite those task lines to link to them, and move every task property into the note it links to. The checkbox, the link and the dates stay on the line.",
     "confirm": "Create notes",
-    "nothing_to_do": "Every task already links to a note",
-    "done": "Linked {{n}} tasks to their notes",
-    "done_partial": "Linked {{n}} tasks; {{skipped}} could not be updated"
+    "nothing_to_do": "There are no inline tasks to give notes to",
+    "done": "Linked {{n}} tasks to their notes and moved the properties of {{moved}}",
+    "done_partial": "Linked {{n}} tasks and moved the properties of {{moved}}; {{skipped}} could not be updated"
   },
   "settings": {
     "display_options": "Display Options",

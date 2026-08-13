@@ -31,6 +31,16 @@ function fields(overrides: Partial<TaskEditFields> = {}): TaskEditFields {
     start: null,
     due: null,
     progress: null,
+    // The dialog covers the whole of a task now, not the four fields the
+    // Gantt's own modal used to show
+    owner: null,
+    allocations: [],
+    expenses: [],
+    hoursPerDay: null,
+    totalHours: null,
+    parentId: null,
+    dependsOn: [],
+    tags: [],
     ...overrides,
   };
 }

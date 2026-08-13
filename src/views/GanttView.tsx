@@ -22,29 +22,12 @@ import {
   parseTaskLine,
   resolveDefaultTaskFile,
 } from "src/lib/utils";
-import {
-  TaskEditFields,
-  applyTaskEdit,
-  datesFromDraft,
-  taskEditChanged,
-  withTaskChanges,
-} from "src/lib/task-write";
+import { withTaskChanges } from "src/lib/task-write";
+import { openTaskEditor } from "src/lib/open-task-editor";
 import { promptForTaskLine } from "src/components/task-line-modal";
-import { promptForTaskFinance } from "src/components/task-finance-modal";
-import {
-  TaskEditDraft,
-  promptForTaskEdit,
-} from "src/components/task-edit-modal";
-import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
-import { readRateBook } from "src/lib/rate-book-note";
 import { withCompanionNote } from "src/lib/companion-note";
 import { diffDays, todayIso } from "src/lib/date-utils";
-import {
-  barLength,
-  getTimelineRange,
-  resizeBar,
-  shiftBar,
-} from "src/lib/gantt-schedule";
+import { getTimelineRange, resizeBar, shiftBar } from "src/lib/gantt-schedule";
 import { planCascade } from "src/lib/gantt-cascade";
 import {
   GanttRow,
@@ -72,7 +55,7 @@ import {
   toggleCollapsed,
 } from "src/lib/task-hierarchy";
 import { promptForParent } from "src/components/gantt-parent-modal";
-import { plainTaskText, taskTextDescription } from "src/lib/task-text";
+import { plainTaskText } from "src/lib/task-text";
 import {
   GANTT_SCALES,
   GanttChart,
@@ -901,142 +884,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [app.vault, settings.linkingStyle]
   );
 
-  /**
-   * Opens the finance modal for a row and writes what comes back.
-   *
-   * The row already knows its bar, so unlike the map this does not have to
-   * schedule anything — the days the modal quotes are the days on screen.
-   */
-  const handleEditFinance = useCallback(
-    async (taskId: string) => {
-      const row = rows.find((candidate) => candidate.task.id === taskId);
-      if (!row) return;
-
-      const { task } = row;
-      const { book } = await readRateBook(app, settings.financeRateNotePath);
-
-      const result = await promptForTaskFinance(app, {
-        initial: task.finance,
-        summary: task.summary,
-        days: barLength(row.bar.start, row.bar.end, settings.ganttSkipWeekends),
-        inferred: row.inferred,
-        defaultHoursPerDay: settings.financeDefaultHoursPerDay,
-        book,
-        currency: settings.financeCurrency,
-        inline: task.type === "dataview",
-      });
-
-      if (!result) return;
-
-      const finance =
-        result.action === "clear" ? EMPTY_TASK_FINANCE : result.finance;
-      const previous = task.finance;
-
-      // An inline task with no ID in its line is found by its text, which is
-      // ambiguous when two tasks read the same
-      await stampTaskId(task);
-
-      const updated = await task.setFinance(finance, app);
-      if (!updated) {
-        new Notice(t("finance.write_failed"));
-        return;
-      }
-
-      setTasks((previousTasks) =>
-        previousTasks.map((candidate) =>
-          candidate.id === taskId ? updated : candidate
-        )
-      );
-
-      plugin.undoHistory.push({
-        label: t("finance.undo_edit", { task: task.summary }),
-        undo: async () => {
-          // Read the task afresh: the line has moved on since the edit
-          const current =
-            tasksRef.current.find((candidate) => candidate.id === taskId) ??
-            updated;
-          const reverted = await current.setFinance(previous, app);
-          if (!reverted) return;
-
-          setTasks((previousTasks) =>
-            previousTasks.map((candidate) =>
-              candidate.id === taskId ? reverted : candidate
-            )
-          );
-        },
-      });
-    },
-    [
-      app,
-      plugin,
-      rows,
-      settings.financeRateNotePath,
-      settings.financeDefaultHoursPerDay,
-      settings.financeCurrency,
-      settings.ganttSkipWeekends,
-      stampTaskId,
-    ]
-  );
+  /* Costing is part of the one task editor now; the row menu opens that. */
 
   /**
-   * Writes one task edit, through the same sequence the board uses.
-   *
-   * The redraw is optimistic and the vault write is what can fail; a failure
-   * puts the task the view was showing back and says so. Everything the edit
-   * touches is read back off the note afterwards, so the row ends up showing
-   * what the file says rather than what the dialog hoped.
-   */
-  const writeTaskEdit = useCallback(
-    async (taskId: string, draft: TaskEditDraft): Promise<boolean> => {
-      const task = tasksRef.current.find(
-        (candidate) => candidate.id === taskId
-      );
-      if (!task) return false;
-
-      const previous: TaskEditFields = {
-        text: taskTextDescription(task.text),
-        status: task.status,
-        start: findTaskDate(task.dates, "start"),
-        due: findTaskDate(task.dates, "due"),
-        progress: task.progress.percent,
-      };
-
-      if (!taskEditChanged(draft, previous)) return true;
-
-      // Optimistic: the vault write is slower than the eye
-      applyTaskUpdate(
-        taskId,
-        withTaskChanges(task, {
-          status: draft.status,
-          progress: { percent: draft.progress },
-          dates: datesFromDraft(task.dates, draft),
-          ...(task.type === "dataview" && draft.text !== previous.text
-            ? { summary: draft.text }
-            : {}),
-        })
-      );
-
-      try {
-        // An inline task with no ID in its line is found by its text, which is
-        // ambiguous when two tasks read the same — and about to change
-        await stampTaskId(task);
-        applyTaskUpdate(
-          taskId,
-          await applyTaskEdit(app, task, draft, previous)
-        );
-        return true;
-      } catch (error) {
-        console.error("Could not save the task edit", error);
-        new Notice(t("task_edit.write_failed", { task: task.summary }));
-        applyTaskUpdate(taskId, task);
-        return false;
-      }
-    },
-    [app, applyTaskUpdate, stampTaskId]
-  );
-
-  /**
-   * Opens the editor for a row and writes what comes back.
+   * Opens the editor for a row.
    *
    * A summary row gets the same dialog with its date fields locked, matching
    * the drag and the resize its bar already refuses: a parent's span is its
@@ -1049,54 +900,26 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       const row = rows.find((candidate) => candidate.task.id === taskId);
       if (!row) return;
 
-      const { task } = row;
       const summary = summaryTaskIds.has(taskId);
-      const previous: TaskEditDraft = {
-        text: taskTextDescription(task.text),
-        status: task.status,
-        start: findTaskDate(task.dates, "start"),
-        due: findTaskDate(task.dates, "due"),
-        progress: task.progress.percent,
-      };
 
-      const result = await promptForTaskEdit(app, {
-        initial: previous,
+      await openTaskEditor({
+        app,
+        task: row.task,
+        tasks: tasksRef.current,
+        settings,
+        undoHistory: plugin.undoHistory,
         // What a click on a suggested bar used to write straight to the note.
-        // It now fills the empty date fields instead, so accepting the
-        // schedule the chart proposed is still a click and a save.
+        // It fills the empty date fields instead, so accepting the schedule
+        // the chart proposed is still a click and a save.
         suggested:
           row.inferred && !summary
             ? { start: row.bar.start, due: row.bar.end }
             : null,
         summary,
-        canEditText: task.type === "dataview",
-      });
-      if (!result) return;
-
-      const { draft } = result;
-      const unchanged =
-        draft.text === previous.text &&
-        draft.status === previous.status &&
-        draft.start === previous.start &&
-        draft.due === previous.due &&
-        draft.progress === previous.progress;
-      // A dialog opened and closed again is not an edit, and does not belong
-      // on the undo stack in front of whatever the user actually did
-      if (unchanged) return;
-
-      const saved = await writeTaskEdit(taskId, draft);
-      if (!saved) return;
-
-      plugin.undoHistory.push({
-        label: t("task_edit.undo_edit", { task: plainTaskText(task.summary) }),
-        // The same write, run backwards; it reads the task afresh, so an undo
-        // long after the fact still finds the line where it is now
-        undo: async () => {
-          await writeTaskEdit(taskId, previous);
-        },
+        onTaskUpdated: (updated) => applyTaskUpdate(taskId, updated),
       });
     },
-    [app, plugin, rows, summaryTaskIds, writeTaskEdit]
+    [app, applyTaskUpdate, plugin, rows, settings, summaryTaskIds]
   );
 
   /**
@@ -1787,7 +1610,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onSetParent={(taskId) => void handleSetParent(taskId)}
           onEditFinance={
             settings.financeEnabled
-              ? (taskId) => void handleEditFinance(taskId)
+              ? (taskId) => void handleOpenTask(taskId)
               : undefined
           }
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}

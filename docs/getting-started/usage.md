@@ -36,7 +36,7 @@ Click the **⋮** button on a node to open the context menu:
 | Action      | Description                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Create task | Open the Tasks plugin modal to create a new child task (requires the [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin) |
-| Edit task   | Open the Tasks plugin modal to edit the task in place (requires the Tasks plugin)                                                            |
+| Edit task   | Open the task editor: name, note, dates, owner, contributors, links, status, progress and tags                                               |
 | Delete task | Remove the task from the vault                                                                                                               |
 
 ### Tags on Nodes

@@ -260,14 +260,22 @@ export default class ProjectPlannerPlugin extends Plugin {
   }
 
   /**
-   * Gives every existing inline task a note and rewrites it as a link, the
-   * same shape new tasks get. Bulk-rewrites task lines, so it asks first.
+   * Gives every existing inline task a note and moves its properties into it,
+   * the same shape a task edited in the dialog ends up with.
+   *
+   * Two jobs, because a vault can need either: tasks written before companion
+   * notes existed have no note at all, and tasks linked by an earlier run of
+   * this command have one that is still empty. Bulk-rewrites task lines, so it
+   * asks first.
    */
   async createNotesForExistingTasks(): Promise<void> {
     const tasks = getAllTasks(this.app);
-    const targets = findTasksNeedingNotes(tasks);
+    const needNotes = findTasksNeedingNotes(tasks);
+    const alreadyLinked = tasks.filter(
+      (task) => task.type === "dataview" && !needNotes.includes(task)
+    ).length;
 
-    if (targets.length === 0) {
+    if (needNotes.length === 0 && alreadyLinked === 0) {
       new Notice(t("retrofit.nothing_to_do"));
       return;
     }
@@ -275,7 +283,7 @@ export default class ProjectPlannerPlugin extends Plugin {
     const proceed = await confirm(this.app, {
       title: t("retrofit.title"),
       body: t("retrofit.body", {
-        n: targets.length,
+        n: needNotes.length,
         folder: this.settings.companionNoteFolder,
       }),
       confirmLabel: t("retrofit.confirm"),
@@ -289,9 +297,10 @@ export default class ProjectPlannerPlugin extends Plugin {
 
     new Notice(
       result.failed === 0 && result.skipped === 0
-        ? t("retrofit.done", { n: result.linked })
+        ? t("retrofit.done", { n: result.linked, moved: result.migrated })
         : t("retrofit.done_partial", {
             n: result.linked,
+            moved: result.migrated,
             skipped: result.skipped + result.failed,
           })
     );
