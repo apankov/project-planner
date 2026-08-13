@@ -70,23 +70,31 @@ if (!fs.existsSync(pluginsDir)) {
 
 fs.mkdirSync(target.dir, { recursive: true });
 
-// Obsidian enables a plugin by folder name and identifies it by the `id` in
-// the manifest beside it. Overwriting an id that a vault already has enabled
-// unenables the plugin and orphans its settings, so an id already in the
-// target wins over the one just built.
+// The views look their own plugin up by id — `plugins.plugins["project-planner"]`
+// in each `*ItemView` — so this plugin only runs under the id it was built
+// with. Deploying it into a folder a vault has enabled under some other id
+// installs something that loads and then cannot open a view, which is a
+// stranger failure than not deploying at all.
 const manifestPath = path.join(target.dir, "manifest.json");
 const built = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
-let manifest = built;
 
 if (fs.existsSync(manifestPath)) {
   try {
     const installed = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     if (installed.id && installed.id !== built.id) {
-      manifest = { ...built, id: installed.id, name: installed.name };
-      console.warn(
-        `Keeping the installed plugin id "${installed.id}" ` +
-          `(this build calls itself "${built.id}").`
+      console.error(
+        [
+          `The folder ${target.dir}`,
+          `holds a plugin with id "${installed.id}", but this build is`,
+          `"${built.id}". The views resolve themselves by id, so the build`,
+          "cannot run in that folder.",
+          "",
+          `Deploy into a folder named "${built.id}" instead, and enable it in`,
+          "Obsidian's community plugins list. Settings are keyed by id, so copy",
+          `the old folder's data.json across if you want them to follow.`,
+        ].join("\n")
       );
+      process.exit(1);
     }
   } catch {
     // An unreadable manifest is replaced rather than deferred to
@@ -94,11 +102,7 @@ if (fs.existsSync(manifestPath)) {
 }
 
 for (const file of ARTIFACTS) {
-  if (file === "manifest.json") {
-    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 4)}\n`);
-  } else {
-    fs.copyFileSync(file, path.join(target.dir, file));
-  }
+  fs.copyFileSync(file, path.join(target.dir, file));
   console.log(`copied ${file}`);
 }
 
