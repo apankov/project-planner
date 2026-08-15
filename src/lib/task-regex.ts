@@ -107,6 +107,48 @@ export const OWNER_FIELD_REMOVAL = new RegExp(
   "gi"
 );
 
+// Open question field names. A question jotted mid-note is not a task and gets
+// no tag: tags already carry other meaning in a vault, and one borrowed for
+// questions would muddy every query that reads them. An inline field is a
+// private channel instead. The first entry is canonical: it is the only
+// spelling ever written back.
+export const OPEN_QUESTION_FIELD_NAMES =
+  "oq|openQuestion|open-question|openquestion";
+
+// Dataview open question field: [oq:: What is the deadline?]
+// The value is matched as a linkable one so a question may name a note.
+// Capturing, for reading the value (no 'g' flag, for .match())
+export const OPEN_QUESTION_FIELD_PATTERN = new RegExp(
+  `[[(]{1,2}(?:${OPEN_QUESTION_FIELD_NAMES})::\\s*(${LINKABLE_FIELD_VALUE})[\\])]{1,2}`,
+  "i"
+);
+
+// The same field, for stripping it out of a line before rewriting it, and for
+// keeping it out of the summary of a task it was mistakenly written onto
+export const OPEN_QUESTION_FIELD_REMOVAL = new RegExp(
+  `[[(]{1,2}(?:${OPEN_QUESTION_FIELD_NAMES})::\\s*${LINKABLE_FIELD_VALUE}[\\])]{1,2}`,
+  "gi"
+);
+
+// Resolved field names, marking an open question as answered. Answering marks
+// the line rather than deleting it: the question and the date it stopped being
+// open are both worth keeping in the note that raised it. The first entry is
+// canonical: it is the only spelling ever written back.
+export const RESOLVED_FIELD_NAMES = "resolved|answered";
+
+// Dataview resolved field: [resolved:: 2025-01-01]
+// Capturing, for reading the value (no 'g' flag, for .match())
+export const RESOLVED_FIELD_PATTERN = new RegExp(
+  `[[(]{1,2}(?:${RESOLVED_FIELD_NAMES})::\\s*([^\\])]*)[\\])]{1,2}`,
+  "i"
+);
+
+// The same field, for stripping it out of a line before rewriting it
+export const RESOLVED_FIELD_REMOVAL = new RegExp(
+  `[[(]{1,2}(?:${RESOLVED_FIELD_NAMES})::\\s*[^\\])]*[\\])]{1,2}`,
+  "gi"
+);
+
 // Emoji date fields: 📅 2025-01-01, ⏳ 2025-01-01, 🛫, ➕, ✅, ❌. The emoji
 // forms are not covered by the Dataview or plain-text date patterns above.
 export const EMOJI_DATE_FIELD_REMOVAL =
@@ -161,6 +203,7 @@ export const TASK_METADATA_PATTERNS: RegExp[] = [
   PROGRESS_FIELD_REMOVAL,
   PARENT_FIELD_REMOVAL,
   OWNER_FIELD_REMOVAL,
+  OPEN_QUESTION_FIELD_REMOVAL,
   PRIORITY_PATTERN_GLOBAL,
   STAR_PATTERN_GLOBAL,
 ];

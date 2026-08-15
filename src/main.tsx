@@ -2,6 +2,7 @@ import React from "react";
 import {
   WorkspaceLeaf,
   Plugin,
+  Editor,
   TFile,
   FuzzySuggestModal,
   MarkdownRenderChild,
@@ -21,6 +22,9 @@ import ProjectPlannerFinanceItemView, {
 import ProjectPlannerKanbanItemView, {
   KANBAN_VIEW_TYPE,
 } from "./views/ProjectPlannerKanbanItemView";
+import ProjectPlannerOpenQuestionsItemView, {
+  OPEN_QUESTIONS_VIEW_TYPE,
+} from "./views/ProjectPlannerOpenQuestionsItemView";
 import GraphEmbedView, {
   EmbedError,
   filterStateFromSource,
@@ -36,6 +40,10 @@ import { FilterState, DEFAULT_FILTER_STATE } from "./types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "./types/embed-config";
 import { Notice } from "obsidian";
 import { checkDataviewPlugin, getAllTasks } from "./lib/utils";
+import {
+  openQuestionMarker,
+  openQuestionMarkerCursor,
+} from "./lib/open-question";
 import {
   findTasksNeedingNotes,
   retrofitCompanionNotes,
@@ -118,6 +126,12 @@ export default class ProjectPlannerPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new ProjectPlannerKanbanItemView(leaf, this)
     );
 
+    this.registerView(
+      OPEN_QUESTIONS_VIEW_TYPE,
+      (leaf: WorkspaceLeaf) =>
+        new ProjectPlannerOpenQuestionsItemView(leaf, this)
+    );
+
     this.addSettingTab(new ProjectPlannerSettingTab(this.app, this));
 
     this.addCommand({
@@ -169,6 +183,31 @@ export default class ProjectPlannerPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: "open-open-questions-view",
+      name: t("commands.open_open_questions_view"),
+      callback: () => {
+        void this.activateOpenQuestionsViewInMainArea();
+      },
+    });
+
+    // Writing the marker by hand means remembering the syntax at exactly the
+    // moment attention is on the question instead
+    this.addCommand({
+      id: "insert-open-question",
+      name: t("commands.insert_open_question"),
+      editorCallback: (editor: Editor) => {
+        const selection = editor.getSelection();
+        const start = editor.getCursor("from");
+
+        editor.replaceSelection(openQuestionMarker(selection));
+        editor.setCursor({
+          line: start.line,
+          ch: start.ch + openQuestionMarkerCursor(selection),
+        });
+      },
+    });
+
+    this.addCommand({
       id: "create-notes-for-existing-tasks",
       name: t("commands.retrofit_companion_notes"),
       callback: () => {
@@ -194,6 +233,10 @@ export default class ProjectPlannerPlugin extends Plugin {
 
     this.addRibbonIcon("columns-3", t("ribbon.open_tasks_kanban"), () => {
       void this.activateKanbanViewInMainArea();
+    });
+
+    this.addRibbonIcon("help-circle", t("ribbon.open_open_questions"), () => {
+      void this.activateOpenQuestionsViewInMainArea();
     });
 
     // Both names render the same embed. The pre-rename one is still
@@ -511,6 +554,12 @@ export default class ProjectPlannerPlugin extends Plugin {
   async activateKanbanViewInMainArea() {
     const leaf = this.app.workspace.getLeaf(true); // true = main area
     await leaf.setViewState({ type: KANBAN_VIEW_TYPE, active: true });
+    void this.app.workspace.revealLeaf(leaf);
+  }
+
+  async activateOpenQuestionsViewInMainArea() {
+    const leaf = this.app.workspace.getLeaf(true); // true = main area
+    await leaf.setViewState({ type: OPEN_QUESTIONS_VIEW_TYPE, active: true });
     void this.app.workspace.revealLeaf(leaf);
   }
 

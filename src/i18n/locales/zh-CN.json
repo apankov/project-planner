@@ -8,6 +8,8 @@
     "insert_filter_as_code_block": "将当前筛选器插入为嵌入式图谱",
     "open_gantt_view": "打开甘特图视图",
     "open_kanban_view": "打开看板视图",
+    "open_open_questions_view": "打开待解问题",
+    "insert_open_question": "在此插入待解问题",
     "retrofit_companion_notes": "为现有任务创建笔记",
     "open_finance_view": "打开任务财务",
     "create_rate_note": "创建费率笔记"
@@ -16,6 +18,7 @@
     "open_tasks_map": "打开项目图谱",
     "open_tasks_gantt": "打开任务甘特图",
     "open_tasks_kanban": "打开任务看板",
+    "open_open_questions": "打开待解问题",
     "open_tasks_finance": "打开任务财务"
   },
   "view": {
@@ -258,6 +261,27 @@
     "move_failed": "无法移动“{{task}}”",
     "status_failed": "无法更改任务状态",
     "tag_failed": "无法更新任务标签"
+  },
+  "open_questions": {
+    "view_title": "待解问题",
+    "loading": "正在读取你的笔记...",
+    "reload": "重新加载问题",
+    "reloaded": "问题已重新加载",
+    "empty": "库中没有待解问题",
+    "empty_hint": "在任意笔记中单独一行写下 [oq:: 你的问题]，它就会出现在这里。",
+    "empty_filtered": "没有问题符合当前搜索",
+    "search_placeholder": "搜索问题或笔记",
+    "show_resolved": "显示已解答",
+    "question_count": "{{n}} 个问题",
+    "resolve": "标记为已解答",
+    "reopen": "重新开启此问题",
+    "resolved_on": "{{date}} 解答",
+    "undo": "撤销",
+    "undo_desc": "撤销上一次更改",
+    "undo_resolve": "解答了“{{question}}”",
+    "undo_reopen": "重新开启了“{{question}}”",
+    "resolve_failed": "无法更新该问题",
+    "stale_line": "该问题在 {{note}} 中已被改动 — 请重新加载以查看当前内容"
   },
   "task_edit": {
     "modal_title": "编辑任务",

@@ -8,6 +8,8 @@
     "insert_filter_as_code_block": "Huidig filter invoegen als ingesloten grafiek",
     "open_gantt_view": "Gantt-weergave openen",
     "open_kanban_view": "Bordweergave openen",
+    "open_open_questions_view": "Open vragen openen",
+    "insert_open_question": "Hier een open vraag invoegen",
     "retrofit_companion_notes": "Notities maken voor bestaande taken",
     "open_finance_view": "Taakfinanciën openen",
     "create_rate_note": "Tariefnotitie aanmaken"
@@ -16,6 +18,7 @@
     "open_tasks_map": "Projectgrafiek openen",
     "open_tasks_gantt": "Takengantt openen",
     "open_tasks_kanban": "Takenbord openen",
+    "open_open_questions": "Open vragen openen",
     "open_tasks_finance": "Taakfinanciën openen"
   },
   "view": {
@@ -258,6 +261,27 @@
     "move_failed": "Kon \"{{task}}\" niet verplaatsen",
     "status_failed": "Kon de taakstatus niet wijzigen",
     "tag_failed": "Kon de tags van de taak niet bijwerken"
+  },
+  "open_questions": {
+    "view_title": "Open vragen",
+    "loading": "Je notities worden gelezen...",
+    "reload": "Vragen opnieuw laden",
+    "reloaded": "Vragen opnieuw geladen",
+    "empty": "Geen open vragen in je kluis",
+    "empty_hint": "Schrijf [oq:: je vraag] op een eigen regel in een notitie, dan verschijnt hij hier.",
+    "empty_filtered": "Geen vragen komen overeen met de huidige zoekopdracht",
+    "search_placeholder": "Zoek in vragen of notities",
+    "show_resolved": "Beantwoorde tonen",
+    "question_count": "{{n}} vragen",
+    "resolve": "Als beantwoord markeren",
+    "reopen": "Deze vraag heropenen",
+    "resolved_on": "Beantwoord op {{date}}",
+    "undo": "Ongedaan maken",
+    "undo_desc": "Neem de laatste wijziging terug",
+    "undo_resolve": "\"{{question}}\" beantwoord",
+    "undo_reopen": "\"{{question}}\" heropend",
+    "resolve_failed": "Kon de vraag niet bijwerken",
+    "stale_line": "Die vraag is gewijzigd in {{note}} — laad opnieuw om hem te zien zoals hij nu is"
   },
   "task_edit": {
     "modal_title": "Taak bewerken",

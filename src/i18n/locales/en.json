@@ -8,6 +8,8 @@
     "insert_filter_as_code_block": "Insert current filter as embedded graph",
     "open_gantt_view": "Open Gantt view",
     "open_kanban_view": "Open board view",
+    "open_open_questions_view": "Open open questions",
+    "insert_open_question": "Insert an open question here",
     "retrofit_companion_notes": "Create notes for existing tasks",
     "open_finance_view": "Open task finance",
     "create_rate_note": "Create the rates note"
@@ -16,6 +18,7 @@
     "open_tasks_map": "Open project graph",
     "open_tasks_gantt": "Open Tasks Gantt",
     "open_tasks_kanban": "Open tasks board",
+    "open_open_questions": "Open open questions",
     "open_tasks_finance": "Open task finance"
   },
   "view": {
@@ -258,6 +261,27 @@
     "move_failed": "Could not move \"{{task}}\"",
     "status_failed": "Could not change the task status",
     "tag_failed": "Could not update the task tags"
+  },
+  "open_questions": {
+    "view_title": "Open questions",
+    "loading": "Reading your notes...",
+    "reload": "Reload questions",
+    "reloaded": "Questions reloaded",
+    "empty": "No open questions in your vault",
+    "empty_hint": "Write [oq:: your question] on a line of its own in any note, and it will appear here.",
+    "empty_filtered": "No questions match the current search",
+    "search_placeholder": "Search questions or notes",
+    "show_resolved": "Show answered",
+    "question_count": "{{n}} questions",
+    "resolve": "Mark answered",
+    "reopen": "Reopen this question",
+    "resolved_on": "Answered {{date}}",
+    "undo": "Undo",
+    "undo_desc": "Take back the last change",
+    "undo_resolve": "answered \"{{question}}\"",
+    "undo_reopen": "reopened \"{{question}}\"",
+    "resolve_failed": "Could not update the question",
+    "stale_line": "That question has changed in {{note}} — reload to see it as it is now"
   },
   "task_edit": {
     "modal_title": "Edit task",
