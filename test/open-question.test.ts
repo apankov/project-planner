@@ -1,6 +1,9 @@
 import {
   OpenQuestion,
+  answerBlockLines,
   getResolvedDate,
+  parseAnswerBlock,
+  writeAnswerToLines,
   matchesQuery,
   noteNameOf,
   openQuestionMarker,
@@ -23,6 +26,8 @@ function makeQuestion(overrides: Partial<OpenQuestion> = {}): OpenQuestion {
     noteName: "Kohtari rollout",
     line: 0,
     rawLine: "[oq:: Is the rollout date fixed?]",
+    answer: null,
+    answerEndLine: null,
     ...overrides,
   };
 }
@@ -256,6 +261,180 @@ describe("matchesQuery", () => {
 
   it("does not match on words it does not hold", () => {
     expect(matchesQuery(question, "finance")).toBe(false);
+  });
+});
+
+describe("parseAnswerBlock", () => {
+  it("reads a one-line answer under its question", () => {
+    const lines = ["[oq:: Is it fixed?]", "> [!answer] Fixed, confirmed by Ops"];
+
+    expect(parseAnswerBlock(lines, 0)).toEqual({
+      answer: "Fixed, confirmed by Ops",
+      endLine: 1,
+    });
+  });
+
+  it("reads an answer that runs over several lines", () => {
+    const lines = [
+      "[oq:: Is it fixed?]",
+      "> [!answer] Fixed.",
+      "> Confirmed 12 March by Ops.",
+      "> The recert is the only risk.",
+      "",
+      "Prose that is not the answer.",
+    ];
+
+    expect(parseAnswerBlock(lines, 0)).toEqual({
+      answer: "Fixed.\nConfirmed 12 March by Ops.\nThe recert is the only risk.",
+      endLine: 3,
+    });
+  });
+
+  it("reads an answer written with no space after the marker", () => {
+    const lines = ["[oq:: Why?]", ">[!answer]Because."];
+    expect(parseAnswerBlock(lines, 0)?.answer).toBe("Because.");
+  });
+
+  it("reads an indented answer under an indented question", () => {
+    const lines = ["  - [oq:: Why?]", "  > [!answer] Because."];
+    expect(parseAnswerBlock(lines, 0)?.answer).toBe("Because.");
+  });
+
+  it.each([
+    ["nothing follows the question", ["[oq:: Why?]"]],
+    ["a blank line separates them", ["[oq:: Why?]", "", "> [!answer] Late."]],
+    ["the next line is prose", ["[oq:: Why?]", "Just a sentence."]],
+    ["the next line is another callout", ["[oq:: Why?]", "> [!note] Not it."]],
+  ])("finds no answer when %s", (_case, lines) => {
+    expect(parseAnswerBlock(lines, 0)).toBeNull();
+  });
+
+  it("stops at a different callout rather than swallowing it", () => {
+    const lines = [
+      "[oq:: Why?]",
+      "> [!answer] Because.",
+      "> [!warning] A separate callout.",
+    ];
+
+    expect(parseAnswerBlock(lines, 0)).toEqual({
+      answer: "Because.",
+      endLine: 1,
+    });
+  });
+
+  it("is found by the parser, so a question knows its own answer", () => {
+    const lines = ["[oq:: Why?]", "> [!answer] Because."];
+    const question = parseOpenQuestionLine(lines[0], NOTE, 0, lines);
+
+    expect(question?.answer).toBe("Because.");
+    expect(question?.answerEndLine).toBe(1);
+  });
+
+  it("leaves an empty callout reading as no answer at all", () => {
+    const lines = ["[oq:: Why?]", "> [!answer]"];
+    expect(parseOpenQuestionLine(lines[0], NOTE, 0, lines)?.answer).toBeNull();
+  });
+});
+
+describe("answerBlockLines", () => {
+  it("writes a one-line answer as a callout", () => {
+    expect(answerBlockLines("Because.", "")).toEqual(["> [!answer] Because."]);
+  });
+
+  it("carries every line of a longer answer", () => {
+    expect(answerBlockLines("First.\nSecond.", "")).toEqual([
+      "> [!answer] First.",
+      "> Second.",
+    ]);
+  });
+
+  it("indents to match the question it belongs to", () => {
+    expect(answerBlockLines("Because.", "  ")).toEqual([
+      "  > [!answer] Because.",
+    ]);
+  });
+
+  it("leaves no trailing space on a blank line inside an answer", () => {
+    expect(answerBlockLines("First.\n\nThird.", "")).toEqual([
+      "> [!answer] First.",
+      ">",
+      "> Third.",
+    ]);
+  });
+});
+
+describe("writeAnswerToLines", () => {
+  it("adds an answer where there was none", () => {
+    const lines = ["# Note", "[oq:: Why?]", "Prose after."];
+
+    expect(writeAnswerToLines(lines, 1, "Because.")).toEqual([
+      "# Note",
+      "[oq:: Why?]",
+      "> [!answer] Because.",
+      "Prose after.",
+    ]);
+  });
+
+  it("replaces an answer rather than stacking a second one", () => {
+    const lines = [
+      "[oq:: Why?]",
+      "> [!answer] An old answer.",
+      "> Still the old one.",
+      "Prose after.",
+    ];
+
+    expect(writeAnswerToLines(lines, 0, "A new answer.")).toEqual([
+      "[oq:: Why?]",
+      "> [!answer] A new answer.",
+      "Prose after.",
+    ]);
+  });
+
+  it("takes an answer away when it is cleared", () => {
+    const lines = ["[oq:: Why?]", "> [!answer] Because.", "Prose after."];
+
+    expect(writeAnswerToLines(lines, 0, null)).toEqual([
+      "[oq:: Why?]",
+      "Prose after.",
+    ]);
+  });
+
+  it.each([null, "", "   "])("treats %p as no answer", (answer) => {
+    const lines = ["[oq:: Why?]", "> [!answer] Because."];
+    expect(writeAnswerToLines(lines, 0, answer)).toEqual(["[oq:: Why?]"]);
+  });
+
+  it("leaves prose that merely follows the question alone", () => {
+    const lines = ["[oq:: Why?]", "A paragraph I wrote myself."];
+
+    expect(writeAnswerToLines(lines, 0, "Because.")).toEqual([
+      "[oq:: Why?]",
+      "> [!answer] Because.",
+      "A paragraph I wrote myself.",
+    ]);
+  });
+
+  it("leaves a second question further down untouched", () => {
+    const lines = ["[oq:: First?]", "", "[oq:: Second?]"];
+
+    expect(writeAnswerToLines(lines, 0, "Because.")).toEqual([
+      "[oq:: First?]",
+      "> [!answer] Because.",
+      "",
+      "[oq:: Second?]",
+    ]);
+  });
+
+  it("round-trips: what is written is what is read back", () => {
+    const written = writeAnswerToLines(
+      ["[oq:: Why?]"],
+      0,
+      "Because.\nAnd also this."
+    );
+
+    expect(parseAnswerBlock(written, 0)?.answer).toBe(
+      "Because.\nAnd also this."
+    );
   });
 });
 

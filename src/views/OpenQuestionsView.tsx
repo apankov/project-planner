@@ -7,10 +7,16 @@ import React, {
 } from "react";
 import { Notice } from "obsidian";
 import { useApp } from "src/hooks/hooks";
-import { OpenQuestion, matchesQuery } from "src/lib/open-question";
+import {
+  OpenQuestion,
+  matchesQuery,
+  sortOpenQuestions,
+} from "src/lib/open-question";
 import {
   StaleQuestionError,
+  editOpenQuestion,
   getAllOpenQuestions,
+  rescanNote,
   setOpenQuestionResolved,
 } from "src/lib/open-question-vault";
 import { todayIso } from "src/lib/date-utils";
@@ -163,6 +169,89 @@ export default function OpenQuestionsView({ plugin }: OpenQuestionsViewProps) {
     [app, applyUpdate, markSaving, plugin]
   );
 
+  /**
+   * Replaces everything this note had to say with what it says now.
+   *
+   * An answer added or taken away moves every line under it, so the questions
+   * further down that note are re-read rather than patched — the alternative is
+   * carrying an offset around and getting it wrong once.
+   */
+  const refreshNote = useCallback(
+    async (notePath: string) => {
+      const fresh = await rescanNote(app, notePath);
+      setQuestions((current) =>
+        sortOpenQuestions([
+          ...current.filter((question) => question.notePath !== notePath),
+          ...fresh,
+        ])
+      );
+    },
+    [app]
+  );
+
+  /**
+   * Attaches an answer, or takes one away.
+   *
+   * Answering settles a question, so it is marked answered in the same write:
+   * one gesture, one entry on the undo stack, and no moment where the note says
+   * a question was answered but is somehow still open. Clearing an answer
+   * deliberately leaves that mark alone — a question can be settled without one,
+   * and silently reopening it would undo a decision nobody asked to revisit.
+   */
+  const handleSaveAnswer = useCallback(
+    async (questionId: string, answer: string | null) => {
+      const question = questionsRef.current.find(
+        (candidate) => candidate.id === questionId
+      );
+      if (!question || answer === question.answer) return;
+
+      const resolvedOn =
+        answer === null
+          ? question.resolvedOn
+          : (question.resolvedOn ?? todayIso());
+
+      applyUpdate({
+        ...question,
+        answer,
+        resolved: resolvedOn !== null,
+        resolvedOn,
+      });
+      markSaving(questionId, true);
+
+      const previous = {
+        answer: question.answer,
+        resolvedOn: question.resolvedOn,
+      };
+
+      try {
+        await editOpenQuestion(app, question, { answer, resolvedOn });
+        await refreshNote(question.notePath);
+
+        const label = plainTaskText(question.question);
+        plugin.undoHistory.push({
+          label: answer
+            ? t("open_questions.undo_answer", { question: label })
+            : t("open_questions.undo_answer_cleared", { question: label }),
+          undo: async () => {
+            await editOpenQuestion(app, question, previous);
+            await refreshNote(question.notePath);
+          },
+        });
+      } catch (error) {
+        console.error("Could not write the answer", error);
+        new Notice(
+          error instanceof StaleQuestionError
+            ? t("open_questions.stale_line", { note: question.noteName })
+            : t("open_questions.answer_failed")
+        );
+        applyUpdate(question);
+      } finally {
+        markSaving(questionId, false);
+      }
+    },
+    [app, applyUpdate, markSaving, plugin, refreshNote]
+  );
+
   const emptyMessage =
     questions.length === 0
       ? t("open_questions.empty")
@@ -208,6 +297,7 @@ export default function OpenQuestionsView({ plugin }: OpenQuestionsViewProps) {
               app={app}
               saving={savingIds.has(question.id)}
               onToggleResolved={(id) => void handleToggleResolved(id)}
+              onSaveAnswer={(id, answer) => void handleSaveAnswer(id, answer)}
             />
           ))}
         </div>

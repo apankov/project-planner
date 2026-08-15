@@ -27,6 +27,22 @@ the paragraph carries on as normal.
 ## Already answered
 
 [oq:: Is there a hard deadline for the pilot?] [resolved:: 2025-01-01]
+> [!answer] Yes — the customer demo on 14 February.
+
+## An answer running over several lines
+
+[oq:: Who owns the handover to support?] [resolved:: 2025-01-02]
+> [!answer] Ops own it, with engineering on call for the first fortnight.
+> Agreed in the 2 January review; revisit once the runbook is written.
+
+## A question whose prose is not an answer
+
+The paragraph under this one must not be mistaken for an answer, because it is
+not a callout and does not start on the very next line.
+
+[oq:: Does the rig need recertifying before the pilot?]
+
+Just an ordinary paragraph that happens to follow a question.
 
 ## Not questions
 

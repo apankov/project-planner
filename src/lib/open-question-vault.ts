@@ -16,6 +16,7 @@ import {
   OpenQuestion,
   scanOpenQuestions,
   sortOpenQuestions,
+  writeAnswerToLines,
   writeResolvedToLine,
 } from "./open-question";
 
@@ -95,4 +96,66 @@ export async function setOpenQuestionResolved(
   if (written.line === null) throw new StaleQuestionError(question.notePath);
 
   return written.line;
+}
+
+/** What a single edit to a question can change. */
+export interface OpenQuestionEdit {
+  /** The answer prose, or null to take the answer away. */
+  answer: string | null;
+  /** The day it was answered, or null to leave it open. */
+  resolvedOn: string | null;
+}
+
+/**
+ * Writes an answer and the answered date in one pass.
+ *
+ * One pass rather than two because they are one gesture: answering a question
+ * settles it, and a crash between two writes would leave a note claiming a
+ * question was answered by nobody, or answered but still open.
+ */
+export async function editOpenQuestion(
+  app: App,
+  question: OpenQuestion,
+  edit: OpenQuestionEdit
+): Promise<void> {
+  const file = app.vault.getFileByPath(question.notePath);
+  if (!(file instanceof TFile)) throw new StaleQuestionError(question.notePath);
+
+  const done = { written: false };
+
+  await app.vault.process(file, (content) => {
+    const eol = content.includes("\r\n") ? "\r\n" : "\n";
+    const lines = content.split(/\r?\n/);
+
+    const index = findQuestionLine(lines, question);
+    if (index === -1) return content;
+
+    lines[index] = writeResolvedToLine(lines[index], edit.resolvedOn);
+    done.written = true;
+
+    // The answer is rewritten from the file as it is now, not from the copy
+    // this question was read with: a callout edited in the note since then is
+    // still found, and still replaced rather than duplicated
+    return writeAnswerToLines(lines, index, edit.answer).join(eol);
+  });
+
+  if (!done.written) throw new StaleQuestionError(question.notePath);
+}
+
+/**
+ * Every question in one note, read fresh.
+ *
+ * Setting an answer shifts every line beneath it, so the questions further down
+ * a note know the wrong line numbers the moment one above them is answered.
+ * Re-reading the one note that changed puts them right without a pass over the
+ * whole vault.
+ */
+export async function rescanNote(
+  app: App,
+  notePath: string
+): Promise<OpenQuestion[]> {
+  const file = app.vault.getFileByPath(notePath);
+  if (!(file instanceof TFile)) return [];
+
+  return scanOpenQuestions(await app.vault.cachedRead(file), notePath);
 }

@@ -149,6 +149,21 @@ export const RESOLVED_FIELD_REMOVAL = new RegExp(
   "gi"
 );
 
+// The callout an answer is written into, on the line under its question:
+//
+//     [oq:: Is the date fixed?]
+//     > [!answer] Fixed, confirmed 12 March by Ops
+//
+// A callout rather than another inline field because an answer is prose and
+// may run to several lines, and a field long enough to hold one would make the
+// question unreadable in the note it was asked in.
+export const ANSWER_CALLOUT_START = /^(\s*)>\s*\[!answer\]\s?(.*)$/i;
+
+// The second and later lines of that callout. A line opening a *different*
+// callout ends the answer rather than joining it, so an answer cannot swallow
+// the note that happens to follow it.
+export const ANSWER_CALLOUT_CONTINUATION = /^\s*>\s?(?!\s*\[!)(.*)$/;
+
 // Emoji date fields: 📅 2025-01-01, ⏳ 2025-01-01, 🛫, ➕, ✅, ❌. The emoji
 // forms are not covered by the Dataview or plain-text date patterns above.
 export const EMOJI_DATE_FIELD_REMOVAL =

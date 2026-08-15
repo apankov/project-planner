@@ -25,9 +25,21 @@
  * The marker is only read on a line of its own. On a task line it is ignored,
  * because a task already has a card of its own everywhere else in the plugin
  * and a second card saying the same thing helps nobody.
+ *
+ * An answer goes in a callout on the line beneath, where it reads as prose and
+ * can run as long as it needs to:
+ *
+ *     [oq:: Is the rollout date fixed?]
+ *     > [!answer] Fixed. Confirmed 12 March by Ops.
+ *
+ * It has to start on the very next line. Anything else — a blank line, a
+ * paragraph of your own — means the question has no answer yet, which is what
+ * keeps writing one from ever overwriting prose that was already there.
  */
 
 import {
+  ANSWER_CALLOUT_CONTINUATION,
+  ANSWER_CALLOUT_START,
   OPEN_QUESTION_FIELD_NAMES,
   OPEN_QUESTION_FIELD_PATTERN,
   RESOLVED_FIELD_NAMES,
@@ -68,6 +80,13 @@ export interface OpenQuestion {
   line: number;
   /** The whole line, exactly as it was read. */
   rawLine: string;
+  /** The answer written beneath it, as prose, or null while it has none. */
+  answer: string | null;
+  /**
+   * The last line the answer callout occupies, or null when there is none.
+   * Zero-based like `line`, and inclusive.
+   */
+  answerEndLine: number | null;
 }
 
 /** A note's display name: `Projects/Kohtari rollout.md` reads as the last part. */
@@ -76,16 +95,56 @@ export function noteNameOf(notePath: string): string {
   return file.replace(/\.md$/i, "");
 }
 
+/** An answer callout found under a question: its prose and where it ends. */
+export interface AnswerBlock {
+  answer: string;
+  /** Inclusive, zero-based. */
+  endLine: number;
+}
+
+/**
+ * The answer callout starting on the line after `questionLine`, if there is
+ * one. It must start there and nowhere else — see the note at the top of this
+ * file for why.
+ */
+export function parseAnswerBlock(
+  lines: string[],
+  questionLine: number
+): AnswerBlock | null {
+  const start = lines[questionLine + 1];
+  if (start === undefined) return null;
+
+  const opening = start.match(ANSWER_CALLOUT_START);
+  if (!opening) return null;
+
+  const parts = [opening[2]];
+  let endLine = questionLine + 1;
+
+  for (let index = endLine + 1; index < lines.length; index += 1) {
+    const continuation = lines[index].match(ANSWER_CALLOUT_CONTINUATION);
+    if (!continuation) break;
+
+    parts.push(continuation[1]);
+    endLine = index;
+  }
+
+  return { answer: parts.join("\n").trim(), endLine };
+}
+
 /**
  * The question on a line, or null when the line holds none.
  *
  * A task line is deliberately none of them: a marker written onto one is
  * metadata on a task that already has a card elsewhere.
+ *
+ * `lines` is the whole note, because a question is not only its own line: the
+ * answer beneath it is part of what the question is.
  */
 export function parseOpenQuestionLine(
   rawLine: string,
   notePath: string,
-  line: number
+  line: number,
+  lines: string[] = [rawLine]
 ): OpenQuestion | null {
   if (TASK_LINE_PREFIX.test(rawLine)) return null;
 
@@ -96,6 +155,7 @@ export function parseOpenQuestionLine(
   if (question.length === 0) return null;
 
   const resolvedOn = getResolvedDate(rawLine);
+  const block = parseAnswerBlock(lines, line);
 
   return {
     id: `${notePath}:${line}`,
@@ -106,6 +166,8 @@ export function parseOpenQuestionLine(
     noteName: noteNameOf(notePath),
     line,
     rawLine,
+    answer: block && block.answer.length > 0 ? block.answer : null,
+    answerEndLine: block ? block.endLine : null,
   };
 }
 
@@ -126,14 +188,57 @@ export function scanOpenQuestions(
   content: string,
   notePath: string
 ): OpenQuestion[] {
+  const lines = content.split("\n");
   const questions: OpenQuestion[] = [];
 
-  content.split("\n").forEach((rawLine, line) => {
-    const question = parseOpenQuestionLine(rawLine, notePath, line);
+  lines.forEach((rawLine, line) => {
+    const question = parseOpenQuestionLine(rawLine, notePath, line, lines);
     if (question) questions.push(question);
   });
 
   return questions;
+}
+
+/** The whitespace a line opens with, so an answer can be indented to match. */
+function indentOf(line: string): string {
+  return line.match(/^\s*/)?.[0] ?? "";
+}
+
+/** An answer as the lines of the callout that will hold it. */
+export function answerBlockLines(answer: string, indent: string): string[] {
+  const [first, ...rest] = answer.trim().split("\n");
+
+  return [
+    `${indent}> [!answer] ${first}`.trimEnd(),
+    ...rest.map((line) => `${indent}> ${line}`.trimEnd()),
+  ];
+}
+
+/**
+ * The note's lines with this question's answer set to exactly this — replacing
+ * the callout already there, adding one where there was none, and removing it
+ * when the answer is cleared.
+ *
+ * Only the answer moves. Everything above the question, and everything below
+ * whatever callout was already attached to it, is passed through untouched.
+ */
+export function writeAnswerToLines(
+  lines: string[],
+  questionLine: number,
+  answer: string | null
+): string[] {
+  const existing = parseAnswerBlock(lines, questionLine);
+  const before = lines.slice(0, questionLine + 1);
+  const after = lines.slice(existing ? existing.endLine + 1 : questionLine + 1);
+
+  const trimmed = answer?.trim() ?? "";
+  if (trimmed.length === 0) return [...before, ...after];
+
+  return [
+    ...before,
+    ...answerBlockLines(trimmed, indentOf(lines[questionLine])),
+    ...after,
+  ];
 }
 
 /**
