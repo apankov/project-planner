@@ -24,6 +24,7 @@ import { GanttMilestone } from "../gantt-milestones";
 import { OpenQuestion } from "../open-question";
 import { CostGroup, CostReport } from "../finance-summary";
 import { CostIssue, TaskCost } from "../task-cost";
+import { plainTaskText } from "../task-text";
 import { diffDays } from "../date-utils";
 
 /* -------------------------------------------------------------------------- */
@@ -105,7 +106,12 @@ export function buildTaskRows(input: BuildTaskRowsInput): HandoverTaskRow[] {
 
     return {
       id: task.id,
-      summary: task.summary,
+      // A task whose text is a wikilink reads as "[[Redesign Float Section]]"
+      // raw. On screen the label column renders it as a real link and nobody
+      // sees the brackets; on paper there is nothing to click, so showing the
+      // markup would hand the reader a page of Obsidian syntax they have no
+      // reason to know
+      summary: plainTaskText(task.summary),
       status: task.status,
       priority: task.priority,
       owner: task.owner,

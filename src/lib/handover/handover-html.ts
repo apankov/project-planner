@@ -37,6 +37,7 @@ import {
   PAPER_FONT_STACK,
   PAPER_HEADING_BAND,
   PAPER_INK,
+  PAPER_LINK,
   PAPER_MONO_STACK,
   PAPER_MUTED,
   PAPER_RULE,
@@ -186,6 +187,28 @@ function statusPill(status: TaskStatus, label: string): string {
   );
 }
 
+/** Work that can still move. Finished work has no float and cannot be late. */
+function isOpen(status: TaskStatus): boolean {
+  return status !== "done" && status !== "canceled";
+}
+
+/**
+ * A run of task IDs, each one a jump to that task's row.
+ *
+ * The dependency columns are the part of the register a reader actually has to
+ * navigate — "what is xw5751, and is it done?" is the question the whole table
+ * exists to answer — and asking them to scan forty rows for an opaque
+ * six-character ID is asking them to give up. Every ID here goes straight to
+ * its row.
+ */
+function referenceList(ids: string[]): string {
+  return ids
+    .map(
+      (id) => `<a class="hp-ref" href="#${esc(taskAnchor(id))}">${esc(id)}</a>`
+    )
+    .join(", ");
+}
+
 /* -------------------------------------------------------------------------- */
 /* Stylesheet                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -237,8 +260,41 @@ h3 { font-size: 11.5pt; margin-top: 1.2em; }
 h4 { font-size: 10.5pt; margin-top: 1em; }
 p { margin: 0 0 0.7em; }
 
-a { color: ${PAPER_INK}; text-decoration: none; border-bottom: 1px solid ${PAPER_RULE}; }
-a.hp-plain { border-bottom: none; }
+/*
+ * Links are keyed off the href attribute, not off a class.
+ *
+ * The register drops a bare <a id="task-…"> on every task name purely as a
+ * jump target, and styling those would paint half the document blue for no
+ * reason. An anchor that goes somewhere looks like it; an anchor that is only
+ * somewhere to go looks like the text around it.
+ */
+a[href] {
+  color: ${PAPER_LINK};
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 0.6px;
+}
+a:not([href]) { color: inherit; text-decoration: none; }
+
+/* An ID in a dependency column: still a link, but it has to stay monospaced
+   and compact, so it gets the colour and a lighter underline */
+a.hp-ref {
+  color: ${PAPER_LINK};
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+/*
+ * A link whose target was not exported. It must not look clickable — a dead
+ * link that still looks live is the one outcome worse than plain text — so it
+ * keeps only a faint dotted rule to show that something was linked here.
+ */
+.hp-dead, a.hp-dead {
+  color: ${PAPER_MUTED};
+  text-decoration: none;
+  border-bottom: 1px dotted ${PAPER_RULE};
+}
 
 .hp-section {
   break-before: page;
@@ -279,8 +335,10 @@ a.hp-plain { border-bottom: none; }
 .hp-toc { list-style: none; padding: 0; margin: 0; }
 .hp-toc > li { margin-bottom: 6px; font-size: 11pt; }
 .hp-toc ul { list-style: none; padding-left: 16px; margin: 4px 0 0; }
-.hp-toc ul li { font-size: 10pt; color: ${PAPER_MUTED}; margin-bottom: 2px; }
-.hp-toc a { border-bottom: none; }
+.hp-toc ul li { font-size: 10pt; margin-bottom: 2px; }
+/* A contents page is nothing but links, so every line of it says so */
+.hp-toc > li > a[href] { font-weight: 600; }
+.hp-toc ul li a[href] { text-decoration-thickness: 0.4px; }
 
 /* Facts ------------------------------------------------------------------ */
 
@@ -341,8 +399,13 @@ table.hp-table td {
 table.hp-table tbody tr:nth-child(even) { background: ${PAPER_BAND}; }
 table.hp-table tr { break-inside: avoid; page-break-inside: avoid; }
 table.hp-table thead { display: table-header-group; }
+/* Fixed layout is what makes the colgroup binding rather than advisory */
+table.hp-table--fixed { table-layout: fixed; }
+table.hp-table--fixed td { overflow-wrap: break-word; }
 .hp-num { text-align: right; font-variant-numeric: tabular-nums; }
 .hp-id { font-family: ${PAPER_MONO_STACK}; font-size: 8pt; white-space: nowrap; }
+/* A cell of many IDs has to wrap, unlike the single ID in the first column */
+.hp-refs { white-space: normal; line-height: 1.6; }
 .hp-nowrap { white-space: nowrap; }
 .hp-muted { color: ${PAPER_MUTED}; }
 .hp-done td:nth-child(2) { text-decoration: line-through; color: ${PAPER_MUTED}; }
@@ -368,7 +431,22 @@ table.hp-table thead { display: table-header-group; }
 /* Figures ---------------------------------------------------------------- */
 
 .hp-figure { margin: 0 0 1.4em; break-inside: avoid; page-break-inside: avoid; }
-.hp-figure svg { max-width: 100%; height: auto; display: block; }
+/*
+ * A figure has to fit the page it is on, height included.
+ *
+ * Width alone is not enough: a tall plan scaled to the width of a landscape
+ * page still comes out taller than the page, and break-inside: avoid cannot
+ * save something that does not fit anywhere — the browser gives up and lets it
+ * spill, which is how a chart ends up with its feet on the next page. Capping
+ * the height makes the SVG letterbox itself instead, and because it carries a
+ * viewBox the drawing scales rather than squashes.
+ */
+.hp-figure svg {
+  max-width: 100%;
+  max-height: 158mm;
+  height: auto;
+  display: block;
+}
 .hp-figure figcaption {
   font-size: 8.5pt;
   color: ${PAPER_MUTED};
@@ -502,7 +580,12 @@ function coverAndContents(options: HandoverHtmlOptions): string {
   const { pack, labels } = options;
   const has = sectionsPresent(pack);
 
-  const entries: Array<{ id: string; label: string; children?: string[] }> = [];
+  interface TocChild {
+    anchor: string;
+    label: string;
+  }
+  const entries: Array<{ id: string; label: string; children?: TocChild[] }> =
+    [];
   entries.push({
     id: "overview",
     label: labels.section.overview,
@@ -518,10 +601,16 @@ function coverAndContents(options: HandoverHtmlOptions): string {
     entries.push({ id: "questions", label: labels.section.questions });
   }
   if (has.notes) {
+    // Every note, not a sample of them. An appendix of 59 notes whose contents
+    // page lists 40 is a document that quietly lost 19 of them, and the reader
+    // has no way to know which — they each have a page, so they each get a line
     entries.push({
       id: "notes",
       label: labels.section.notes,
-      children: pack.notes.slice(0, 40).map((note) => note.title),
+      children: pack.notes.map((note) => ({
+        anchor: note.anchor,
+        label: note.title,
+      })),
     });
   }
 
@@ -531,14 +620,21 @@ function coverAndContents(options: HandoverHtmlOptions): string {
         ? tag(
             "ul",
             "",
-            entry.children.map((child) => tag("li", "", esc(child))).join("")
+            entry.children
+              .map((child) =>
+                tag(
+                  "li",
+                  "",
+                  `<a href="#${esc(child.anchor)}">${esc(child.label)}</a>`
+                )
+              )
+              .join("")
           )
         : "";
       return tag(
         "li",
         "",
-        `<a class="hp-plain" href="#${entry.id}">${esc(entry.label)}</a>` +
-          children
+        `<a href="#${entry.id}">${esc(entry.label)}</a>` + children
       );
     })
     .join("");
@@ -735,9 +831,9 @@ function registerRow(
     tag(
       "td",
       "",
-      `${indent}<a class="hp-plain" id="${esc(
-        taskAnchor(task.id)
-      )}">${esc(task.summary)}</a>${critical}` +
+      `${indent}<a id="${esc(taskAnchor(task.id))}">${esc(
+        task.summary
+      )}</a>${critical}` +
         (task.inferred
           ? ` <span class="hp-muted">(${esc(labels.register.suggested)})</span>`
           : "")
@@ -758,21 +854,26 @@ function registerRow(
     tag(
       "td",
       'class="hp-num"',
-      task.floatDays === null ? "—" : String(task.floatDays)
+      // Float on finished work is arithmetic, not information: a task that is
+      // already done cannot slip, and "-43 days" against a green Done pill
+      // reads as an error in the report rather than a fact about the plan
+      task.floatDays === null || !isOpen(task.status)
+        ? "—"
+        : String(task.floatDays)
     ),
     tag(
       "td",
-      'class="hp-id"',
+      'class="hp-id hp-refs"',
       task.dependsOn.length === 0
         ? `<span class="hp-muted">—</span>`
-        : esc(task.dependsOn.join(", "))
+        : referenceList(task.dependsOn)
     ),
     tag(
       "td",
-      'class="hp-id"',
+      'class="hp-id hp-refs"',
       task.blocks.length === 0
         ? `<span class="hp-muted">—</span>`
-        : esc(task.blocks.join(", "))
+        : referenceList(task.blocks)
     ),
   ];
 
@@ -833,6 +934,18 @@ function registerSection(options: HandoverHtmlOptions): string {
     )
     .join("");
 
+  // Left to the browser, the dependency columns win: a cell holding a dozen
+  // comma-separated IDs asks for more room than a task name, and the name is
+  // squeezed into a four-line column while the IDs sit in acres of white.
+  // The name is the thing a reader is looking for, so it gets the space.
+  const widths = withFinance
+    ? [6, 25, 6, 7, 7, 7, 4, 4, 12, 12, 4, 6]
+    : [6, 30, 7, 8, 8, 8, 5, 5, 11, 12];
+
+  const columns = widths
+    .map((width) => `<col style="width:${width}%" />`)
+    .join("");
+
   const rows = pack.tasks
     .map((task) => registerRow(task, options, withFinance))
     .join("");
@@ -853,8 +966,10 @@ function registerSection(options: HandoverHtmlOptions): string {
     legend +
     tag(
       "table",
-      'class="hp-table"',
-      `<thead><tr>${headerMarkup}</tr></thead>` + tag("tbody", "", rows)
+      'class="hp-table hp-table--fixed"',
+      `<colgroup>${columns}</colgroup>` +
+        `<thead><tr>${headerMarkup}</tr></thead>` +
+        tag("tbody", "", rows)
     ) +
     `</section>`
   );
@@ -1089,9 +1204,7 @@ function questionsSection(options: HandoverHtmlOptions): string {
 
   const render = (question: (typeof pack.questions)[number]) => {
     const where = question.noteAnchor
-      ? `<a class="hp-plain" href="#${esc(question.noteAnchor)}">${esc(
-          question.noteName
-        )}</a>`
+      ? `<a href="#${esc(question.noteAnchor)}">${esc(question.noteName)}</a>`
       : esc(question.noteName);
 
     const answer = question.answer

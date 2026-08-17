@@ -20,6 +20,18 @@ export const PAPER_HEADING_BAND = "#e9ecf1";
 export const PAPER_WHITE = "#ffffff";
 export const PAPER_ACCENT = "#b4472f";
 
+/**
+ * Links, and only links.
+ *
+ * Deliberately not the accent: that rust is already spoken for by the critical
+ * path and by overdue dates, and a reader who has learned "red means this is
+ * urgent" should not then meet a red word that merely means "you can click
+ * me". Blue is the one colour a document can use for a link without having to
+ * explain itself, and this one is dark enough to stay legible in grayscale for
+ * anyone who prints the pack on an office mono printer.
+ */
+export const PAPER_LINK = "#1a4f8a";
+
 /** Matches the Gantt export's bars, so a status reads the same in both. */
 export const PAPER_STATUS_FILL = {
   todo: "#b7c1d0",

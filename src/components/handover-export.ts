@@ -56,6 +56,7 @@ import { readRateBook } from "src/lib/rate-book-note";
 import { buildCostReport, groupCosts } from "src/lib/finance-summary";
 import { CostIssue } from "src/lib/task-cost";
 import { todayIso } from "src/lib/date-utils";
+import { plainTaskText } from "src/lib/task-text";
 import {
   GanttExportLine,
   buildGanttSvg,
@@ -446,7 +447,9 @@ async function buildPack(input: PackInput): Promise<HandoverPack> {
   const exportLines: GanttExportLine[] = lines.map((line) => ({
     kind: "task" as const,
     id: line.row.task.id,
-    label: line.row.task.summary,
+    // Brackets and all is what the raw summary holds; the chart has nothing
+    // to click, so it shows the words. Same reasoning as the register's
+    label: plainTaskText(line.row.task.summary),
     depth: line.depth,
     start: line.row.bar.start,
     end: line.row.bar.end,
@@ -460,16 +463,18 @@ async function buildPack(input: PackInput): Promise<HandoverPack> {
   const ganttSvg =
     exportLines.length > 0
       ? buildGanttSvg({
-          title: draft.title,
+          // No title and no footer inside the drawing. Standing alone as a PNG
+          // the chart has to name itself and say where it came from; on page
+          // four of a pack whose cover, running header and page footer all say
+          // exactly that, it would be the third answer to a question nobody
+          // asked. The span line stays, because that is about the plan
+          title: "",
           subtitle: t("gantt.export_subtitle", {
             n: exportLines.length,
             start: formatExportDate(timeline.start),
             end: formatExportDate(timeline.end),
           }),
-          footer: t("gantt.export_footer", {
-            vault: app.vault.getName(),
-            date: formatExportDate(today),
-          }),
+          footer: "",
           lines: exportLines,
           laneMilestones: lanes.map((milestone) => ({
             label: milestone.label,

@@ -91,6 +91,38 @@ describe("buildTaskRows", () => {
     expect(row.end).toBe("2026-09-09");
   });
 
+  describe("task names", () => {
+    it("shows the words of a wikilinked task, not its brackets", () => {
+      const [row] = build([
+        makeRow({ id: "a", summary: "[[Redesign Float Section]]" }),
+      ]);
+
+      expect(row.summary).toBe("Redesign Float Section");
+    });
+
+    it("prefers a wikilink's alias", () => {
+      const [row] = build([
+        makeRow({ id: "a", summary: "[[Notes/Spec Batteries|Spec cells]]" }),
+      ]);
+
+      expect(row.summary).toBe("Spec cells");
+    });
+
+    it("drops the folders from a linked note's path", () => {
+      const [row] = build([
+        makeRow({ id: "a", summary: "[[Notes/Spec Batteries]]" }),
+      ]);
+
+      expect(row.summary).toBe("Spec Batteries");
+    });
+
+    it("leaves an ordinary task name alone", () => {
+      const [row] = build([makeRow({ id: "a", summary: "Purchase Motor" })]);
+
+      expect(row.summary).toBe("Purchase Motor");
+    });
+  });
+
   it("works out who is waiting on whom", () => {
     const rows = build([
       makeRow({ id: "a" }),
@@ -129,10 +161,13 @@ describe("buildTaskRows", () => {
   describe("overdue", () => {
     it("flags unfinished work that has run past its end date", () => {
       const [row] = build([
-        makeRow({ id: "a", status: "in_progress" }, {
-          start: "2026-08-01",
-          end: "2026-08-05",
-        }),
+        makeRow(
+          { id: "a", status: "in_progress" },
+          {
+            start: "2026-08-01",
+            end: "2026-08-05",
+          }
+        ),
       ]);
 
       expect(row.overdue).toBe(true);
@@ -140,10 +175,13 @@ describe("buildTaskRows", () => {
 
     it("does not flag finished work", () => {
       const [row] = build([
-        makeRow({ id: "a", status: "done" }, {
-          start: "2026-08-01",
-          end: "2026-08-05",
-        }),
+        makeRow(
+          { id: "a", status: "done" },
+          {
+            start: "2026-08-01",
+            end: "2026-08-05",
+          }
+        ),
       ]);
 
       expect(row.overdue).toBe(false);
@@ -151,19 +189,20 @@ describe("buildTaskRows", () => {
 
     it("does not flag cancelled work", () => {
       const [row] = build([
-        makeRow({ id: "a", status: "canceled" }, {
-          start: "2026-08-01",
-          end: "2026-08-05",
-        }),
+        makeRow(
+          { id: "a", status: "canceled" },
+          {
+            start: "2026-08-01",
+            end: "2026-08-05",
+          }
+        ),
       ]);
 
       expect(row.overdue).toBe(false);
     });
 
     it("does not flag work that ends today", () => {
-      const [row] = build([
-        makeRow({ id: "a" }, { start: TODAY, end: TODAY }),
-      ]);
+      const [row] = build([makeRow({ id: "a" }, { start: TODAY, end: TODAY })]);
 
       expect(row.overdue).toBe(false);
     });
@@ -256,10 +295,7 @@ describe("buildSummary", () => {
   it("counts tasks nobody is answerable for", () => {
     const summary = buildSummary({
       ...noQuestions,
-      tasks: build([
-        makeRow({ id: "a", owner: "Ada" }),
-        makeRow({ id: "b" }),
-      ]),
+      tasks: build([makeRow({ id: "a", owner: "Ada" }), makeRow({ id: "b" })]),
     });
 
     expect(summary.unownedCount).toBe(1);

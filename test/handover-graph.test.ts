@@ -97,9 +97,7 @@ describe("buildDependencyGraphs", () => {
     );
 
     // Three layers has to be wider than two, whatever the exact numbers are
-    expect(chain.drawings[0].width).toBeGreaterThan(
-      parallel.drawings[0].width
-    );
+    expect(chain.drawings[0].width).toBeGreaterThan(parallel.drawings[0].width);
   });
 
   it("marks the critical path in the accent colour", () => {

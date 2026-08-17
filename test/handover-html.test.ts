@@ -252,6 +252,40 @@ describe("buildHandoverHtml", () => {
       expect(contents).not.toContain('href="#finance"');
     });
 
+    it("lists every note in the contents, not a sample of them", () => {
+      const notes = Array.from({ length: 45 }, (_unused, index) => ({
+        path: `n${index}.md`,
+        title: `Note ${index}`,
+        folder: "",
+        html: "<p>x</p>",
+        anchor: noteAnchor(`n${index}.md`),
+      }));
+
+      const contents = render(makePack({ notes })).split('id="overview"')[0];
+
+      expect(contents).toContain("Note 0");
+      expect(contents).toContain("Note 44");
+    });
+
+    it("makes each note in the contents a link to its page", () => {
+      const anchor = noteAnchor("Plan.md");
+      const contents = render(
+        makePack({
+          notes: [
+            {
+              path: "Plan.md",
+              title: "Plan",
+              folder: "",
+              html: "<p>x</p>",
+              anchor,
+            },
+          ],
+        })
+      ).split('id="overview"')[0];
+
+      expect(contents).toContain(`href="#${anchor}"`);
+    });
+
     it("prints wide sections landscape", () => {
       const html = render(makePack({ ganttSvg: "<svg></svg>" }));
 
@@ -318,6 +352,48 @@ describe("buildHandoverHtml", () => {
         })
       );
       expect(withFinance).toContain(">Cost<");
+    });
+
+    it("makes every dependency ID a jump to that task's row", () => {
+      const html = render(
+        makePack({
+          tasks: [
+            makeTaskRow({ id: "aaa", blocks: ["bbb"] }),
+            makeTaskRow({ id: "bbb", dependsOn: ["aaa"] }),
+          ],
+        })
+      );
+
+      expect(html).toContain('href="#task-aaa"');
+      expect(html).toContain('href="#task-bbb"');
+      // ...and the row it lands on is a target, not itself a link
+      expect(html).toContain('<a id="task-aaa">');
+    });
+
+    it("hides float on work that is already finished", () => {
+      const done = render(
+        makePack({
+          tasks: [makeTaskRow({ status: "done", floatDays: -43 })],
+        })
+      );
+      expect(done).not.toContain("-43");
+
+      const open = render(
+        makePack({ tasks: [makeTaskRow({ status: "todo", floatDays: -43 })] })
+      );
+      expect(open).toContain("-43");
+    });
+
+    it("gives the task name more of the table than the ID columns", () => {
+      const html = render(makePack());
+      const widths = [...html.matchAll(/<col style="width:(\d+)%"/g)].map(
+        (match) => Number(match[1])
+      );
+
+      // Column 1 is the task name; 8 and 9 are "waits for" and "blocks"
+      expect(widths[1]).toBeGreaterThan(widths[8]);
+      expect(widths[1]).toBeGreaterThan(widths[9]);
+      expect(widths.reduce((sum, width) => sum + width, 0)).toBe(100);
     });
 
     it("says the register is empty rather than printing a bare table", () => {
@@ -438,6 +514,37 @@ describe("buildHandoverHtml", () => {
       const html = render(makePack({ notes: [{ ...note, html: "  " }] }));
 
       expect(html).toContain("This note is empty.");
+    });
+  });
+
+  describe("links", () => {
+    it("makes a link that goes somewhere look like a link", () => {
+      const html = render(makePack());
+
+      expect(html).toContain("a[href] {");
+      expect(html).toContain("text-decoration: underline");
+    });
+
+    it("leaves an anchor that is only a jump target unstyled", () => {
+      const html = render(makePack());
+
+      expect(html).toContain("a:not([href]) { color: inherit;");
+    });
+
+    it("does not dress a dead link up as a live one", () => {
+      const html = render(makePack());
+      const dead = html.slice(html.indexOf(".hp-dead, a.hp-dead {"));
+
+      expect(dead).toContain("text-decoration: none");
+    });
+
+    it("keeps link colour clear of the critical-path accent", () => {
+      const html = render(
+        makePack({ tasks: [makeTaskRow({ critical: true })] })
+      );
+
+      // The accent means "urgent" throughout the pack; links must not borrow it
+      expect(html).toContain("a[href] {\n  color: #1a4f8a;");
     });
   });
 

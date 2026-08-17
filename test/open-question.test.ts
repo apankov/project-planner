@@ -128,7 +128,10 @@ describe("scanOpenQuestions", () => {
     const questions = scanOpenQuestions(content, NOTE);
 
     expect(questions).toHaveLength(2);
-    expect(questions[0]).toMatchObject({ question: "Is the date fixed?", line: 2 });
+    expect(questions[0]).toMatchObject({
+      question: "Is the date fixed?",
+      line: 2,
+    });
     expect(questions[1]).toMatchObject({
       question: "Who signs it off?",
       line: 5,
@@ -266,7 +269,10 @@ describe("matchesQuery", () => {
 
 describe("parseAnswerBlock", () => {
   it("reads a one-line answer under its question", () => {
-    const lines = ["[oq:: Is it fixed?]", "> [!answer] Fixed, confirmed by Ops"];
+    const lines = [
+      "[oq:: Is it fixed?]",
+      "> [!answer] Fixed, confirmed by Ops",
+    ];
 
     expect(parseAnswerBlock(lines, 0)).toEqual({
       answer: "Fixed, confirmed by Ops",
@@ -285,7 +291,8 @@ describe("parseAnswerBlock", () => {
     ];
 
     expect(parseAnswerBlock(lines, 0)).toEqual({
-      answer: "Fixed.\nConfirmed 12 March by Ops.\nThe recert is the only risk.",
+      answer:
+        "Fixed.\nConfirmed 12 March by Ops.\nThe recert is the only risk.",
       endLine: 3,
     });
   });
