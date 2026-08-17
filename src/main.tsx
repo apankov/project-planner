@@ -49,6 +49,11 @@ import {
   retrofitCompanionNotes,
 } from "./lib/companion-note-retrofit";
 import { confirm } from "./components/confirm-modal";
+import {
+  DEFAULT_HANDOVER_DRAFT,
+  promptForHandover,
+} from "./components/handover-export-modal";
+import { exportHandoverPack } from "./components/handover-export";
 import { requestTaskFocus } from "./lib/view-focus";
 import { UndoHistory } from "./lib/undo-history";
 import { ensureRateNote } from "./lib/rate-book-note";
@@ -216,6 +221,14 @@ export default class ProjectPlannerPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: "export-handover-pack",
+      name: t("commands.export_handover_pack"),
+      callback: () => {
+        void this.createHandoverPack();
+      },
+    });
+
+    this.addCommand({
       id: "insert-filter-as-code-block",
       name: t("commands.insert_filter_as_code_block"),
       callback: () => {
@@ -347,6 +360,49 @@ export default class ProjectPlannerPlugin extends Plugin {
             skipped: result.skipped + result.failed,
           })
     );
+  }
+
+  /**
+   * Writes the whole project out as one searchable PDF.
+   *
+   * The point of it is the reader who does not have Obsidian, has no intention
+   * of installing it, and still has to be able to find "who owns the thing that
+   * blocks the launch" six months from now. So it is deliberately the whole
+   * vault and not a view: the plan, the register, the dependencies, the costs,
+   * the open questions and every note behind them, in one file that searches.
+   */
+  async createHandoverPack(): Promise<void> {
+    const draft = await promptForHandover(
+      this.app,
+      { ...DEFAULT_HANDOVER_DRAFT, title: this.app.vault.getName() },
+      this.settings.financeEnabled
+    );
+    if (!draft) return;
+
+    const title = draft.title || this.app.vault.getName();
+
+    try {
+      const result = await exportHandoverPack(
+        this.app,
+        this.settings,
+        { ...draft, title },
+        `${this.manifest.name} ${this.manifest.version}`
+      );
+
+      new Notice(
+        result.isPdf
+          ? t("handover.done", {
+              path: result.file.path,
+              tasks: result.taskCount,
+              notes: result.noteCount,
+            })
+          : t("handover.done_html", { path: result.file.path }),
+        result.isPdf ? 8000 : 0
+      );
+    } catch (error) {
+      console.error("Could not build the handover pack", error);
+      new Notice(t("handover.failed"));
+    }
   }
 
   /** Persists the Gantt task-column width after a resize drag. */

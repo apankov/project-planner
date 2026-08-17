@@ -4863,3 +4863,30 @@ If your plugin does not need CSS, delete this file.
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
+
+/* Says what the handover pack is before the questions about it */
+.project-planner-handover-modal__desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/*
+ * Where every note is rendered on the way into the handover pack.
+ *
+ * Obsidian's Markdown renderer needs its output to be in a laid-out document —
+ * some post-processors give up on a detached element, and `display: none`
+ * leaves images and callouts unmeasured — so the host has to be in the page but
+ * must never be seen. Parked off-screen and sealed off from pointer and screen
+ * reader alike, since the user is meant to keep working while it runs.
+ */
+.project-planner-handover-render {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 794px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
