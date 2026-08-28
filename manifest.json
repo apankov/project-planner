@@ -1,10 +1,10 @@
 {
-    "id": "tasks-map",
-    "name": "Tasks Map",
+    "id": "project-planner",
+    "name": "Project Planner",
     "version": "0.36.1",
     "minAppVersion": "1.8.0",
-    "description": "A graph view of your tasks.",
-    "author": "NicoKNL",
-    "authorUrl": "https://github.com/NicoKNL",
+    "description": "Plan projects from your Markdown tasks with a dependency graph, Gantt chart with critical path, kanban board, and cost tracking.",
+    "author": "Harrison Milburn",
+    "authorUrl": "https://github.com/HMIL1151",
     "isDesktopOnly": false
 }

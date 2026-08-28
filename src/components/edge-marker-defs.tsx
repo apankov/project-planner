@@ -12,7 +12,7 @@ import { EDGE_COLOR_NAMES, edgeMarkerId } from "src/lib/edge-style-manager";
  */
 export function EdgeMarkerDefs() {
   return (
-    <svg className="tasks-map-edge-marker-defs" aria-hidden="true">
+    <svg className="project-planner-edge-marker-defs" aria-hidden="true">
       <defs>
         {EDGE_COLOR_NAMES.map((color) => (
           <marker
@@ -27,7 +27,7 @@ export function EdgeMarkerDefs() {
           >
             <path
               d="M0,0 L8,3 L0,6 z"
-              className={`tasks-map-edge-arrowhead tasks-map-edge-arrowhead--${color}`}
+              className={`project-planner-edge-arrowhead project-planner-edge-arrowhead--${color}`}
             />
           </marker>
         ))}

@@ -71,28 +71,30 @@ export default function StatusCountsOverlay({
   }, [tasks]);
 
   return (
-    <div className="tasks-map-status-counts-overlay">
+    <div className="project-planner-status-counts-overlay">
       {ALL_STATUSES.map((status) => (
-        <div key={status} className="tasks-map-status-counts-item">
+        <div key={status} className="project-planner-status-counts-item">
           <span
-            className={`tasks-map-status-counts-dot tasks-map-status-counts-dot--${status}`}
+            className={`project-planner-status-counts-dot project-planner-status-counts-dot--${status}`}
           />
-          <span className="tasks-map-status-counts-label">
+          <span className="project-planner-status-counts-label">
             {t(statusLabelKeys[status])}
           </span>
-          <span className="tasks-map-status-counts-value">
+          <span className="project-planner-status-counts-value">
             {counts[status]}
           </span>
         </div>
       ))}
       <div
         ref={totalRef}
-        className="tasks-map-status-counts-item tasks-map-status-counts-total"
+        className="project-planner-status-counts-item project-planner-status-counts-total"
       >
-        <span className="tasks-map-status-counts-label">
+        <span className="project-planner-status-counts-label">
           {t("filters.status_total")}
         </span>
-        <span className="tasks-map-status-counts-value">{tasks.length}</span>
+        <span className="project-planner-status-counts-value">
+          {tasks.length}
+        </span>
       </div>
     </div>
   );

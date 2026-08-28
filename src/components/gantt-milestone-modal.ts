@@ -102,7 +102,7 @@ export class GanttMilestoneModal extends Modal {
       });
 
     this.errorEl = contentEl.createEl("p", {
-      cls: "tasks-map-gantt-milestone-modal__error",
+      cls: "project-planner-gantt-milestone-modal__error",
     });
     this.errorEl.hide();
 

@@ -8,9 +8,9 @@ interface EmbedSidebarProps {
 
 export function EmbedSidebar({ onReload }: EmbedSidebarProps) {
   return (
-    <div className="tasks-map-embed-sidebar">
+    <div className="project-planner-embed-sidebar">
       <button
-        className="tasks-map-embed-sidebar__button"
+        className="project-planner-embed-sidebar__button"
         onClick={onReload}
         aria-label={t("filters.reload_tasks")}
         title={t("filters.reload_tasks")}

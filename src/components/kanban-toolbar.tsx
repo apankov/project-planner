@@ -53,8 +53,8 @@ export function KanbanToolbar({
   onToggleAllColumns,
 }: KanbanToolbarProps) {
   return (
-    <div className="tasks-map-kanban-toolbar">
-      <label className="tasks-map-kanban-toolbar__toggle">
+    <div className="project-planner-kanban-toolbar">
+      <label className="project-planner-kanban-toolbar__toggle">
         <span>{t("kanban.group_by")}</span>
         <select
           value={groupBy}
@@ -72,7 +72,7 @@ export function KanbanToolbar({
       </label>
 
       <button
-        className="tasks-map-kanban-toolbar__button tasks-map-kanban-toolbar__button--accent"
+        className="project-planner-kanban-toolbar__button project-planner-kanban-toolbar__button--accent"
         onClick={onAddTask}
         title={t("kanban.add_task_desc")}
       >
@@ -81,7 +81,7 @@ export function KanbanToolbar({
       </button>
 
       <button
-        className="tasks-map-kanban-toolbar__button"
+        className="project-planner-kanban-toolbar__button"
         onClick={onSortByDue}
         title={t("kanban.sort_by_due_desc")}
       >
@@ -90,7 +90,7 @@ export function KanbanToolbar({
       </button>
 
       <button
-        className="tasks-map-kanban-toolbar__button"
+        className="project-planner-kanban-toolbar__button"
         onClick={onUndo}
         disabled={!canUndo}
         title={undoLabel ?? t("kanban.undo_desc")}
@@ -100,7 +100,7 @@ export function KanbanToolbar({
       </button>
 
       <button
-        className="tasks-map-kanban-toolbar__button"
+        className="project-planner-kanban-toolbar__button"
         onClick={onToggleAllColumns}
         title={
           anyCollapsed
@@ -118,7 +118,7 @@ export function KanbanToolbar({
         </span>
       </button>
 
-      <div className="tasks-map-kanban-toolbar__search">
+      <div className="project-planner-kanban-toolbar__search">
         <Search size={14} />
         <input
           type="text"
@@ -128,7 +128,7 @@ export function KanbanToolbar({
         />
       </div>
 
-      <label className="tasks-map-kanban-toolbar__toggle">
+      <label className="project-planner-kanban-toolbar__toggle">
         <input
           type="checkbox"
           checked={hideCompleted}
@@ -137,20 +137,20 @@ export function KanbanToolbar({
         <span>{t("kanban.hide_completed")}</span>
       </label>
 
-      <span className="tasks-map-kanban-toolbar__count">
+      <span className="project-planner-kanban-toolbar__count">
         {t("kanban.task_count", { n: taskCount })}
       </span>
 
-      <div className="tasks-map-kanban-toolbar__spacer" />
+      <div className="project-planner-kanban-toolbar__spacer" />
 
       {!isWritableGroupBy(groupBy) && (
-        <span className="tasks-map-kanban-toolbar__note">
+        <span className="project-planner-kanban-toolbar__note">
           {t("kanban.read_only_grouping")}
         </span>
       )}
 
       <button
-        className="tasks-map-kanban-toolbar__button"
+        className="project-planner-kanban-toolbar__button"
         onClick={onReload}
         title={t("kanban.reload")}
       >

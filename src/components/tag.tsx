@@ -28,7 +28,7 @@ export function Tag({
 
   return (
     <span
-      className={`tasks-map-tag ${getTagColorClass(tag, palette, colorOverrides)} ${onRemove ? "tasks-map-tag--removable" : ""}`}
+      className={`project-planner-tag ${getTagColorClass(tag, palette, colorOverrides)} ${onRemove ? "project-planner-tag--removable" : ""}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -36,7 +36,7 @@ export function Tag({
       {isHovered && onRemove && (
         <X
           size={12}
-          className="tasks-map-tag-remove-icon"
+          className="project-planner-tag-remove-icon"
           onClick={handleRemoveClick}
         />
       )}

@@ -11,8 +11,8 @@
 Clone the repository:
 
 ```sh
-git clone https://github.com/NicoKNL/tasks-map.git
-cd tasks-map
+git clone https://github.com/HMIL1151/project-planner.git
+cd project-planner
 ```
 
 Install dependencies:
@@ -97,7 +97,7 @@ To test the plugin locally, copy the built output into your vault:
 npm run build
 
 # Then copy main.js, manifest.json, and styles.css into:
-# <your-vault>/.obsidian/plugins/tasks-map/
+# <your-vault>/.obsidian/plugins/project-planner/
 ```
 
 Enable the plugin in Obsidian under Settings → Community plugins.
@@ -111,7 +111,7 @@ Point it at your vault by creating a `.obsidian-plugin-dir` file in the
 repository root (git-ignored) whose first non-comment line is the target path:
 
 ```text
-C:\Users\you\MyVault\.obsidian\plugins\tasks-map
+C:\Users\you\MyVault\.obsidian\plugins\project-planner
 ```
 
 Alternatively set the `OBSIDIAN_PLUGIN_DIR` environment variable, which takes

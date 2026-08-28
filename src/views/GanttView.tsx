@@ -21,24 +21,14 @@ import {
   getTasksApi,
   parseTaskLine,
   resolveDefaultTaskFile,
-  setTaskTextInVault,
 } from "src/lib/utils";
+import { withTaskChanges } from "src/lib/task-write";
+import { openTaskEditor } from "src/lib/open-task-editor";
 import { promptForTaskLine } from "src/components/task-line-modal";
-import { promptForTaskFinance } from "src/components/task-finance-modal";
-import {
-  TaskEditDraft,
-  promptForTaskEdit,
-} from "src/components/task-edit-modal";
-import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
-import { readRateBook } from "src/lib/rate-book-note";
 import { withCompanionNote } from "src/lib/companion-note";
 import { diffDays, todayIso } from "src/lib/date-utils";
-import {
-  barLength,
-  getTimelineRange,
-  resizeBar,
-  shiftBar,
-} from "src/lib/gantt-schedule";
+import { getTimelineRange, resizeBar, shiftBar } from "src/lib/gantt-schedule";
+import { planCascade } from "src/lib/gantt-cascade";
 import {
   GanttRow,
   buildGanttRows,
@@ -65,7 +55,7 @@ import {
   toggleCollapsed,
 } from "src/lib/task-hierarchy";
 import { promptForParent } from "src/components/gantt-parent-modal";
-import { plainTaskText, taskTextDescription } from "src/lib/task-text";
+import { plainTaskText } from "src/lib/task-text";
 import {
   GANTT_SCALES,
   GanttChart,
@@ -77,6 +67,7 @@ import {
   GanttMilestone,
   addMilestone,
   findMilestone,
+  laneMilestones,
   milestoneOrderKey,
   readMilestones,
   removeMilestone,
@@ -84,6 +75,19 @@ import {
   shiftMilestone,
   updateMilestone,
 } from "src/lib/gantt-milestones";
+import { buildLines } from "src/lib/gantt-lines";
+import {
+  GanttExportLine,
+  buildGanttSvg,
+  exportFileName,
+  formatExportDate,
+} from "src/lib/gantt-export";
+import {
+  DEFAULT_EXPORT_DRAFT,
+  GanttExportDraft,
+  exportGanttPng,
+  promptForGanttExport,
+} from "src/components/gantt-export-modal";
 import { getConnectionHighlight } from "src/lib/connection-highlight";
 import { findCriticalPath } from "src/lib/critical-path";
 import { ScheduleRisk, findScheduleRisks } from "src/lib/schedule-risk";
@@ -91,13 +95,12 @@ import { GanttToolbar } from "src/components/gantt-toolbar";
 import { BarDragResult } from "src/components/gantt-bar";
 import { MilestoneDragResult } from "src/components/gantt-milestone";
 import { promptForMilestone } from "src/components/gantt-milestone-modal";
-import { TasksMapSettings } from "src/types/settings";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import { useUndoHistory } from "src/hooks/use-undo-history";
-import { TaskDateProperty, findTaskDate } from "src/lib/task-dates";
-import { TaskProgress } from "src/lib/task-progress";
-import { TaskStatus } from "src/types/task";
-import TasksMapPlugin from "../main";
+import { findTaskDate } from "src/lib/task-dates";
+import { effectiveTaskStatus } from "src/lib/task-progress";
+import ProjectPlannerPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
   GANTT_VIEW_TYPE,
@@ -106,50 +109,12 @@ import {
 import { t } from "../i18n";
 
 interface GanttViewProps {
-  settings: TasksMapSettings;
-  plugin: TasksMapPlugin;
+  settings: ProjectPlannerSettings;
+  plugin: ProjectPlannerPlugin;
 }
 
 /** Stable empty map, so switching the warnings off is not a new prop. */
 const NO_RISKS: Map<string, ScheduleRisk[]> = new Map();
-
-/** Fields a view can swap on a task without re-reading it from the vault. */
-interface TaskFieldChanges {
-  summary?: string;
-  status?: TaskStatus;
-  tags?: string[];
-  dates?: TaskDateProperty[];
-  progress?: TaskProgress;
-  incomingLinks?: string[];
-}
-
-/**
- * A copy of a task with a few fields swapped.
- *
- * An optimistic redraw needs a new object — React compares by identity — that
- * is still a real `DataviewTask` or `NoteTask` with all its methods, so the
- * prototype is carried over rather than spread away.
- */
-function withTaskChanges(task: BaseTask, changes: TaskFieldChanges): BaseTask {
-  return Object.assign(
-    Object.create(Object.getPrototypeOf(task)),
-    task,
-    changes
-  ) as BaseTask;
-}
-
-/** The dates a task carries, with start and due replaced by a draft's. */
-function datesFromDraft(
-  dates: TaskDateProperty[],
-  draft: TaskEditDraft
-): TaskDateProperty[] {
-  const next = dates.filter(
-    (entry) => entry.type !== "start" && entry.type !== "due"
-  );
-  if (draft.start) next.push({ type: "start", date: draft.start });
-  if (draft.due) next.push({ type: "due", date: draft.due });
-  return next;
-}
 
 export default function GanttView({ settings, plugin }: GanttViewProps) {
   const app = useApp();
@@ -170,6 +135,13 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
   const [savingTaskIds, setSavingTaskIds] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  // Remembered for the session, so exporting the same plan twice does not mean
+  // retyping its heading and picking its page size again
+  const [exportDraft, setExportDraft] = useState<GanttExportDraft>({
+    title: "",
+    ...DEFAULT_EXPORT_DRAFT,
+  });
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   // Undo runs long after its action, so it reads tasks through a ref
@@ -389,6 +361,24 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     ]);
   }, [hierarchy, milestones, order, settings.ganttDateOrder]);
 
+  /**
+   * The lines exactly as the chart draws them — headings, rows and the
+   * milestones filed among them, nested, folded and in order.
+   *
+   * The chart works this out for itself from the same three inputs, so this is
+   * the same list rather than a second opinion on it. The export reads it
+   * because a picture of the chart has to be a picture of *this* chart: what
+   * was filtered out, folded away or dragged into place is what the reader of
+   * the exported page should see too.
+   */
+  const chartLines = useMemo(
+    () => buildLines(hierarchyGroups, milestones, lineOrder),
+    [hierarchyGroups, milestones, lineOrder]
+  );
+
+  /** Milestones marked across the chart rather than filed in the list. */
+  const laneFlags = useMemo(() => laneMilestones(milestones), [milestones]);
+
   // Which tasks decide the finish date, and how much room the rest have. Run
   // over the rows on screen, so filtering the chart re-asks the question of the
   // plan you can actually see rather than of the whole vault.
@@ -586,34 +576,77 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const handleCommit = useCallback(
-    async ({ taskId, mode, days }: BarDragResult) => {
+    async ({ taskId, mode, days, cascade }: BarDragResult) => {
       const row = rows.find((candidate) => candidate.task.id === taskId);
       if (!row) return;
 
+      // Shift-dragging pushes the slip through the rest of the plan, which is
+      // the whole point of the gesture — so it wins over the selection, which
+      // is a different and more deliberate way of saying which bars move.
+      const plan =
+        cascade && mode === "move" ? planCascade(taskId, rows, days) : null;
+
+      // Nothing travelled anywhere, so there is nothing to write or undo
+      if (plan && plan.movingIds.length === 0) return;
+
       // Moving one of several selected bars carries the rest along, which is
-      // how a slipped date gets pushed through the tasks that follow it
+      // another way to push a slipped date through the tasks that follow it
       const movingTogether =
+        !plan &&
         mode === "move" &&
         selectedTaskIds.size > 1 &&
         selectedTaskIds.has(taskId);
 
-      const moving = movingTogether
-        ? rows.filter((candidate) => selectedTaskIds.has(candidate.task.id))
-        : [row];
+      const moving = plan
+        ? rows.filter((candidate) => plan.movingIds.includes(candidate.task.id))
+        : movingTogether
+          ? rows.filter((candidate) => selectedTaskIds.has(candidate.task.id))
+          : [row];
 
       const snapshots = moving.map(capturePreviousDates);
 
       for (const target of moving) {
-        await commitRowDates(target, mode, days);
+        // Each row in a cascade travels its own distance: one held back by a
+        // blocker must not drag the tasks waiting on it any further than it got
+        const targetDays = plan
+          ? (plan.shiftById.get(target.task.id) ?? plan.days)
+          : days;
+        await commitRowDates(target, mode, targetDays);
       }
 
       plugin.undoHistory.push({
-        label:
-          moving.length > 1
+        label: plan
+          ? t("gantt.undo_cascade", { n: moving.length })
+          : moving.length > 1
             ? t("gantt.undo_move_many", { n: moving.length })
             : t("gantt.undo_move_one", { task: row.task.summary }),
         undo: () => restoreDates(snapshots),
       });
+
+      if (plan) {
+        // One line, however many ways the plan had to give: a drag that was
+        // held back *and* left work behind should not stack up notices
+        const left = [
+          plan.heldIds.length > 0
+            ? t("gantt.cascade_held", { n: plan.heldIds.length })
+            : null,
+          plan.skippedInferredIds.length > 0
+            ? t("gantt.cascade_skipped", { n: plan.skippedInferredIds.length })
+            : null,
+          plan.skippedCompletedIds.length > 0
+            ? t("gantt.cascade_skipped_done", {
+                n: plan.skippedCompletedIds.length,
+              })
+            : null,
+        ];
+
+        new Notice(
+          [t("gantt.cascade_moved", { n: moving.length }), ...left]
+            .filter(Boolean)
+            .join(" — ")
+        );
+        return;
+      }
 
       if (moving.length > 1) {
         new Notice(t("gantt.moved_together", { n: moving.length }));
@@ -851,177 +884,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [app.vault, settings.linkingStyle]
   );
 
-  /**
-   * Opens the finance modal for a row and writes what comes back.
-   *
-   * The row already knows its bar, so unlike the map this does not have to
-   * schedule anything — the days the modal quotes are the days on screen.
-   */
-  const handleEditFinance = useCallback(
-    async (taskId: string) => {
-      const row = rows.find((candidate) => candidate.task.id === taskId);
-      if (!row) return;
-
-      const { task } = row;
-      const { book } = await readRateBook(app, settings.financeRateNotePath);
-
-      const result = await promptForTaskFinance(app, {
-        initial: task.finance,
-        summary: task.summary,
-        days: barLength(row.bar.start, row.bar.end, settings.ganttSkipWeekends),
-        inferred: row.inferred,
-        defaultHoursPerDay: settings.financeDefaultHoursPerDay,
-        book,
-        currency: settings.financeCurrency,
-        inline: task.type === "dataview",
-      });
-
-      if (!result) return;
-
-      const finance =
-        result.action === "clear" ? EMPTY_TASK_FINANCE : result.finance;
-      const previous = task.finance;
-
-      // An inline task with no ID in its line is found by its text, which is
-      // ambiguous when two tasks read the same
-      await stampTaskId(task);
-
-      const updated = await task.setFinance(finance, app);
-      if (!updated) {
-        new Notice(t("finance.write_failed"));
-        return;
-      }
-
-      setTasks((previousTasks) =>
-        previousTasks.map((candidate) =>
-          candidate.id === taskId ? updated : candidate
-        )
-      );
-
-      plugin.undoHistory.push({
-        label: t("finance.undo_edit", { task: task.summary }),
-        undo: async () => {
-          // Read the task afresh: the line has moved on since the edit
-          const current =
-            tasksRef.current.find((candidate) => candidate.id === taskId) ??
-            updated;
-          const reverted = await current.setFinance(previous, app);
-          if (!reverted) return;
-
-          setTasks((previousTasks) =>
-            previousTasks.map((candidate) =>
-              candidate.id === taskId ? reverted : candidate
-            )
-          );
-        },
-      });
-    },
-    [
-      app,
-      plugin,
-      rows,
-      settings.financeRateNotePath,
-      settings.financeDefaultHoursPerDay,
-      settings.financeCurrency,
-      settings.ganttSkipWeekends,
-      stampTaskId,
-    ]
-  );
+  /* Costing is part of the one task editor now; the row menu opens that. */
 
   /**
-   * Writes one task edit: the words, the state, the two dates and the
-   * progress, in that order and only where something actually changed.
-   *
-   * The order matters. Setting a task in progress stamps a start date and
-   * finishing one stamps a completion date, so the status goes first and the
-   * dates the user typed are written over the top — otherwise a status change
-   * would quietly overrule the date beside it in the same dialog.
-   *
-   * The redraw is optimistic and the vault write is what can fail; a failure
-   * puts the task the view was showing back and says so. Everything the edit
-   * touches is read back off the note afterwards, so the row ends up showing
-   * what the file says rather than what the dialog hoped.
-   */
-  const writeTaskEdit = useCallback(
-    async (taskId: string, draft: TaskEditDraft): Promise<boolean> => {
-      const task = tasksRef.current.find(
-        (candidate) => candidate.id === taskId
-      );
-      if (!task) return false;
-
-      const canEditText = task.type === "dataview";
-      const previousText = taskTextDescription(task.text);
-      const previousStart = findTaskDate(task.dates, "start");
-      const previousDue = findTaskDate(task.dates, "due");
-
-      const textChanged = canEditText && draft.text !== previousText;
-      const statusChanged = draft.status !== task.status;
-      const datesChanged =
-        draft.start !== previousStart || draft.due !== previousDue;
-      const progressChanged = draft.progress !== task.progress.percent;
-
-      if (!textChanged && !statusChanged && !datesChanged && !progressChanged) {
-        return true;
-      }
-
-      // Optimistic: the vault write is slower than the eye
-      applyTaskUpdate(
-        taskId,
-        withTaskChanges(task, {
-          status: draft.status,
-          progress: { percent: draft.progress },
-          dates: datesFromDraft(task.dates, draft),
-          ...(textChanged ? { summary: draft.text } : {}),
-        })
-      );
-
-      try {
-        // An inline task with no ID in its line is found by its text, which is
-        // ambiguous when two tasks read the same — and about to change
-        await stampTaskId(task);
-
-        let current: BaseTask = task;
-
-        if (statusChanged) {
-          await current.updateStatus(draft.status, app);
-          current = withTaskChanges(current, { status: draft.status });
-        }
-
-        if (datesChanged) {
-          const dated = await current.setDates(
-            { start: draft.start, due: draft.due },
-            app
-          );
-          if (!dated) throw new Error("dates could not be written");
-          current = dated;
-        }
-
-        if (textChanged) {
-          const renamed = await setTaskTextInVault(current, draft.text, app);
-          if (!renamed) throw new Error("task text could not be written");
-          current = renamed;
-        }
-
-        if (progressChanged) {
-          const progressed = await current.setProgress(draft.progress, app);
-          if (!progressed) throw new Error("progress could not be written");
-          current = progressed;
-        }
-
-        applyTaskUpdate(taskId, current);
-        return true;
-      } catch (error) {
-        console.error("Could not save the task edit", error);
-        new Notice(t("task_edit.write_failed", { task: task.summary }));
-        applyTaskUpdate(taskId, task);
-        return false;
-      }
-    },
-    [app, applyTaskUpdate, stampTaskId]
-  );
-
-  /**
-   * Opens the editor for a row and writes what comes back.
+   * Opens the editor for a row.
    *
    * A summary row gets the same dialog with its date fields locked, matching
    * the drag and the resize its bar already refuses: a parent's span is its
@@ -1034,54 +900,26 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       const row = rows.find((candidate) => candidate.task.id === taskId);
       if (!row) return;
 
-      const { task } = row;
       const summary = summaryTaskIds.has(taskId);
-      const previous: TaskEditDraft = {
-        text: taskTextDescription(task.text),
-        status: task.status,
-        start: findTaskDate(task.dates, "start"),
-        due: findTaskDate(task.dates, "due"),
-        progress: task.progress.percent,
-      };
 
-      const result = await promptForTaskEdit(app, {
-        initial: previous,
+      await openTaskEditor({
+        app,
+        task: row.task,
+        tasks: tasksRef.current,
+        settings,
+        undoHistory: plugin.undoHistory,
         // What a click on a suggested bar used to write straight to the note.
-        // It now fills the empty date fields instead, so accepting the
-        // schedule the chart proposed is still a click and a save.
+        // It fills the empty date fields instead, so accepting the schedule
+        // the chart proposed is still a click and a save.
         suggested:
           row.inferred && !summary
             ? { start: row.bar.start, due: row.bar.end }
             : null,
         summary,
-        canEditText: task.type === "dataview",
-      });
-      if (!result) return;
-
-      const { draft } = result;
-      const unchanged =
-        draft.text === previous.text &&
-        draft.status === previous.status &&
-        draft.start === previous.start &&
-        draft.due === previous.due &&
-        draft.progress === previous.progress;
-      // A dialog opened and closed again is not an edit, and does not belong
-      // on the undo stack in front of whatever the user actually did
-      if (unchanged) return;
-
-      const saved = await writeTaskEdit(taskId, draft);
-      if (!saved) return;
-
-      plugin.undoHistory.push({
-        label: t("task_edit.undo_edit", { task: plainTaskText(task.summary) }),
-        // The same write, run backwards; it reads the task afresh, so an undo
-        // long after the fact still finds the line where it is now
-        undo: async () => {
-          await writeTaskEdit(taskId, previous);
-        },
+        onTaskUpdated: (updated) => applyTaskUpdate(taskId, updated),
       });
     },
-    [app, plugin, rows, summaryTaskIds, writeTaskEdit]
+    [app, applyTaskUpdate, plugin, rows, settings, summaryTaskIds]
   );
 
   /**
@@ -1507,17 +1345,177 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     );
   }, [applying, inferredRows, writeRowDates]);
 
+  /**
+   * The chart as a picture, for a document.
+   *
+   * The drawing is built from scratch rather than captured off the screen, so
+   * it can be plainer than the view it comes from: no hover controls, no
+   * selection, no theme colours, and the whole timeline fitted to the page
+   * instead of a slice of it. What it keeps is what a reader needs — the
+   * order, the nesting, the states, today, the milestones and a key.
+   */
+  const handleExport = useCallback(async () => {
+    if (exporting) return;
+    if (chartLines.length === 0) {
+      new Notice(t("gantt.export_empty"));
+      return;
+    }
+
+    const vaultName = app.vault.getName();
+    const draft = await promptForGanttExport(app, {
+      ...exportDraft,
+      title: exportDraft.title || vaultName,
+    });
+    if (!draft) return;
+
+    setExportDraft(draft);
+    setExporting(true);
+
+    const title = draft.title || vaultName;
+
+    try {
+      const lines: GanttExportLine[] = chartLines.map((line) => {
+        if (line.kind === "header") {
+          return { kind: "heading", label: line.label, count: line.count };
+        }
+        if (line.kind === "milestone") {
+          return {
+            kind: "milestone",
+            label: line.milestone.label,
+            date: line.milestone.date,
+          };
+        }
+
+        const { task, bar, inferred } = line.row;
+        return {
+          kind: "task",
+          id: task.id,
+          label: plainTaskText(task.summary),
+          depth: line.depth,
+          start: bar.start,
+          end: bar.end,
+          // The reading the chart shows, so a task carrying progress but still
+          // ticked off as to-do exports as underway, the way it looks on screen
+          status: effectiveTaskStatus(task.status, task.progress),
+          percent: task.progress.percent,
+          inferred,
+          rollup: line.hasChildren,
+          critical:
+            settings.showCriticalPath && criticalPath.criticalIds.has(task.id),
+        };
+      });
+
+      // The span the plan actually covers, rather than the padded range the
+      // chart is drawn over: the subtitle is a claim about the work
+      const dates = [
+        ...lines.flatMap((line) =>
+          line.kind === "task"
+            ? [line.start, line.end]
+            : line.kind === "milestone"
+              ? [line.date]
+              : []
+        ),
+        ...laneFlags.map((milestone) => milestone.date),
+      ];
+      const first = dates.reduce(
+        (earliest, date) => (diffDays(earliest, date) < 0 ? date : earliest),
+        dates[0] ?? timeline.start
+      );
+      const last = dates.reduce(
+        (latest, date) => (diffDays(latest, date) > 0 ? date : latest),
+        dates[0] ?? timeline.end
+      );
+
+      const image = buildGanttSvg({
+        title,
+        subtitle: t("gantt.export_subtitle", {
+          n: rows.length,
+          start: formatExportDate(first),
+          end: formatExportDate(last),
+        }),
+        footer: t("gantt.export_footer", {
+          vault: vaultName,
+          date: formatExportDate(today),
+        }),
+        lines,
+        laneMilestones: laneFlags.map((milestone) => ({
+          label: milestone.label,
+          date: milestone.date,
+        })),
+        timelineStart: timeline.start,
+        timelineEnd: timeline.end,
+        today,
+        labels: {
+          today: t("gantt.legend_today"),
+          statuses: {
+            todo: t("gantt.legend_todo"),
+            in_progress: t("gantt.legend_in_progress"),
+            done: t("gantt.legend_done"),
+            canceled: t("gantt.legend_canceled"),
+          },
+          suggested: t("gantt.legend_suggested"),
+          summary: t("gantt.legend_summary"),
+          milestone: t("gantt.legend_milestone"),
+          critical: t("gantt.legend_critical"),
+        },
+        options: {
+          paper: draft.paper,
+          pixelRatio: draft.pixelRatio,
+          showToday: draft.showToday,
+        },
+      });
+
+      const result = await exportGanttPng(
+        app,
+        image,
+        exportFileName(title, today),
+        draft.pixelRatio
+      );
+
+      new Notice(
+        result.copied
+          ? t("gantt.export_done_copied", {
+              file: result.file.name,
+              width: result.width,
+              height: result.height,
+            })
+          : t("gantt.export_done", {
+              file: result.file.name,
+              width: result.width,
+              height: result.height,
+            })
+      );
+    } catch (error) {
+      console.error("Could not export the Gantt chart", error);
+      new Notice(t("gantt.export_failed"));
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    app,
+    chartLines,
+    criticalPath.criticalIds,
+    exportDraft,
+    exporting,
+    laneFlags,
+    rows.length,
+    settings.showCriticalPath,
+    timeline.end,
+    timeline.start,
+    today,
+  ]);
+
   if (isLoading) {
     return (
-      <div className="tasks-map-loading-container">
-        <div className="tasks-map-spinner" />
-        <div className="tasks-map-loading-text">{t("gantt.loading")}</div>
+      <div className="project-planner-loading-container">
+        <div className="project-planner-spinner" />
+        <div className="project-planner-loading-text">{t("gantt.loading")}</div>
       </div>
     );
   }
 
   return (
-    <div className="tasks-map-gantt-container">
+    <div className="project-planner-gantt-container">
       <GanttToolbar
         scale={scale}
         onScaleChange={setScale}
@@ -1543,20 +1541,22 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         onToggleDateOrder={handleToggleDateOrder}
         onAddTask={() => void addTask(null)}
         onAddMilestone={() => void handleAddMilestone()}
+        onExport={() => void handleExport()}
+        exporting={exporting}
         onUndoOrder={() => void handleUndo()}
         canUndoOrder={canUndo}
         undoLabel={undoLabel}
       />
 
       {linkingFromId && (
-        <div className="tasks-map-gantt-linking">
+        <div className="project-planner-gantt-linking">
           {t("gantt.linking_hint", {
             task:
               rows.find((row) => row.task.id === linkingFromId)?.task.summary ??
               "",
           })}
           <button
-            className="tasks-map-gantt-linking__cancel"
+            className="project-planner-gantt-linking__cancel"
             onClick={() => setLinkingFromId(null)}
           >
             {t("gantt.linking_cancel")}
@@ -1569,7 +1569,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           them behind "no tasks" would lose work the user can see no other
           way. */}
       {rows.length === 0 && rowMilestones(milestones).length === 0 ? (
-        <div className="tasks-map-gantt-empty">
+        <div className="project-planner-gantt-empty">
           {tasks.length === 0 ? t("gantt.empty") : t("gantt.empty_filtered")}
         </div>
       ) : (
@@ -1610,7 +1610,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           onSetParent={(taskId) => void handleSetParent(taskId)}
           onEditFinance={
             settings.financeEnabled
-              ? (taskId) => void handleEditFinance(taskId)
+              ? (taskId) => void handleOpenTask(taskId)
               : undefined
           }
           onAddTag={(taskId, tag) => void changeTag(taskId, tag, true)}
@@ -1629,10 +1629,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         />
       )}
 
-      <div className="tasks-map-gantt-footer">
+      <div className="project-planner-gantt-footer">
         <GanttLegend showCriticalPath={settings.showCriticalPath} />
         {settings.showCriticalPath && criticalPath.projectFinish && (
-          <div className="tasks-map-gantt-hint">
+          <div className="project-planner-gantt-hint">
             {t("gantt.critical_path_hint", {
               finish: criticalPath.projectFinish,
               n: criticalPath.criticalIds.size,
@@ -1640,17 +1640,17 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           </div>
         )}
         {visibleRisks.size > 0 && (
-          <div className="tasks-map-gantt-hint tasks-map-gantt-hint--warning">
+          <div className="project-planner-gantt-hint project-planner-gantt-hint--warning">
             {t("gantt.at_risk_hint", { n: visibleRisks.size })}
           </div>
         )}
         {selectedTaskIds.size > 1 && (
-          <div className="tasks-map-gantt-hint">
+          <div className="project-planner-gantt-hint">
             {t("gantt.moved_together_hint", { n: selectedTaskIds.size })}
           </div>
         )}
         {inferredRows.length > 0 && (
-          <div className="tasks-map-gantt-hint">
+          <div className="project-planner-gantt-hint">
             {t("gantt.inferred_hint", { n: inferredRows.length })}
           </div>
         )}

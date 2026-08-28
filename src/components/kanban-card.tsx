@@ -25,7 +25,7 @@ import { t } from "../i18n";
  * from a file dragged in off the desktop before it lights up as a drop target:
  * the payload cannot be read during a dragover, only the type list can.
  */
-export const CARD_DRAG_KEY = "application/tasks-map-card-id";
+export const CARD_DRAG_KEY = "application/project-planner-card-id";
 
 export type DropPlacement = "before" | "after";
 
@@ -123,7 +123,7 @@ export function KanbanCard({
   // Custom properties cannot be set from JSX, where inline styles are banned
   useLayoutEffect(() => {
     progressRef.current?.style.setProperty(
-      "--tasks-map-card-progress",
+      "--project-planner-card-progress",
       `${percent ?? 0}%`
     );
   }, [percent]);
@@ -168,12 +168,12 @@ export function KanbanCard({
   );
 
   const classNames = [
-    "tasks-map-kanban-card",
-    `tasks-map-kanban-card--${task.status}`,
-    selected ? "tasks-map-kanban-card--selected" : "",
-    dragging ? "tasks-map-kanban-card--dragging" : "",
-    saving ? "tasks-map-kanban-card--saving" : "",
-    dropPlacement ? `tasks-map-kanban-card--drop-${dropPlacement}` : "",
+    "project-planner-kanban-card",
+    `project-planner-kanban-card--${task.status}`,
+    selected ? "project-planner-kanban-card--selected" : "",
+    dragging ? "project-planner-kanban-card--dragging" : "",
+    saving ? "project-planner-kanban-card--saving" : "",
+    dropPlacement ? `project-planner-kanban-card--drop-${dropPlacement}` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -195,9 +195,9 @@ export function KanbanCard({
       }}
       title={t("kanban.card_hint")}
     >
-      <div className="tasks-map-kanban-card__header">
+      <div className="project-planner-kanban-card__header">
         <span
-          className="tasks-map-kanban-card__status"
+          className="project-planner-kanban-card__status"
           role="button"
           tabIndex={0}
           title={t("kanban.cycle_status")}
@@ -214,12 +214,15 @@ export function KanbanCard({
           {STATUS_ICONS[task.status]}
         </span>
 
-        <span ref={summaryRef} className="tasks-map-kanban-card__summary" />
+        <span
+          ref={summaryRef}
+          className="project-planner-kanban-card__summary"
+        />
 
         {task.priority && <TaskPriority priority={task.priority} />}
         {task.starred && (
           <span
-            className="tasks-map-kanban-card__star"
+            className="project-planner-kanban-card__star"
             title={t("kanban.starred")}
           >
             ⭐
@@ -231,15 +234,15 @@ export function KanbanCard({
       {percent !== null && (
         <div
           ref={progressRef}
-          className="tasks-map-kanban-card__progress"
+          className="project-planner-kanban-card__progress"
           title={t("kanban.progress", { n: percent })}
         >
-          <div className="tasks-map-kanban-card__progress-fill" />
+          <div className="project-planner-kanban-card__progress-fill" />
         </div>
       )}
 
       {showTags && task.tags.length > 0 && (
-        <div className="tasks-map-kanban-card__tags">
+        <div className="project-planner-kanban-card__tags">
           {task.tags.map((tag) => (
             <Tag
               key={tag}
@@ -252,10 +255,10 @@ export function KanbanCard({
         </div>
       )}
 
-      <div className="tasks-map-kanban-card__footer">
+      <div className="project-planner-kanban-card__footer">
         {due && (
           <span
-            className={`tasks-map-kanban-card__due tasks-map-kanban-card__due--${dueTone(
+            className={`project-planner-kanban-card__due project-planner-kanban-card__due--${dueTone(
               due,
               today
             )}`}
@@ -267,11 +270,11 @@ export function KanbanCard({
         )}
 
         {task.finance.allocations.length > 0 && (
-          <span className="tasks-map-kanban-card__people">
+          <span className="project-planner-kanban-card__people">
             {task.finance.allocations.map(({ person }) => (
               <span
                 key={person}
-                className="tasks-map-kanban-card__avatar"
+                className="project-planner-kanban-card__avatar"
                 title={person}
               >
                 {initialsOf(person)}

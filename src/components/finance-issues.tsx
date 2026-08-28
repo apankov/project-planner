@@ -27,9 +27,9 @@ function IssueRow({ group }: { group: IssueGroup }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <li className="tasks-map-finance-issues__group">
+    <li className="project-planner-finance-issues__group">
       <button
-        className="tasks-map-finance-issues__header"
+        className="project-planner-finance-issues__header"
         onClick={() => setOpen((previous) => !previous)}
         type="button"
       >
@@ -38,12 +38,12 @@ function IssueRow({ group }: { group: IssueGroup }) {
       </button>
 
       {open && (
-        <ul className="tasks-map-finance-issues__details">
+        <ul className="project-planner-finance-issues__details">
           {group.details.map((detail, index) => (
             <li key={`${group.key}-${index}`}>
               {group.onSelect ? (
                 <button
-                  className="tasks-map-finance-issues__detail-button"
+                  className="project-planner-finance-issues__detail-button"
                   onClick={() => group.onSelect?.(index)}
                   type="button"
                 >
@@ -65,11 +65,11 @@ export default function FinanceIssues({
   emptyLabel,
 }: FinanceIssuesProps) {
   if (groups.length === 0) {
-    return <p className="tasks-map-finance__empty">{emptyLabel}</p>;
+    return <p className="project-planner-finance__empty">{emptyLabel}</p>;
   }
 
   return (
-    <ul className="tasks-map-finance-issues">
+    <ul className="project-planner-finance-issues">
       {groups.map((group) => (
         <IssueRow group={group} key={group.key} />
       ))}

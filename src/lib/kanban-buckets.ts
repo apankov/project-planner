@@ -32,11 +32,19 @@ import { TaskFinance } from "./task-finance";
 import { findTaskDate } from "./task-dates";
 
 export type KanbanGroupBy =
-  "status" | "due" | "person" | "tag" | "project" | "priority" | "file";
+  | "status"
+  | "due"
+  | "start"
+  | "person"
+  | "tag"
+  | "project"
+  | "priority"
+  | "file";
 
 export const KANBAN_GROUP_BY_OPTIONS: KanbanGroupBy[] = [
   "status",
   "due",
+  "start",
   "person",
   "tag",
   "project",
@@ -52,12 +60,24 @@ export function isKanbanGroupBy(value: string): value is KanbanGroupBy {
 export const WRITABLE_GROUP_BY: KanbanGroupBy[] = [
   "status",
   "due",
+  "start",
   "person",
   "tag",
 ];
 
 export function isWritableGroupBy(groupBy: KanbanGroupBy): boolean {
   return WRITABLE_GROUP_BY.includes(groupBy);
+}
+
+/**
+ * The groupings that ask a question about a day rather than a value: they
+ * share their columns, their ordering and their drop arithmetic, and differ
+ * only in which date they read and write.
+ */
+export type DateGroupBy = "due" | "start";
+
+export function isDateGroupBy(groupBy: KanbanGroupBy): groupBy is DateGroupBy {
+  return groupBy === "due" || groupBy === "start";
 }
 
 /**
@@ -68,6 +88,7 @@ export function isWritableGroupBy(groupBy: KanbanGroupBy): boolean {
 export type KanbanChange =
   | { field: "status"; status: TaskStatus }
   | { field: "due"; due: string | null }
+  | { field: "start"; start: string | null }
   | { field: "person"; person: string | null }
   | { field: "tag"; tag: string | null };
 
@@ -86,7 +107,8 @@ export const STATUS_BUCKET_ORDER: TaskStatus[] = [
   "canceled",
 ];
 
-export const DUE_BUCKET_KEYS = [
+/** The columns of a date grouping, soonest first. Shared by due and start. */
+export const DATE_BUCKET_KEYS = [
   "overdue",
   "today",
   "tomorrow",
@@ -96,7 +118,7 @@ export const DUE_BUCKET_KEYS = [
   "none",
 ] as const;
 
-export type DueBucketKey = (typeof DUE_BUCKET_KEYS)[number];
+export type DateBucketKey = (typeof DATE_BUCKET_KEYS)[number];
 
 /** Highest first; anything unrecognised sorts after these but before none. */
 const PRIORITY_ORDER = ["🔺", "⏫", "🔼", "🔽", "⏬"];
@@ -106,7 +128,8 @@ export const NO_VALUE_KEY = "";
 
 export interface BucketLabels {
   status: (_status: TaskStatus) => string;
-  due: (_key: DueBucketKey) => string;
+  due: (_key: DateBucketKey) => string;
+  start: (_key: DateBucketKey) => string;
   priority: (_value: string) => string;
   noTag: string;
   noPerson: string;
@@ -131,6 +154,19 @@ export function taskDueDate(task: BaseTask): string | null {
   return findTaskDate(task.dates, "due");
 }
 
+/** A task's start date, or null when it carries none. */
+export function taskStartDate(task: BaseTask): string | null {
+  return findTaskDate(task.dates, "start");
+}
+
+/** The date a grouping reads off a task. */
+export function taskDateFor(
+  task: BaseTask,
+  groupBy: DateGroupBy
+): string | null {
+  return groupBy === "due" ? taskDueDate(task) : taskStartDate(task);
+}
+
 /** The person a task is filed under, or "" when nobody has it. */
 export function taskPerson(task: BaseTask): string {
   return task.finance.allocations[0]?.person ?? NO_VALUE_KEY;
@@ -145,11 +181,14 @@ export function taskTag(task: BaseTask): string {
   );
 }
 
-/** Which date bucket a due date falls in, relative to `today`. */
-export function dueBucketKey(due: string | null, today: string): DueBucketKey {
-  if (!due || toEpochDay(due) === null) return "none";
+/** Which date bucket a day falls in, relative to `today`. */
+export function dateBucketKey(
+  date: string | null,
+  today: string
+): DateBucketKey {
+  if (!date || toEpochDay(date) === null) return "none";
 
-  const delta = diffDays(today, due);
+  const delta = diffDays(today, date);
   if (delta < 0) return "overdue";
   if (delta === 0) return "today";
   if (delta === 1) return "tomorrow";
@@ -170,7 +209,8 @@ export function bucketKeyFor(
     case "status":
       return task.status;
     case "due":
-      return dueBucketKey(taskDueDate(task), today);
+    case "start":
+      return dateBucketKey(taskDateFor(task, groupBy), today);
     case "person":
       return taskPerson(task);
     case "tag":
@@ -187,17 +227,23 @@ export function bucketKeyFor(
 /**
  * The day a drop into a date bucket writes.
  *
- * Ranges are written to their last day — dropping into "Next week" means "by
- * the end of next week", which is what someone sweeping cards forward means —
- * and "Later" to the day after that, the first day the bucket covers.
- * "Overdue" has no day of its own: nobody drags a card to make it late, so it
- * takes no drops.
+ * A due date is a deadline, so ranges are written to their last day —
+ * dropping into "Next week" means "by the end of next week", which is what
+ * someone sweeping cards forward means. A start date is the opposite kind of
+ * day: it is when work begins, so the same drop means "starting next week"
+ * and writes the first day the bucket covers. Either way the day written
+ * falls back in the column it was dropped on.
+ *
+ * "Overdue" has no day of its own under either grouping: nobody drags a card
+ * to make it late, so it takes no drops.
  */
-export function dueDateForBucket(
-  key: DueBucketKey,
-  today: string
+export function dateForBucket(
+  key: DateBucketKey,
+  today: string,
+  groupBy: DateGroupBy = "due"
 ): string | null | undefined {
   const weekEnd = endOfWeek(today);
+  const deadline = groupBy === "due";
 
   switch (key) {
     case "today":
@@ -205,9 +251,10 @@ export function dueDateForBucket(
     case "tomorrow":
       return addDays(today, 1);
     case "this_week":
-      return weekEnd;
+      // The rest of this week runs from the day after tomorrow to Sunday
+      return deadline ? weekEnd : addDays(today, 2);
     case "next_week":
-      return addDays(weekEnd, 7);
+      return addDays(weekEnd, deadline ? 7 : 1);
     case "later":
       return addDays(weekEnd, 8);
     case "none":
@@ -306,19 +353,26 @@ function fixedBuckets(
     }));
   }
 
-  if (groupBy !== "due") return [];
+  if (!isDateGroupBy(groupBy)) return [];
 
-  return DUE_BUCKET_KEYS.filter((key) => {
+  return DATE_BUCKET_KEYS.filter((key) => {
     if (key === "overdue") return false;
     // A Saturday has no "rest of this week" left to drop anything into
     if (key === "this_week") return diffDays(today, endOfWeek(today)) > 1;
     return true;
   }).map((key) => {
-    const due = dueDateForBucket(key, today);
+    const date = dateForBucket(key, today, groupBy);
+    const label = groupBy === "due" ? labels.due(key) : labels.start(key);
+
+    if (date === undefined) return { key, label, change: null };
+
     return {
       key,
-      label: labels.due(key),
-      change: due === undefined ? null : { field: "due", due },
+      label,
+      change:
+        groupBy === "due"
+          ? ({ field: "due", due: date } as KanbanChange)
+          : ({ field: "start", start: date } as KanbanChange),
     };
   });
 }
@@ -352,7 +406,9 @@ function dynamicBucket(
       return { label: fileLabel(task.link), change: null };
     case "due":
       // Only "overdue" reaches here: every other date bucket is a fixed column
-      return { label: labels.due(key as DueBucketKey), change: null };
+      return { label: labels.due(key as DateBucketKey), change: null };
+    case "start":
+      return { label: labels.start(key as DateBucketKey), change: null };
     default:
       return { label: labels.status(key as TaskStatus), change: null };
   }
@@ -432,10 +488,9 @@ export function buildBuckets(
     .map((key) => buckets.get(key))
     .filter((bucket): bucket is KanbanBucket => bucket !== undefined);
 
-  const overdue =
-    groupBy === "due"
-      ? discovered.filter((bucket) => bucket.key === "overdue")
-      : [];
+  const overdue = isDateGroupBy(groupBy)
+    ? discovered.filter((bucket) => bucket.key === "overdue")
+    : [];
 
   const trailing = sortDynamicBuckets(
     discovered.filter((bucket) => !overdue.includes(bucket)),

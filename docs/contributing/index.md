@@ -1,6 +1,6 @@
 # Contributing
 
-Pull requests and suggestions are welcome! Please open an issue or PR on [GitHub](https://github.com/NicoKNL/tasks-map).
+Pull requests and suggestions are welcome! Please open an issue or PR on [GitHub](https://github.com/HMIL1151/project-planner).
 
 ## In This Section
 

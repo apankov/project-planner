@@ -1,4 +1,4 @@
-import { filterStateFromSource } from "../src/views/TaskMapGraphEmbedView";
+import { filterStateFromSource } from "../src/views/GraphEmbedView";
 import { DEFAULT_FILTER_STATE } from "../src/types/filter-state";
 import { DEFAULT_EMBED_CONFIG } from "../src/types/embed-config";
 

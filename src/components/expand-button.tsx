@@ -11,7 +11,7 @@ export function ExpandButton({ expanded, onClick }: ExpandButtonProps) {
     <button
       onClick={onClick}
       title={expanded ? "Collapse debug info" : "Expand debug info"}
-      className="tasks-map-expand-button"
+      className="project-planner-expand-button"
     >
       {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
     </button>

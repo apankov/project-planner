@@ -33,12 +33,9 @@ import {
   appendTaskLineToFile,
 } from "src/lib/utils";
 import { promptForTaskLine } from "src/components/task-line-modal";
-import { promptForTaskFinance } from "src/components/task-finance-modal";
-import { EMPTY_TASK_FINANCE } from "src/lib/task-finance";
-import { readRateBook } from "src/lib/rate-book-note";
+import { openTaskEditor } from "src/lib/open-task-editor";
 import { buildGanttRows } from "src/lib/gantt-rows";
 import { EMPTY_CRITICAL_PATH, findCriticalPath } from "src/lib/critical-path";
-import { barLength } from "src/lib/gantt-schedule";
 import { withCompanionNote } from "src/lib/companion-note";
 import { BaseTask } from "src/types/task";
 import { NoteTask } from "src/types/note-task";
@@ -72,7 +69,7 @@ import { GraphEmptyState } from "src/components/graph-empty-state";
 import ControlsPanel from "src/components/controls-panel";
 import GraphActionBar from "src/components/graph-action-bar";
 import { t } from "../i18n";
-import TasksMapPlugin from "../main";
+import ProjectPlannerPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
   MAP_VIEW_TYPE,
@@ -80,30 +77,30 @@ import {
 } from "src/lib/view-focus";
 
 import { TaskStatus } from "src/types/task";
-import { TasksMapSettings } from "src/types/settings";
+import { ProjectPlannerSettings } from "src/types/settings";
 import { FilterState } from "src/types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "src/types/embed-config";
 import { TaskInsertPosition } from "src/types/base-task";
 
 const ALL_STATUSES: TaskStatus[] = ["todo", "in_progress", "done", "canceled"];
 
-interface TaskMapGraphViewProps {
-  settings: TasksMapSettings;
+interface GraphViewProps {
+  settings: ProjectPlannerSettings;
   filterState: FilterState;
   setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
-  plugin: TasksMapPlugin;
+  plugin: ProjectPlannerPlugin;
   embedConfig?: EmbedConfig;
   reloadRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function TaskMapGraphView({
+export default function GraphView({
   settings,
   filterState,
   setFilterState,
   plugin,
   embedConfig,
   reloadRef,
-}: TaskMapGraphViewProps) {
+}: GraphViewProps) {
   const embed = { ...DEFAULT_EMBED_CONFIG, ...embedConfig };
   const app = useApp();
   const vault = app.vault;
@@ -203,9 +200,9 @@ export default function TaskMapGraphView({
   React.useEffect(() => {
     if (containerRef.current) {
       if (hideTags) {
-        containerRef.current.classList.add("tasks-map--hide-tags");
+        containerRef.current.classList.add("project-planner--hide-tags");
       } else {
-        containerRef.current.classList.remove("tasks-map--hide-tags");
+        containerRef.current.classList.remove("project-planner--hide-tags");
       }
     }
   }, [hideTags]);
@@ -446,21 +443,6 @@ export default function TaskMapGraphView({
     tasksRef.current = tasks;
   }, [tasks]);
 
-  /** Writes the ID into the task line so a later write finds the right one. */
-  const stampTaskId = useCallback(
-    async (task: BaseTask) => {
-      if (task.type !== "dataview") return;
-      await addSignToTaskInFile(
-        vault,
-        task,
-        "id",
-        task.id,
-        settings.linkingStyle
-      );
-    },
-    [vault, settings.linkingStyle]
-  );
-
   /** The task's line exactly as it appears in its note, if it can be found. */
   const readTaskLine = useCallback(
     async (task: BaseTask): Promise<string | null> => {
@@ -486,84 +468,29 @@ export default function TaskMapGraphView({
   );
 
   /**
-   * Opens the finance modal for a task and writes what comes back.
+   * Opens the one task editor for a node.
    *
-   * The bar is scheduled here rather than stored, because hours-per-day needs
-   * to know how long the task runs and the map has no timeline of its own. It
-   * goes through the same `buildGanttRows` the chart uses, so the number in the
-   * modal is the number the Gantt would show.
+   * The map used to hand the task line to the Tasks plugin's own modal, which
+   * meant a different dialog here from the one the board and the timeline
+   * offered, and meant every field that plugin does not understand — the
+   * costing especially — had to be stripped off the line and stitched back on
+   * around it so its rewrite could not corrupt them.
    */
-  const handleEditFinance = useCallback(
+  const handleEditTask = useCallback(
     async (task: BaseTask) => {
-      const { book } = await readRateBook(app, settings.financeRateNotePath);
-
-      const row = buildGanttRows(tasksRef.current, {
-        skipWeekends: settings.ganttSkipWeekends,
-      }).find((candidate) => candidate.task.id === task.id);
-
-      const result = await promptForTaskFinance(app, {
-        initial: task.finance,
-        summary: task.summary,
-        days: row
-          ? barLength(row.bar.start, row.bar.end, settings.ganttSkipWeekends)
-          : 1,
-        inferred: row?.inferred ?? true,
-        defaultHoursPerDay: settings.financeDefaultHoursPerDay,
-        book,
-        currency: settings.financeCurrency,
-        inline: task.type === "dataview",
-      });
-
-      if (!result) return;
-
-      const finance =
-        result.action === "clear" ? EMPTY_TASK_FINANCE : result.finance;
-      const previous = task.finance;
-
-      // An inline task with no ID in its line is found by its text, which is
-      // ambiguous when two tasks read the same. Stamping first makes the write
-      // land on the right line.
-      await stampTaskId(task);
-
-      const updated = await task.setFinance(finance, app);
-      if (!updated) {
-        new Notice(t("finance.write_failed"));
-        return;
-      }
-
-      setTasks((previousTasks) =>
-        previousTasks.map((candidate) =>
-          candidate.id === task.id ? updated : candidate
-        )
-      );
-
-      plugin.undoHistory.push({
-        label: t("finance.undo_edit", { task: task.summary }),
-        undo: async () => {
-          // Read the task afresh: the line has moved on since the edit
-          const current =
-            tasksRef.current.find((candidate) => candidate.id === task.id) ??
-            updated;
-          const reverted = await current.setFinance(previous, app);
-          if (!reverted) return;
-
-          setTasks((previousTasks) =>
-            previousTasks.map((candidate) =>
-              candidate.id === task.id ? reverted : candidate
-            )
-          );
-        },
+      await openTaskEditor({
+        app,
+        task,
+        tasks: tasksRef.current,
+        settings,
+        undoHistory: plugin.undoHistory,
+        // Through the same handler an edit has always gone through, so the tag
+        // registry the map colours nodes from follows a tag changed in the
+        // dialog — the editor can change tags now, which the old route could not
+        onTaskUpdated: (updated) => handleTaskEdited(task.id, updated),
       });
     },
-    [
-      app,
-      plugin,
-      settings.financeRateNotePath,
-      settings.financeDefaultHoursPerDay,
-      settings.financeCurrency,
-      settings.ganttSkipWeekends,
-      stampTaskId,
-    ]
+    [app, handleTaskEdited, plugin, settings]
   );
 
   const createUpdatedTask = useCallback(
@@ -688,7 +615,6 @@ export default function TaskMapGraphView({
       groupByProject,
       settings.tagColorPalette,
       settings.tagColorOverrides,
-      handleTaskEdited,
       handleTaskCreated,
       connectionHighlight,
       {
@@ -696,7 +622,7 @@ export default function TaskMapGraphView({
         folder: settings.companionNoteFolder,
       },
       deleteTaskAndHealChain,
-      settings.financeEnabled ? handleEditFinance : undefined,
+      handleEditTask,
       criticalPath.criticalIds
     );
     let newEdges = createEdgesFromTasks(
@@ -796,7 +722,7 @@ export default function TaskMapGraphView({
     criticalPath,
     dropEdgeId,
     deleteTaskAndHealChain,
-    handleEditFinance,
+    handleEditTask,
   ]);
 
   const nodeTypes = useMemo(
@@ -1944,7 +1870,7 @@ export default function TaskMapGraphView({
   return (
     <TagsContext.Provider value={tagsContextValue}>
       <div
-        className="tasks-map-graph-container"
+        className="project-planner-graph-container"
         ref={containerRef}
         onDrop={(e) => void onDrop(e)}
         onDragOver={onDragOver}
@@ -1953,9 +1879,9 @@ export default function TaskMapGraphView({
           <UnlinkedTasksPanel tasks={sidebarTasks} />
         )}
         {isLoading && (
-          <div className="tasks-map-loading-container">
-            <div className="tasks-map-spinner" />
-            <div className="tasks-map-loading-text">Loading tasks...</div>
+          <div className="project-planner-loading-container">
+            <div className="project-planner-spinner" />
+            <div className="project-planner-loading-text">Loading tasks...</div>
           </div>
         )}
         {!isLoading && tasks.length === 0 && (
@@ -1991,7 +1917,7 @@ export default function TaskMapGraphView({
           multiSelectionKeyCode="Shift"
           selectionKeyCode="Shift"
         >
-          <div className="tasks-map-panels-stack">
+          <div className="project-planner-panels-stack">
             {embed.showPresetsPanel && (
               <FilterPresetsPanel
                 presets={settings.filterPresets}

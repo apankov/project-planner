@@ -135,3 +135,16 @@ export function getFrontmatterDateProperties(
 export function frontmatterKeyForDate(type: TaskDateType): string {
   return type === "done" ? "completed" : type;
 }
+
+/**
+ * Every frontmatter key that would be read as a date of this type.
+ *
+ * Clearing a date has to take all of them off, not just the canonical one: a
+ * note written with `dueDate:` and cleared through `due:` would keep the old
+ * value and go on reporting a due date the user had just deleted.
+ */
+export function frontmatterKeysForDate(type: TaskDateType): string[] {
+  return FRONTMATTER_DATE_KEYS.filter((entry) => entry.type === type).map(
+    (entry) => entry.key
+  );
+}

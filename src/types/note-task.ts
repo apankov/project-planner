@@ -14,6 +14,8 @@ import {
   progressFrontmatterPatch,
 } from "../lib/task-progress";
 import { normalizeParentId, parentFrontmatterPatch } from "../lib/task-parent";
+import { normalizeOwner, ownerFrontmatterPatch } from "../lib/task-owner";
+import { findFrontmatter, updateFrontmatter } from "../lib/frontmatter-write";
 
 interface DependencyEntry {
   uid: string;
@@ -93,23 +95,19 @@ export class NoteTask extends BaseTask {
     _position: TaskInsertPosition = "after"
   ): Promise<void> {
     if (!this.link) {
-      console.log("!task.link: ", newTaskLine);
       return;
     }
     const vault = app?.vault;
     if (!vault) {
-      console.log("!vault: ", newTaskLine);
       return;
     }
     const originalFile = vault.getFileByPath(this.link);
     if (!originalFile) {
-      console.log("!originalFile: ", newTaskLine);
       return;
     }
 
     const folderPath = originalFile.parent?.path;
     if (!folderPath) {
-      console.log("!folderPath: ", newTaskLine);
       return;
     }
 
@@ -135,40 +133,20 @@ export class NoteTask extends BaseTask {
   /**
    * Reads the note's frontmatter, hands it to `mutate`, and writes back what
    * that leaves behind. Returns false when there was nothing to write to.
+   *
+   * The work itself lives in `lib/frontmatter-write` now, because an inline
+   * task's companion note is written the same way and two implementations of
+   * this would be two different ways for a save to go wrong.
    */
   private async updateFrontmatter(
     app: App,
     mutate: (_frontmatter: Record<string, unknown>) => void
   ): Promise<boolean> {
     if (!this.link) return false;
-    const vault = app?.vault;
-    if (!vault) return false;
-    const file = vault.getFileByPath(this.link);
+    const file = app?.vault?.getFileByPath(this.link);
     if (!file) return false;
 
-    let wrote = false;
-
-    await vault.process(file, (fileContent) => {
-      const lines = fileContent.split(/\r?\n/);
-      const { frontmatterStart, frontmatterEnd } = this.findFrontmatter(lines);
-
-      if (frontmatterStart === -1 || frontmatterEnd === -1) {
-        return fileContent;
-      }
-
-      const frontmatterYaml = lines
-        .slice(frontmatterStart + 1, frontmatterEnd)
-        .join("\n");
-      const bodyContent = lines.slice(frontmatterEnd + 1).join("\n");
-      const frontmatterData = parseYaml(frontmatterYaml) || {};
-
-      mutate(frontmatterData);
-
-      wrote = true;
-      return `---\n${stringifyYaml(frontmatterData)}---\n${bodyContent}`;
-    });
-
-    return wrote;
+    return updateFrontmatter(app, file, mutate);
   }
 
   async setDates(dates: TaskDateUpdate, app: App): Promise<BaseTask | null> {
@@ -227,6 +205,22 @@ export class NoteTask extends BaseTask {
     return this.copyWith({ progress: { percent } });
   }
 
+  async setOwner(owner: string | null, app: App): Promise<BaseTask | null> {
+    const name = normalizeOwner(owner);
+    const { set, remove } = ownerFrontmatterPatch(name);
+
+    const wrote = await this.updateFrontmatter(app, (frontmatter) => {
+      // Every accepted spelling goes, so a note that used `assignee` cannot
+      // keep it around contradicting the `owner` just written
+      for (const key of remove) delete frontmatter[key];
+      Object.assign(frontmatter, set);
+    });
+
+    if (!wrote) return null;
+
+    return this.copyWith({ owner: name });
+  }
+
   async setParent(parentId: string | null, app: App): Promise<BaseTask | null> {
     const id = normalizeParentId(parentId);
     const { set, remove } = parentFrontmatterPatch(id);
@@ -248,6 +242,7 @@ export class NoteTask extends BaseTask {
     dates?: TaskDateProperty[];
     finance?: TaskFinance;
     progress?: TaskProgress;
+    owner?: string | null;
     parentId?: string | null;
   }): NoteTask {
     return new NoteTask({
@@ -264,6 +259,7 @@ export class NoteTask extends BaseTask {
       dates: this.dates,
       finance: this.finance,
       progress: this.progress,
+      owner: this.owner,
       parentId: this.parentId,
       ...changes,
     });
@@ -510,26 +506,14 @@ export class NoteTask extends BaseTask {
   }
 
   /**
-   * Helper method to find frontmatter boundaries
+   * Helper method to find frontmatter boundaries. Shared with the companion
+   * note writer, so both agree on where a note's properties start and stop.
    */
   private findFrontmatter(lines: string[]): {
     frontmatterStart: number;
     frontmatterEnd: number;
   } {
-    let frontmatterStart = -1;
-    let frontmatterEnd = -1;
-
-    if (lines[0] === "---") {
-      frontmatterStart = 0;
-      for (let i = 1; i < lines.length; i++) {
-        if (lines[i] === "---") {
-          frontmatterEnd = i;
-          break;
-        }
-      }
-    }
-
-    return { frontmatterStart, frontmatterEnd };
+    return findFrontmatter(lines);
   }
 
   /**

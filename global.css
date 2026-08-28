@@ -10,27 +10,27 @@ If your plugin does not need CSS, delete this file.
 @import "reactflow/dist/style.css";
 
 :root {
-  --tasks-map-color-black-rgb: 0, 0, 0;
-  --tasks-map-color-white: #ffffff;
-  --tasks-map-color-green: #2d8a3e;
-  --tasks-map-color-green-rgb: 45, 138, 62;
-  --tasks-map-color-blue: #2674b5;
-  --tasks-map-color-blue-rgb: 38, 116, 181;
-  --tasks-map-color-red: #c0392b;
-  --tasks-map-color-red-rgb: 192, 57, 43;
+  --project-planner-color-black-rgb: 0, 0, 0;
+  --project-planner-color-white: #ffffff;
+  --project-planner-color-green: #2d8a3e;
+  --project-planner-color-green-rgb: 45, 138, 62;
+  --project-planner-color-blue: #2674b5;
+  --project-planner-color-blue-rgb: 38, 116, 181;
+  --project-planner-color-red: #c0392b;
+  --project-planner-color-red-rgb: 192, 57, 43;
 }
 
 .theme-dark {
-  --tasks-map-color-green: #4caf62;
-  --tasks-map-color-green-rgb: 76, 175, 98;
-  --tasks-map-color-blue: #5ba4d4;
-  --tasks-map-color-blue-rgb: 91, 164, 212;
-  --tasks-map-color-red: #e05c5c;
-  --tasks-map-color-red-rgb: 224, 92, 92;
+  --project-planner-color-green: #4caf62;
+  --project-planner-color-green-rgb: 76, 175, 98;
+  --project-planner-color-blue: #5ba4d4;
+  --project-planner-color-blue-rgb: 91, 164, 212;
+  --project-planner-color-red: #e05c5c;
+  --project-planner-color-red-rgb: 224, 92, 92;
 }
 
 /* Expand Button Styles */
-.tasks-map-expand-button {
+.project-planner-expand-button {
   position: absolute;
   bottom: 8px;
   left: 8px;
@@ -42,19 +42,19 @@ If your plugin does not need CSS, delete this file.
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 4px rgba(var(--tasks-map-color-black-rgb), 0.08);
+  box-shadow: 0 1px 4px rgba(var(--project-planner-color-black-rgb), 0.08);
   z-index: 3;
   cursor: pointer;
   color: var(--text-muted);
 }
 
-.tasks-map-expand-button:hover {
+.project-planner-expand-button:hover {
   background: var(--background-modifier-hover-active);
   color: var(--text-normal);
 }
 
 /* Settings Preview Styles */
-.tasks-map-preview-container {
+.project-planner-preview-container {
   margin-top: 8px;
   padding: 12px;
   background-color: var(--background-secondary);
@@ -64,23 +64,23 @@ If your plugin does not need CSS, delete this file.
   border: 1px solid var(--background-modifier-border);
 }
 
-.tasks-map-preview-title {
+.project-planner-preview-title {
   margin-bottom: 6px;
   font-weight: 600;
   color: var(--text-normal);
 }
 
-.tasks-map-preview-desc {
+.project-planner-preview-desc {
   color: var(--text-muted);
 }
 
-.tasks-map-preview-example {
+.project-planner-preview-example {
   margin-top: 4px;
   color: var(--text-normal);
 }
 
 /* Delete Edge Button Styles */
-.tasks-map-delete-edge-button-container {
+.project-planner-delete-edge-button-container {
   position: fixed;
   bottom: 100px;
   left: 50%;
@@ -92,7 +92,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Style editor for the selected connection, stacked above its action buttons */
-.tasks-map-edge-style {
+.project-planner-edge-style {
   position: fixed;
   bottom: 210px;
   left: 50%;
@@ -108,13 +108,13 @@ If your plugin does not need CSS, delete this file.
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-.tasks-map-edge-style__row {
+.project-planner-edge-style__row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.tasks-map-edge-style__label {
+.project-planner-edge-style__label {
   min-width: 54px;
   font-size: 11px;
   text-transform: uppercase;
@@ -122,13 +122,13 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-faint);
 }
 
-.tasks-map-edge-style__swatches,
-.tasks-map-edge-style__group {
+.project-planner-edge-style__swatches,
+.project-planner-edge-style__group {
   display: flex;
   gap: 4px;
 }
 
-.tasks-map-edge-style__swatch {
+.project-planner-edge-style__swatch {
   width: 18px;
   height: 18px;
   padding: 0;
@@ -138,33 +138,33 @@ If your plugin does not need CSS, delete this file.
   box-shadow: none;
 }
 
-.tasks-map-edge-style__swatch--active {
+.project-planner-edge-style__swatch--active {
   border-color: var(--text-normal);
 }
 
-.tasks-map-edge-style__swatch--default {
+.project-planner-edge-style__swatch--default {
   background: var(--text-muted);
 }
-.tasks-map-edge-style__swatch--red {
+.project-planner-edge-style__swatch--red {
   background: #e05c5c;
 }
-.tasks-map-edge-style__swatch--orange {
+.project-planner-edge-style__swatch--orange {
   background: #e07c3a;
 }
-.tasks-map-edge-style__swatch--green {
+.project-planner-edge-style__swatch--green {
   background: #4caf62;
 }
-.tasks-map-edge-style__swatch--blue {
+.project-planner-edge-style__swatch--blue {
   background: #2674b5;
 }
-.tasks-map-edge-style__swatch--purple {
+.project-planner-edge-style__swatch--purple {
   background: #7c5cbf;
 }
-.tasks-map-edge-style__swatch--grey {
+.project-planner-edge-style__swatch--grey {
   background: #6e7681;
 }
 
-.tasks-map-edge-style__option {
+.project-planner-edge-style__option {
   padding: 2px 8px;
   font-size: 11px;
   cursor: pointer;
@@ -172,108 +172,108 @@ If your plugin does not need CSS, delete this file.
   box-shadow: none;
 }
 
-.tasks-map-edge-style__option--active {
+.project-planner-edge-style__option--active {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
-.tasks-map-edge-style__reset {
+.project-planner-edge-style__reset {
   font-size: 11px;
   padding: 3px 8px;
   cursor: pointer;
 }
 
-.tasks-map-style-edge-button--active {
+.project-planner-style-edge-button--active {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
 /* Connection colours and dash patterns */
-.tasks-map-hash-edge-path--color-red {
+.project-planner-hash-edge-path--color-red {
   stroke: #e05c5c;
 }
-.tasks-map-hash-edge-path--color-orange {
+.project-planner-hash-edge-path--color-orange {
   stroke: #e07c3a;
 }
-.tasks-map-hash-edge-path--color-green {
+.project-planner-hash-edge-path--color-green {
   stroke: #4caf62;
 }
-.tasks-map-hash-edge-path--color-blue {
+.project-planner-hash-edge-path--color-blue {
   stroke: #2674b5;
 }
-.tasks-map-hash-edge-path--color-purple {
+.project-planner-hash-edge-path--color-purple {
   stroke: #7c5cbf;
 }
-.tasks-map-hash-edge-path--color-grey {
+.project-planner-hash-edge-path--color-grey {
   stroke: #6e7681;
 }
 
-.tasks-map-hash-edge-path--dashed {
+.project-planner-hash-edge-path--dashed {
   stroke-dasharray: 8 5;
 }
 
-.tasks-map-hash-edge-path--dotted {
+.project-planner-hash-edge-path--dotted {
   stroke-dasharray: 2 4;
   stroke-linecap: round;
 }
 
-.tasks-map-edge-marker-defs {
+.project-planner-edge-marker-defs {
   position: absolute;
   width: 0;
   height: 0;
   overflow: hidden;
 }
 
-.tasks-map-edge-arrowhead {
+.project-planner-edge-arrowhead {
   fill: var(--text-faint);
 }
-.tasks-map-edge-arrowhead--red {
+.project-planner-edge-arrowhead--red {
   fill: #e05c5c;
 }
-.tasks-map-edge-arrowhead--orange {
+.project-planner-edge-arrowhead--orange {
   fill: #e07c3a;
 }
-.tasks-map-edge-arrowhead--green {
+.project-planner-edge-arrowhead--green {
   fill: #4caf62;
 }
-.tasks-map-edge-arrowhead--blue {
+.project-planner-edge-arrowhead--blue {
   fill: #2674b5;
 }
-.tasks-map-edge-arrowhead--purple {
+.project-planner-edge-arrowhead--purple {
   fill: #7c5cbf;
 }
-.tasks-map-edge-arrowhead--grey {
+.project-planner-edge-arrowhead--grey {
   fill: #6e7681;
 }
 
-.tasks-map-delete-edge-button,
-.tasks-map-insert-task-button {
+.project-planner-delete-edge-button,
+.project-planner-insert-task-button {
   padding: 10px;
-  color: var(--tasks-map-color-white);
+  color: var(--project-planner-color-white);
   border: none;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.tasks-map-delete-edge-button {
-  background: var(--tasks-map-color-red);
+.project-planner-delete-edge-button {
+  background: var(--project-planner-color-red);
 }
 
-.tasks-map-delete-edge-button:hover {
-  background: var(--tasks-map-color-red-hover, #c53030);
+.project-planner-delete-edge-button:hover {
+  background: var(--project-planner-color-red-hover, #c53030);
 }
 
-.tasks-map-insert-task-button {
+.project-planner-insert-task-button {
   background: var(--interactive-accent);
 }
 
-.tasks-map-insert-task-button:hover {
+.project-planner-insert-task-button:hover {
   background: var(--interactive-accent-hover);
 }
 
 /* Link Button Styles */
-.tasks-map-graph-container .tasks-map-link-button {
+.project-planner-graph-container .project-planner-link-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,7 +282,7 @@ If your plugin does not need CSS, delete this file.
   appearance: none;
   -webkit-appearance: none;
   border: none;
-  border-left: 1px solid var(--tasks-map-node-divider);
+  border-left: 1px solid var(--project-planner-node-divider);
   border-radius: 0;
   box-shadow: none;
   background: transparent;
@@ -293,31 +293,31 @@ If your plugin does not need CSS, delete this file.
   outline: none;
 }
 
-.tasks-map-link-button--success {
-  color: var(--tasks-map-color-green);
+.project-planner-link-button--success {
+  color: var(--project-planner-color-green);
 }
 
-.tasks-map-link-button--error {
-  color: var(--tasks-map-color-red);
+.project-planner-link-button--error {
+  color: var(--project-planner-color-red);
 }
 
-.tasks-map-link-button--normal {
+.project-planner-link-button--normal {
   color: var(--text-muted);
 }
 
-.tasks-map-graph-container .tasks-map-link-button:hover {
-  background: var(--tasks-map-node-hover);
+.project-planner-graph-container .project-planner-link-button:hover {
+  background: var(--project-planner-node-hover);
 }
 
 /* Task Menu Styles */
-.tasks-map-task-menu {
+.project-planner-task-menu {
   position: relative;
   display: flex;
   align-items: stretch;
   align-self: stretch;
 }
 
-.tasks-map-graph-container .tasks-map-task-menu-button {
+.project-planner-graph-container .project-planner-task-menu-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -326,7 +326,7 @@ If your plugin does not need CSS, delete this file.
   appearance: none;
   -webkit-appearance: none;
   border: none;
-  border-left: 1px solid var(--tasks-map-node-divider);
+  border-left: 1px solid var(--project-planner-node-divider);
   border-radius: 0 var(--radius-m) 0 0;
   box-shadow: none;
   background: transparent;
@@ -337,12 +337,12 @@ If your plugin does not need CSS, delete this file.
   outline: none;
 }
 
-.tasks-map-graph-container .tasks-map-task-menu-button:hover {
-  background: var(--tasks-map-node-hover);
+.project-planner-graph-container .project-planner-task-menu-button:hover {
+  background: var(--project-planner-node-hover);
   color: var(--text-normal);
 }
 
-.tasks-map-task-menu-dropdown {
+.project-planner-task-menu-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
@@ -350,11 +350,11 @@ If your plugin does not need CSS, delete this file.
   min-width: 120px;
   background: var(--background-primary);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   z-index: 100;
 }
 
-.tasks-map-task-menu-item {
+.project-planner-task-menu-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -369,38 +369,38 @@ If your plugin does not need CSS, delete this file.
   border-radius: 0;
 }
 
-.tasks-map-task-menu-item:first-child {
+.project-planner-task-menu-item:first-child {
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.tasks-map-task-menu-item:last-child {
+.project-planner-task-menu-item:last-child {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
 }
 
-.tasks-map-task-menu-item:hover {
+.project-planner-task-menu-item:hover {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-task-menu-item--danger {
+.project-planner-task-menu-item--danger {
   color: var(--text-error);
 }
 
-.tasks-map-task-menu-item--danger:hover {
+.project-planner-task-menu-item--danger:hover {
   background: rgba(255, 0, 0, 0.1);
 }
 
 /* Task Node Styles */
-.tasks-map-task-node-header {
+.project-planner-task-node-header {
   display: flex;
   align-items: stretch;
   min-height: 40px;
-  border-bottom: 1px solid var(--tasks-map-node-divider);
+  border-bottom: 1px solid var(--project-planner-node-divider);
   color: var(--text-muted);
   width: calc(100% + 24px);
   margin-left: -12px;
@@ -411,11 +411,11 @@ If your plugin does not need CSS, delete this file.
   border-radius: var(--radius-m) var(--radius-m) 0 0;
 }
 
-.tasks-map-task-node-header-spacer {
+.project-planner-task-node-header-spacer {
   flex: 1;
 }
 
-.tasks-map-task-node-summary {
+.project-planner-task-node-summary {
   display: block;
   font-size: 13px;
   font-weight: 500;
@@ -423,7 +423,7 @@ If your plugin does not need CSS, delete this file.
   margin-bottom: 6px;
 }
 
-.tasks-map-graph-container .tasks-map-task-node-header-button {
+.project-planner-graph-container .project-planner-task-node-header-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -432,10 +432,10 @@ If your plugin does not need CSS, delete this file.
   appearance: none;
   -webkit-appearance: none;
   border: none;
-  border-left: 1px solid var(--tasks-map-node-divider);
+  border-left: 1px solid var(--project-planner-node-divider);
   border-radius: 0;
   box-shadow: none;
-  background: var(--tasks-map-node-bg);
+  background: var(--project-planner-node-bg);
   cursor: pointer;
   flex-shrink: 0;
   color: var(--text-muted);
@@ -444,11 +444,11 @@ If your plugin does not need CSS, delete this file.
   transition: color 0.2s ease;
 }
 
-.tasks-map-graph-container .tasks-map-task-node-header-button:hover {
-  background: var(--tasks-map-node-hover);
+.project-planner-graph-container .project-planner-task-node-header-button:hover {
+  background: var(--project-planner-node-hover);
 }
 
-.tasks-map-graph-container .tasks-map-star-button {
+.project-planner-graph-container .project-planner-star-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -457,7 +457,7 @@ If your plugin does not need CSS, delete this file.
   appearance: none;
   -webkit-appearance: none;
   border: none;
-  border-left: 1px solid var(--tasks-map-node-divider);
+  border-left: 1px solid var(--project-planner-node-divider);
   border-radius: 0;
   box-shadow: none;
   background: transparent;
@@ -470,23 +470,23 @@ If your plugin does not need CSS, delete this file.
   transition: color 0.2s ease;
 }
 
-.tasks-map-graph-container .tasks-map-star-button:hover {
-  background: var(--tasks-map-node-hover);
+.project-planner-graph-container .project-planner-star-button:hover {
+  background: var(--project-planner-node-hover);
   color: rgb(255, 215, 0);
 }
 
-.tasks-map-star-button svg[fill="currentColor"] {
+.project-planner-star-button svg[fill="currentColor"] {
   color: rgb(255, 215, 0);
 }
 
-.tasks-map-task-node-content {
+.project-planner-task-node-content {
   position: relative;
   flex: 1;
   padding-bottom: 4px;
 }
 
-.tasks-map-task-node-footer {
-  border-top: 1px solid var(--tasks-map-node-divider);
+.project-planner-task-node-footer {
+  border-top: 1px solid var(--project-planner-node-divider);
   width: calc(100% + 24px);
   margin-left: -12px;
   margin-right: -12px;
@@ -497,17 +497,17 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Task Details Styles */
-.tasks-map-task-details {
+.project-planner-task-details {
   margin-top: 10px;
   font-size: 13px;
   background: var(--background-secondary-alt);
   border-radius: 6px;
   padding: 8px;
-  box-shadow: 0 1px 4px rgba(var(--tasks-map-color-black-rgb), 0.04);
+  box-shadow: 0 1px 4px rgba(var(--project-planner-color-black-rgb), 0.04);
 }
 
 /* Tag Styles */
-.tasks-map-tag {
+.project-planner-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -524,167 +524,167 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Tag palette: rainbow */
-.tasks-map-tag--rainbow-0 {
+.project-planner-tag--rainbow-0 {
   background-color: #e05c5c;
 }
-.tasks-map-tag--rainbow-1 {
+.project-planner-tag--rainbow-1 {
   background-color: #e07c3a;
 }
-.tasks-map-tag--rainbow-2 {
+.project-planner-tag--rainbow-2 {
   background-color: #c9a827;
 }
-.tasks-map-tag--rainbow-3 {
+.project-planner-tag--rainbow-3 {
   background-color: #4caf62;
 }
-.tasks-map-tag--rainbow-4 {
+.project-planner-tag--rainbow-4 {
   background-color: #2674b5;
 }
-.tasks-map-tag--rainbow-5 {
+.project-planner-tag--rainbow-5 {
   background-color: #7c5cbf;
 }
-.tasks-map-tag--rainbow-6 {
+.project-planner-tag--rainbow-6 {
   background-color: #d45fa0;
 }
-.tasks-map-tag--rainbow-7 {
+.project-planner-tag--rainbow-7 {
   background-color: #3ab8b8;
 }
 
 /* Tag palette: ocean */
-.tasks-map-tag--ocean-0 {
+.project-planner-tag--ocean-0 {
   background-color: #1a6e8a;
 }
-.tasks-map-tag--ocean-1 {
+.project-planner-tag--ocean-1 {
   background-color: #2187a8;
 }
-.tasks-map-tag--ocean-2 {
+.project-planner-tag--ocean-2 {
   background-color: #1f9eb5;
 }
-.tasks-map-tag--ocean-3 {
+.project-planner-tag--ocean-3 {
   background-color: #2ab5c4;
 }
-.tasks-map-tag--ocean-4 {
+.project-planner-tag--ocean-4 {
   background-color: #3abfaa;
 }
-.tasks-map-tag--ocean-5 {
+.project-planner-tag--ocean-5 {
   background-color: #2e9e8c;
 }
-.tasks-map-tag--ocean-6 {
+.project-planner-tag--ocean-6 {
   background-color: #1d7e7e;
 }
-.tasks-map-tag--ocean-7 {
+.project-planner-tag--ocean-7 {
   background-color: #256e9e;
 }
 
 /* Tag palette: forest */
-.tasks-map-tag--forest-0 {
+.project-planner-tag--forest-0 {
   background-color: #2d7a3a;
 }
-.tasks-map-tag--forest-1 {
+.project-planner-tag--forest-1 {
   background-color: #3a8c45;
 }
-.tasks-map-tag--forest-2 {
+.project-planner-tag--forest-2 {
   background-color: #4a9e50;
 }
-.tasks-map-tag--forest-3 {
+.project-planner-tag--forest-3 {
   background-color: #6aaa45;
 }
-.tasks-map-tag--forest-4 {
+.project-planner-tag--forest-4 {
   background-color: #8ab035;
 }
-.tasks-map-tag--forest-5 {
+.project-planner-tag--forest-5 {
   background-color: #7a9e2d;
 }
-.tasks-map-tag--forest-6 {
+.project-planner-tag--forest-6 {
   background-color: #5c8c38;
 }
-.tasks-map-tag--forest-7 {
+.project-planner-tag--forest-7 {
   background-color: #3d6b2d;
 }
 
 /* Tag palette: sunset */
-.tasks-map-tag--sunset-0 {
+.project-planner-tag--sunset-0 {
   background-color: #c0392b;
 }
-.tasks-map-tag--sunset-1 {
+.project-planner-tag--sunset-1 {
   background-color: #d45a2a;
 }
-.tasks-map-tag--sunset-2 {
+.project-planner-tag--sunset-2 {
   background-color: #e07030;
 }
-.tasks-map-tag--sunset-3 {
+.project-planner-tag--sunset-3 {
   background-color: #e09030;
 }
-.tasks-map-tag--sunset-4 {
+.project-planner-tag--sunset-4 {
   background-color: #c97040;
 }
-.tasks-map-tag--sunset-5 {
+.project-planner-tag--sunset-5 {
   background-color: #b84060;
 }
-.tasks-map-tag--sunset-6 {
+.project-planner-tag--sunset-6 {
   background-color: #a03070;
 }
-.tasks-map-tag--sunset-7 {
+.project-planner-tag--sunset-7 {
   background-color: #d04080;
 }
 
 /* Tag palette: mono */
-.tasks-map-tag--mono-0,
-.tasks-map-tag--mono-1,
-.tasks-map-tag--mono-2,
-.tasks-map-tag--mono-3,
-.tasks-map-tag--mono-4,
-.tasks-map-tag--mono-5,
-.tasks-map-tag--mono-6,
-.tasks-map-tag--mono-7 {
+.project-planner-tag--mono-0,
+.project-planner-tag--mono-1,
+.project-planner-tag--mono-2,
+.project-planner-tag--mono-3,
+.project-planner-tag--mono-4,
+.project-planner-tag--mono-5,
+.project-planner-tag--mono-6,
+.project-planner-tag--mono-7 {
   background-color: #2674b5;
 }
 
 /* Manual per-tag colors (override the palette) */
-.tasks-map-tag--custom-red {
+.project-planner-tag--custom-red {
   background-color: #e05c5c;
 }
-.tasks-map-tag--custom-orange {
+.project-planner-tag--custom-orange {
   background-color: #e07c3a;
 }
-.tasks-map-tag--custom-yellow {
+.project-planner-tag--custom-yellow {
   background-color: #c9a827;
 }
-.tasks-map-tag--custom-green {
+.project-planner-tag--custom-green {
   background-color: #4caf62;
 }
-.tasks-map-tag--custom-teal {
+.project-planner-tag--custom-teal {
   background-color: #3ab8b8;
 }
-.tasks-map-tag--custom-blue {
+.project-planner-tag--custom-blue {
   background-color: #2674b5;
 }
-.tasks-map-tag--custom-indigo {
+.project-planner-tag--custom-indigo {
   background-color: #4b5bbf;
 }
-.tasks-map-tag--custom-purple {
+.project-planner-tag--custom-purple {
   background-color: #7c5cbf;
 }
-.tasks-map-tag--custom-pink {
+.project-planner-tag--custom-pink {
   background-color: #d45fa0;
 }
-.tasks-map-tag--custom-gray {
+.project-planner-tag--custom-gray {
   background-color: #6e7681;
 }
 
-.tasks-map-graph-container.tasks-map--hide-tags .tasks-map-tag-list,
-.tasks-map-graph-container.tasks-map--hide-tags .tasks-map-task-node-footer {
+.project-planner-graph-container.project-planner--hide-tags .project-planner-tag-list,
+.project-planner-graph-container.project-planner--hide-tags .project-planner-task-node-footer {
   display: none;
 }
 
-.tasks-map-tag.tasks-map-tag--removable {
+.project-planner-tag.project-planner-tag--removable {
   cursor: pointer;
 }
 
-.tasks-map-tag-remove-icon {
+.project-planner-tag-remove-icon {
   color: white;
 }
 
-.tasks-map-tag-input {
+.project-planner-tag-input {
   background-color: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 12px;
@@ -695,12 +695,12 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Tag Input (CreatableSelect) Styles */
-.tasks-map-tag-select__container {
+.project-planner-tag-select__container {
   min-width: 160px;
   font-size: 11px;
 }
 
-.tasks-map-tag-select__control {
+.project-planner-tag-select__control {
   min-height: 20px;
   height: 20px;
   min-width: 160px;
@@ -711,21 +711,21 @@ If your plugin does not need CSS, delete this file.
   box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
-.tasks-map-tag-select__control:hover {
+.project-planner-tag-select__control:hover {
   border-color: var(--interactive-accent);
 }
 
-.tasks-map-tag-select-error .tasks-map-tag-select__control {
+.project-planner-tag-select-error .project-planner-tag-select__control {
   background: rgba(255, 0, 0, 0.1);
   border-color: var(--text-error);
   box-shadow: 0 0 0 1px var(--text-error);
 }
 
-.tasks-map-tag-select-error .tasks-map-tag-select__control:hover {
+.project-planner-tag-select-error .project-planner-tag-select__control:hover {
   border-color: var(--text-error);
 }
 
-.tasks-map-tag-select__value-container {
+.project-planner-tag-select__value-container {
   padding: 0 8px;
   height: 100%;
   box-sizing: border-box;
@@ -733,11 +733,11 @@ If your plugin does not need CSS, delete this file.
   align-items: center;
 }
 
-.tasks-map-tag-select__indicators {
+.project-planner-tag-select__indicators {
   display: none;
 }
 
-.tasks-map-tag-select__input {
+.project-planner-tag-select__input {
   margin: 0;
   padding: 0;
   border: none;
@@ -749,7 +749,7 @@ If your plugin does not need CSS, delete this file.
   align-items: center;
 }
 
-.tasks-map-tag-select__input > div {
+.project-planner-tag-select__input > div {
   margin: 0;
   padding: 0;
   border: none;
@@ -762,8 +762,8 @@ If your plugin does not need CSS, delete this file.
   font-size: 11px;
 }
 
-.tasks-map-tag-select__input input,
-.tasks-map-tag-select__input input:focus {
+.project-planner-tag-select__input input,
+.project-planner-tag-select__input input:focus {
   margin: 0;
   padding: 0;
   color: var(--text-normal);
@@ -780,7 +780,7 @@ If your plugin does not need CSS, delete this file.
   text-size-adjust: 100%;
 }
 
-.tasks-map-tag-select__single-value {
+.project-planner-tag-select__single-value {
   margin: 0;
   padding: 0;
   color: var(--text-normal);
@@ -789,7 +789,7 @@ If your plugin does not need CSS, delete this file.
   line-height: 11px;
 }
 
-.tasks-map-tag-select__placeholder {
+.project-planner-tag-select__placeholder {
   color: var(--text-faint);
   font-size: 11px;
   font-family: inherit;
@@ -799,15 +799,15 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Ensure all nested elements inherit small font size */
-.tasks-map-tag-select__container *,
-.tasks-map-tag-select__control *,
-.tasks-map-tag-select__value-container *,
-.tasks-map-tag-select__input *,
-.tasks-map-tag-select__input input {
+.project-planner-tag-select__container *,
+.project-planner-tag-select__control *,
+.project-planner-tag-select__value-container *,
+.project-planner-tag-select__input *,
+.project-planner-tag-select__input input {
   font-size: 11px;
 }
 
-.tasks-map-tag-select__menu {
+.project-planner-tag-select__menu {
   min-width: 160px;
   z-index: 9999;
   background: var(--background-secondary);
@@ -818,12 +818,12 @@ If your plugin does not need CSS, delete this file.
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.tasks-map-tag-select__menu-list {
+.project-planner-tag-select__menu-list {
   padding: 4px;
   max-height: 200px;
 }
 
-.tasks-map-tag-select__option {
+.project-planner-tag-select__option {
   background: var(--background-secondary);
   color: var(--text-normal);
   cursor: pointer;
@@ -832,24 +832,24 @@ If your plugin does not need CSS, delete this file.
   font-size: 11px;
 }
 
-.tasks-map-tag-select__option--is-focused {
+.project-planner-tag-select__option--is-focused {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-tag-select__option--is-selected {
+.project-planner-tag-select__option--is-selected {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-tag-select__option:active {
+.project-planner-tag-select__option:active {
   background: var(--background-modifier-active);
 }
 
-.tasks-map-tag-select__menu-notice {
+.project-planner-tag-select__menu-notice {
   color: var(--text-muted);
   font-size: 11px;
 }
 
-.tasks-map-add-tag-button {
+.project-planner-add-tag-button {
   background-color: rgba(0, 0, 0, 0.2);
   color: white;
   padding: 3px 8px;
@@ -865,12 +865,12 @@ If your plugin does not need CSS, delete this file.
     background-color 0.2s ease;
 }
 
-.tasks-map-add-tag-button:hover {
+.project-planner-add-tag-button:hover {
   background-color: rgba(0, 0, 0, 0.3);
   color: white;
 }
 
-.tasks-map-tag-list {
+.project-planner-tag-list {
   display: flex;
   align-items: flex-start;
   gap: 4px;
@@ -878,12 +878,12 @@ If your plugin does not need CSS, delete this file.
   flex-wrap: wrap;
 }
 
-.tasks-map-tag-list:hover .tasks-map-add-tag-button {
+.project-planner-tag-list:hover .project-planner-add-tag-button {
   opacity: 1;
 }
 
 /* Inline code styling for task summaries */
-.tasks-map-inline-code {
+.project-planner-inline-code {
   font-family: var(--font-monospace);
   font-size: 0.9em;
   padding: 2px 4px;
@@ -893,27 +893,27 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Link styling for task summaries */
-.tasks-map-link {
+.project-planner-link {
   color: var(--link-color);
   text-decoration: none;
   cursor: pointer;
 }
 
-.tasks-map-link:hover {
+.project-planner-link:hover {
   color: var(--link-color-hover);
   text-decoration: underline;
 }
 
-.tasks-map-link.tasks-map-link--internal {
+.project-planner-link.project-planner-link--internal {
   color: var(--link-color);
 }
 
-.tasks-map-link.tasks-map-link--internal:hover {
+.project-planner-link.project-planner-link--internal:hover {
   color: var(--link-color-hover);
 }
 
 /* GUI Overlay Styles */
-.tasks-map-gui-overlay-bottom {
+.project-planner-gui-overlay-bottom {
   position: absolute;
   left: 50%;
   bottom: 32px;
@@ -925,7 +925,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Panels stack — positions both filter + presets panels top-right */
-.tasks-map-panels-stack {
+.project-planner-panels-stack {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -942,7 +942,7 @@ If your plugin does not need CSS, delete this file.
 
 /* Permanent graph actions: on screen whatever the panels are doing, so it sits
    above them and wraps rather than growing under the panel stack */
-.tasks-map-action-bar {
+.project-planner-action-bar {
   position: absolute;
   top: 16px;
   left: 50%;
@@ -958,10 +958,10 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
 }
 
-.tasks-map-graph-container .tasks-map-action-bar__button {
+.project-planner-graph-container .project-planner-action-bar__button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -980,20 +980,20 @@ If your plugin does not need CSS, delete this file.
   height: auto;
 }
 
-.tasks-map-graph-container .tasks-map-action-bar__button:hover {
+.project-planner-graph-container .project-planner-action-bar__button:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
   box-shadow: none;
 }
 
-.tasks-map-graph-container .tasks-map-action-bar__button:disabled {
+.project-planner-graph-container .project-planner-action-bar__button:disabled {
   color: var(--text-faint);
   background: transparent;
   cursor: default;
 }
 
 /* Filter Panel Styles */
-.tasks-map-filter-panel {
+.project-planner-filter-panel {
   pointer-events: auto;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -1001,17 +1001,17 @@ If your plugin does not need CSS, delete this file.
   max-height: calc(100% - 32px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   overflow: hidden;
 }
 
-.tasks-map-filter-panel.tasks-map-filter-panel--minimized {
+.project-planner-filter-panel.project-planner-filter-panel--minimized {
   min-width: unset;
   max-height: unset;
   overflow: visible;
 }
 
-.tasks-map-filter-panel__header {
+.project-planner-filter-panel__header {
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -1020,12 +1020,12 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-filter-panel.tasks-map-filter-panel--minimized
-  .tasks-map-filter-panel__header {
+.project-planner-filter-panel.project-planner-filter-panel--minimized
+  .project-planner-filter-panel__header {
   border-bottom: none;
 }
 
-.tasks-map-filter-panel__title {
+.project-planner-filter-panel__title {
   flex: 1;
   font-size: 12px;
   font-weight: 600;
@@ -1036,7 +1036,7 @@ If your plugin does not need CSS, delete this file.
   padding: 10px 12px;
 }
 
-.tasks-map-graph-container .tasks-map-filter-panel__header-icon {
+.project-planner-graph-container .project-planner-filter-panel__header-icon {
   display: flex;
   align-items: center;
   align-self: stretch;
@@ -1054,51 +1054,51 @@ If your plugin does not need CSS, delete this file.
   height: auto;
 }
 
-.tasks-map-graph-container .tasks-map-filter-panel__header-icon:hover {
+.project-planner-graph-container .project-planner-filter-panel__header-icon:hover {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-graph-container
-  .tasks-map-filter-panel.tasks-map-filter-panel--minimized
-  .tasks-map-filter-panel__header-icon {
+.project-planner-graph-container
+  .project-planner-filter-panel.project-planner-filter-panel--minimized
+  .project-planner-filter-panel__header-icon {
   border-radius: 0 8px 8px 0;
   padding: 10px;
 }
 
-.tasks-map-filter-panel-toggle {
+.project-planner-filter-panel-toggle {
   display: none;
 }
 
-.tasks-map-filter-panel__content {
+.project-planner-filter-panel__content {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
 }
 
-.tasks-map-filter-panel-content {
+.project-planner-filter-panel-content {
   display: none;
 }
 
-.tasks-map-filter-section {
+.project-planner-filter-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.tasks-map-filter-item {
+.project-planner-filter-item {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.tasks-map-filter-label {
+.project-planner-filter-label {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
-.tasks-map-filter-advanced-toggle {
+.project-planner-filter-advanced-toggle {
   width: 100%;
   display: flex;
   align-items: center;
@@ -1115,16 +1115,16 @@ If your plugin does not need CSS, delete this file.
   transition: all 0.2s ease;
 }
 
-.tasks-map-filter-advanced-toggle:hover {
+.project-planner-filter-advanced-toggle:hover {
   background: var(--background-primary-alt);
   border-color: var(--text-muted);
 }
 
-.tasks-map-filter-advanced-toggle svg {
+.project-planner-filter-advanced-toggle svg {
   flex-shrink: 0;
 }
 
-.tasks-map-filter-advanced {
+.project-planner-filter-advanced {
   border-top: 1px solid var(--background-modifier-border);
   padding-top: 12px;
   animation: slideDown 0.2s ease-out;
@@ -1142,20 +1142,20 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Search Bar Styles */
-.tasks-map-search-bar {
+.project-planner-search-bar {
   position: relative;
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.tasks-map-search-bar-row {
+.project-planner-search-bar-row {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.tasks-map-graph-container .tasks-map-search-icon-button {
+.project-planner-graph-container .project-planner-search-icon-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1175,13 +1175,13 @@ If your plugin does not need CSS, delete this file.
   min-height: 28px;
 }
 
-.tasks-map-graph-container .tasks-map-search-icon-button:hover {
+.project-planner-graph-container .project-planner-search-icon-button:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
   box-shadow: none;
 }
 
-.tasks-map-graph-container .tasks-map-search-input {
+.project-planner-graph-container .project-planner-search-input {
   flex: 1;
   border: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
@@ -1195,11 +1195,11 @@ If your plugin does not need CSS, delete this file.
   box-sizing: border-box;
 }
 
-.tasks-map-search-input::placeholder {
+.project-planner-search-input::placeholder {
   color: var(--text-faint);
 }
 
-.tasks-map-graph-container .tasks-map-search-clear {
+.project-planner-graph-container .project-planner-search-clear {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1219,13 +1219,13 @@ If your plugin does not need CSS, delete this file.
   min-height: 28px;
 }
 
-.tasks-map-graph-container .tasks-map-search-clear:hover {
+.project-planner-graph-container .project-planner-search-clear:hover {
   color: var(--text-normal);
   background: transparent;
   box-shadow: none;
 }
 
-.tasks-map-search-result-count {
+.project-planner-search-result-count {
   display: block;
   margin-top: 4px;
   font-size: 11px;
@@ -1233,14 +1233,14 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Traversal Options (checkboxes below search) */
-.tasks-map-traversal-options {
+.project-planner-traversal-options {
   display: flex;
   gap: 12px;
   margin-top: 6px;
 }
 
 /* Search Suggestions Dropdown */
-.tasks-map-search-suggestions {
+.project-planner-search-suggestions {
   position: absolute;
   top: 100%;
   left: -16px;
@@ -1249,12 +1249,12 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 0 0 8px 8px;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   max-height: 300px;
   overflow-y: auto;
 }
 
-.tasks-map-search-suggestion {
+.project-planner-search-suggestion {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1271,25 +1271,25 @@ If your plugin does not need CSS, delete this file.
   box-sizing: border-box;
 }
 
-.tasks-map-search-suggestion:last-child {
+.project-planner-search-suggestion:last-child {
   border-bottom: none;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
 
-.tasks-map-search-suggestion:hover,
-.tasks-map-search-suggestion--active {
+.project-planner-search-suggestion:hover,
+.project-planner-search-suggestion--active {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-search-suggestion-summary {
+.project-planner-search-suggestion-summary {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.4;
 }
 
-.tasks-map-search-suggestion-tags {
+.project-planner-search-suggestion-tags {
   font-size: 10px;
   color: var(--text-muted);
   overflow: hidden;
@@ -1298,7 +1298,7 @@ If your plugin does not need CSS, delete this file.
   line-height: 1.3;
 }
 
-.tasks-map-gui-overlay-checkbox-label {
+.project-planner-gui-overlay-checkbox-label {
   display: flex;
   align-items: center;
   user-select: none;
@@ -1309,21 +1309,21 @@ If your plugin does not need CSS, delete this file.
   gap: 8px;
 }
 
-.tasks-map-gui-overlay-checkbox-label:hover {
+.project-planner-gui-overlay-checkbox-label:hover {
   color: var(--text-normal);
 }
 
-.tasks-map-gui-overlay-checkbox-input {
+.project-planner-gui-overlay-checkbox-input {
   cursor: pointer;
   margin: 0;
 }
 
-.tasks-map-gui-overlay-checkbox-text {
+.project-planner-gui-overlay-checkbox-text {
   font-size: 12px;
 }
 
 /* Legacy styles - kept for backward compatibility */
-.tasks-map-gui-overlay-tag-select {
+.project-planner-gui-overlay-tag-select {
   position: absolute;
   top: 24px;
   right: 32px;
@@ -1331,7 +1331,7 @@ If your plugin does not need CSS, delete this file.
   min-width: 220px;
 }
 
-.tasks-map-gui-overlay-status-select {
+.project-planner-gui-overlay-status-select {
   position: absolute;
   top: 80px;
   right: 32px;
@@ -1339,7 +1339,7 @@ If your plugin does not need CSS, delete this file.
   min-width: 220px;
 }
 
-.tasks-map-gui-overlay-hidetag-checkbox {
+.project-planner-gui-overlay-hidetag-checkbox {
   position: absolute;
   top: 120px;
   right: 32px;
@@ -1351,7 +1351,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Task Priority Styles */
-.tasks-map-task-priority {
+.project-planner-task-priority {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1360,12 +1360,12 @@ If your plugin does not need CSS, delete this file.
   font-size: 14px;
   line-height: 1;
   cursor: default;
-  border-left: 1px solid var(--tasks-map-node-divider);
+  border-left: 1px solid var(--project-planner-node-divider);
   flex-shrink: 0;
 }
 
 /* Task Status Styles */
-.tasks-map-status-container {
+.project-planner-status-container {
   display: flex;
   align-items: stretch;
   align-self: stretch;
@@ -1374,7 +1374,7 @@ If your plugin does not need CSS, delete this file.
   overflow: hidden;
 }
 
-.tasks-map-task-status-toggle {
+.project-planner-task-status-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1386,25 +1386,25 @@ If your plugin does not need CSS, delete this file.
     color 0.15s ease;
 }
 
-.tasks-map-task-status-toggle:hover {
-  background: var(--tasks-map-node-hover);
+.project-planner-task-status-toggle:hover {
+  background: var(--project-planner-node-hover);
   color: var(--text-normal);
 }
 
-.tasks-map-task-background--todo .tasks-map-task-status-toggle {
+.project-planner-task-background--todo .project-planner-task-status-toggle {
   color: var(--text-muted);
 }
 
-.tasks-map-task-background--in-progress .tasks-map-task-status-toggle {
-  color: var(--tasks-map-color-blue);
+.project-planner-task-background--in-progress .project-planner-task-status-toggle {
+  color: var(--project-planner-color-blue);
 }
 
-.tasks-map-task-background--done .tasks-map-task-status-toggle {
-  color: var(--tasks-map-color-green);
+.project-planner-task-background--done .project-planner-task-status-toggle {
+  color: var(--project-planner-color-green);
 }
 
-.tasks-map-task-background--canceled .tasks-map-task-status-toggle {
-  color: var(--tasks-map-color-red);
+.project-planner-task-background--canceled .project-planner-task-status-toggle {
+  color: var(--project-planner-color-red);
 }
 
 /* Task Node Handle Styles */
@@ -1433,11 +1433,11 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Hash Edge Styles */
-.tasks-map-hash-edge-interaction {
+.project-planner-hash-edge-interaction {
   cursor: pointer;
 }
 
-.tasks-map-hash-edge-path {
+.project-planner-hash-edge-path {
   stroke: var(--color-base-40);
   stroke-width: 1.5;
   fill: none;
@@ -1446,97 +1446,97 @@ If your plugin does not need CSS, delete this file.
     stroke-width 0.15s ease;
 }
 
-.tasks-map-hash-edge-path--selected {
+.project-planner-hash-edge-path--selected {
   stroke: var(--interactive-accent);
   stroke-width: 2;
 }
 
 /* Dependency-chain highlight: clicking a task lights up everything it waits
    on and everything waiting on it, and fades the rest. */
-.tasks-map-hash-edge-path--connected {
+.project-planner-hash-edge-path--connected {
   stroke: var(--interactive-accent);
   stroke-width: 2.5;
 }
 
-.tasks-map-hash-edge-path--dimmed {
+.project-planner-hash-edge-path--dimmed {
   opacity: 0.15;
 }
 
 /* Upstream feeds into the selected task, downstream waits on it */
-.tasks-map-hash-edge-path--upstream {
+.project-planner-hash-edge-path--upstream {
   stroke: var(--color-purple, #7c5cbf);
   stroke-width: 2.5;
 }
 
-.tasks-map-hash-edge-path--downstream {
+.project-planner-hash-edge-path--downstream {
   stroke: var(--color-orange, #e07c3a);
   stroke-width: 2.5;
 }
 
 /* A dragged task is hovering over this connection and would split it */
-.tasks-map-hash-edge-path--drop-target {
+.project-planner-hash-edge-path--drop-target {
   stroke: var(--interactive-accent);
   stroke-width: 4;
   stroke-dasharray: 6 4;
   opacity: 1;
 }
 
-.tasks-map-task-node-root--dimmed {
+.project-planner-task-node-root--dimmed {
   opacity: 0.35;
 }
 
-.tasks-map-task-node-root--connected {
+.project-planner-task-node-root--connected {
   box-shadow: 0 0 0 2px var(--interactive-accent);
   border-radius: var(--radius-m, 8px);
 }
 
 .react-flow__edge:hover
-  .tasks-map-hash-edge-path:not(.tasks-map-hash-edge-path--selected) {
+  .project-planner-hash-edge-path:not(.project-planner-hash-edge-path--selected) {
   stroke: var(--interactive-accent);
   stroke-dasharray: 6 4;
-  animation: tasks-map-edge-march 0.5s linear infinite;
+  animation: project-planner-edge-march 0.5s linear infinite;
 }
 
-@keyframes tasks-map-edge-march {
+@keyframes project-planner-edge-march {
   to {
     stroke-dashoffset: -20;
   }
 }
 
-.tasks-map-hash-edge-text {
+.project-planner-hash-edge-text {
   user-select: none;
   pointer-events: none;
   fill: var(--text-muted);
 }
 
 /* Link Button SVG Styles */
-.tasks-map-link-button svg {
+.project-planner-link-button svg {
   display: block;
 }
 
 /* Task Minimap Styles */
-.tasks-map-react-flow__minimap {
+.project-planner-react-flow__minimap {
   background: var(--background-primary);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(var(--tasks-map-color-black), 0.12);
+  box-shadow: 0 2px 8px rgba(var(--project-planner-color-black), 0.12);
 }
 
 /* Task Map Graph View Styles */
-.tasks-map-graph-container {
+.project-planner-graph-container {
   width: 100%;
   height: 100%;
   position: relative;
 }
 
 /* Task Background Styles */
-.tasks-map-task-background {
+.project-planner-task-background {
   border-radius: var(--radius-m);
   padding: 12px;
   width: 250px;
   min-height: 120px;
   max-height: fit-content;
-  box-shadow: 0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+  box-shadow: 0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
   font-weight: 500;
   display: flex;
   flex-direction: column;
@@ -1545,11 +1545,11 @@ If your plugin does not need CSS, delete this file.
   transition: width 0.2s;
 }
 
-.tasks-map-task-node-root {
+.project-planner-task-node-root {
   position: relative;
 }
 
-.tasks-map-task-date-bar {
+.project-planner-task-date-bar {
   position: absolute;
   bottom: calc(100% + 10px);
   left: 50%;
@@ -1570,7 +1570,7 @@ If your plugin does not need CSS, delete this file.
   pointer-events: none;
 }
 
-.tasks-map-task-date-item {
+.project-planner-task-date-item {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: baseline;
@@ -1580,181 +1580,181 @@ If your plugin does not need CSS, delete this file.
   border: 1px solid var(--background-modifier-border);
   border-radius: 999px;
   background: var(--background-primary);
-  box-shadow: 0 2px 6px rgba(var(--tasks-map-color-black-rgb), 0.12);
+  box-shadow: 0 2px 6px rgba(var(--project-planner-color-black-rgb), 0.12);
   font-size: 11px;
   line-height: 18px;
   letter-spacing: 0;
   white-space: nowrap;
 }
 
-.tasks-map-task-date-emoji {
+.project-planner-task-date-emoji {
   font-size: 12px;
   line-height: 1;
 }
 
-.tasks-map-task-date-label {
+.project-planner-task-date-label {
   color: var(--text-muted);
 }
 
-.tasks-map-task-date-value {
+.project-planner-task-date-value {
   color: var(--text-normal);
   font-variant-numeric: tabular-nums;
 }
 
-.tasks-map-task-background--expanded {
+.project-planner-task-background--expanded {
   max-height: none;
 }
 
-.tasks-map-task-background--debug {
+.project-planner-task-background--debug {
   padding-bottom: 40px; /* Extra space for expand button (24px height + 16px margin) */
 }
 
-.tasks-map-task-background--todo {
-  --tasks-map-node-bg: var(--background-secondary);
-  --tasks-map-node-divider: rgba(var(--tasks-map-color-black-rgb), 0.1);
-  --tasks-map-node-hover: var(--background-modifier-hover);
+.project-planner-task-background--todo {
+  --project-planner-node-bg: var(--background-secondary);
+  --project-planner-node-divider: rgba(var(--project-planner-color-black-rgb), 0.1);
+  --project-planner-node-hover: var(--background-modifier-hover);
   background: var(--background-secondary);
-  border: 1px solid rgba(var(--tasks-map-color-black-rgb), 0.1);
+  border: 1px solid rgba(var(--project-planner-color-black-rgb), 0.1);
   border-left: 4px solid transparent;
   color: var(--text-normal);
 }
 
-.tasks-map-task-background--done {
-  --tasks-map-node-bg: var(--background-secondary);
-  --tasks-map-node-divider: rgba(var(--tasks-map-color-green-rgb), 0.3);
-  --tasks-map-node-hover: var(--background-modifier-hover);
+.project-planner-task-background--done {
+  --project-planner-node-bg: var(--background-secondary);
+  --project-planner-node-divider: rgba(var(--project-planner-color-green-rgb), 0.3);
+  --project-planner-node-hover: var(--background-modifier-hover);
   background: var(--background-secondary);
   background-image: linear-gradient(
     to right,
-    rgba(var(--tasks-map-color-green-rgb), 0.18) 0%,
-    rgba(var(--tasks-map-color-green-rgb), 0.08) 50%,
+    rgba(var(--project-planner-color-green-rgb), 0.18) 0%,
+    rgba(var(--project-planner-color-green-rgb), 0.08) 50%,
     transparent 100%
   );
-  border: 1px solid rgba(var(--tasks-map-color-green-rgb), 0.3);
-  border-left: 4px solid var(--tasks-map-color-green);
+  border: 1px solid rgba(var(--project-planner-color-green-rgb), 0.3);
+  border-left: 4px solid var(--project-planner-color-green);
   color: var(--text-normal);
 }
 
-.tasks-map-task-background--in-progress {
-  --tasks-map-node-bg: var(--background-secondary);
-  --tasks-map-node-divider: rgba(var(--tasks-map-color-blue-rgb), 0.3);
-  --tasks-map-node-hover: var(--background-modifier-hover);
+.project-planner-task-background--in-progress {
+  --project-planner-node-bg: var(--background-secondary);
+  --project-planner-node-divider: rgba(var(--project-planner-color-blue-rgb), 0.3);
+  --project-planner-node-hover: var(--background-modifier-hover);
   background: var(--background-secondary);
   background-image: linear-gradient(
     to right,
-    rgba(var(--tasks-map-color-blue-rgb), 0.18) 0%,
-    rgba(var(--tasks-map-color-blue-rgb), 0.08) 50%,
+    rgba(var(--project-planner-color-blue-rgb), 0.18) 0%,
+    rgba(var(--project-planner-color-blue-rgb), 0.08) 50%,
     transparent 100%
   );
-  border: 1px solid rgba(var(--tasks-map-color-blue-rgb), 0.3);
-  border-left: 4px solid var(--tasks-map-color-blue);
+  border: 1px solid rgba(var(--project-planner-color-blue-rgb), 0.3);
+  border-left: 4px solid var(--project-planner-color-blue);
   color: var(--text-normal);
 }
 
-.tasks-map-task-background--canceled {
-  --tasks-map-node-bg: var(--background-secondary);
-  --tasks-map-node-divider: rgba(var(--tasks-map-color-red-rgb), 0.3);
-  --tasks-map-node-hover: var(--background-modifier-hover);
+.project-planner-task-background--canceled {
+  --project-planner-node-bg: var(--background-secondary);
+  --project-planner-node-divider: rgba(var(--project-planner-color-red-rgb), 0.3);
+  --project-planner-node-hover: var(--background-modifier-hover);
   background: var(--background-secondary);
   background-image: linear-gradient(
     to right,
-    rgba(var(--tasks-map-color-red-rgb), 0.18) 0%,
-    rgba(var(--tasks-map-color-red-rgb), 0.08) 50%,
+    rgba(var(--project-planner-color-red-rgb), 0.18) 0%,
+    rgba(var(--project-planner-color-red-rgb), 0.08) 50%,
     transparent 100%
   );
-  border: 1px solid rgba(var(--tasks-map-color-red-rgb), 0.3);
-  border-left: 4px solid var(--tasks-map-color-red);
+  border: 1px solid rgba(var(--project-planner-color-red-rgb), 0.3);
+  border-left: 4px solid var(--project-planner-color-red);
   color: var(--text-muted);
 }
 
 /* Hover and Selected States */
-.tasks-map-task-background:hover {
+.project-planner-task-background:hover {
   box-shadow:
-    0 0 0 2px rgba(var(--tasks-map-color-black-rgb), 0.2),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+    0 0 0 2px rgba(var(--project-planner-color-black-rgb), 0.2),
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
 }
 
-.tasks-map-task-background--selected {
+.project-planner-task-background--selected {
   box-shadow:
-    0 0 0 2px rgba(var(--tasks-map-color-black-rgb), 0.2),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+    0 0 0 2px rgba(var(--project-planner-color-black-rgb), 0.2),
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
 }
 
-.theme-dark .tasks-map-task-background:hover {
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.25),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
-}
-
-.theme-dark .tasks-map-task-background--selected {
+.theme-dark .project-planner-task-background:hover {
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.25),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
 }
 
-.tasks-map-task-background--done:hover,
-.tasks-map-task-background--done.tasks-map-task-background--selected {
+.theme-dark .project-planner-task-background--selected {
   box-shadow:
-    0 0 0 2px rgba(var(--tasks-map-color-green-rgb), 0.4),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+    0 0 0 2px rgba(255, 255, 255, 0.25),
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
 }
 
-.tasks-map-task-background--in-progress:hover,
-.tasks-map-task-background--in-progress.tasks-map-task-background--selected {
+.project-planner-task-background--done:hover,
+.project-planner-task-background--done.project-planner-task-background--selected {
   box-shadow:
-    0 0 0 2px rgba(var(--tasks-map-color-blue-rgb), 0.4),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+    0 0 0 2px rgba(var(--project-planner-color-green-rgb), 0.4),
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
 }
 
-.tasks-map-task-background--canceled:hover,
-.tasks-map-task-background--canceled.tasks-map-task-background--selected {
+.project-planner-task-background--in-progress:hover,
+.project-planner-task-background--in-progress.project-planner-task-background--selected {
   box-shadow:
-    0 0 0 2px rgba(var(--tasks-map-color-red-rgb), 0.4),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+    0 0 0 2px rgba(var(--project-planner-color-blue-rgb), 0.4),
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
 }
 
-.tasks-map-task-background--starred {
+.project-planner-task-background--canceled:hover,
+.project-planner-task-background--canceled.project-planner-task-background--selected {
+  box-shadow:
+    0 0 0 2px rgba(var(--project-planner-color-red-rgb), 0.4),
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
+}
+
+.project-planner-task-background--starred {
   box-shadow:
     0 0 20px rgba(255, 215, 0, 0.6),
     0 0 40px rgba(255, 215, 0, 0.4),
-    0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
-  animation: tasks-map-pulse-gold 2s ease-in-out infinite;
+    0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
+  animation: project-planner-pulse-gold 2s ease-in-out infinite;
 }
 
-.tasks-map-task-background--todo.tasks-map-task-background--starred {
+.project-planner-task-background--todo.project-planner-task-background--starred {
   border-color: rgba(255, 215, 0, 0.8);
 }
 
-.tasks-map-task-background--done.tasks-map-task-background--starred {
+.project-planner-task-background--done.project-planner-task-background--starred {
   border-color: rgba(255, 215, 0, 0.8);
 }
 
-.tasks-map-task-background--in-progress.tasks-map-task-background--starred {
+.project-planner-task-background--in-progress.project-planner-task-background--starred {
   border-color: rgba(255, 215, 0, 0.8);
 }
 
-.tasks-map-task-background--canceled.tasks-map-task-background--starred {
+.project-planner-task-background--canceled.project-planner-task-background--starred {
   border-color: rgba(255, 215, 0, 0.8);
 }
 
-@keyframes tasks-map-pulse-gold {
+@keyframes project-planner-pulse-gold {
   0%,
   100% {
     box-shadow:
       0 0 20px rgba(255, 215, 0, 0.6),
       0 0 40px rgba(255, 215, 0, 0.4),
-      0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+      0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
   }
   50% {
     box-shadow:
       0 0 30px rgba(255, 215, 0, 0.8),
       0 0 60px rgba(255, 215, 0, 0.6),
-      0 2px 8px rgba(var(--tasks-map-color-black-rgb), 0.07);
+      0 2px 8px rgba(var(--project-planner-color-black-rgb), 0.07);
   }
 }
 
 /* Centered Message Container Styles */
-.tasks-map-centered-message-container {
+.project-planner-centered-message-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1762,22 +1762,22 @@ If your plugin does not need CSS, delete this file.
   width: 100%;
 }
 
-.tasks-map-centered-message-content {
+.project-planner-centered-message-content {
   background: var(--background-secondary);
   padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   max-width: 600px;
   text-align: center;
 }
 
-.tasks-map-message-icon {
+.project-planner-message-icon {
   font-size: 48px;
   margin-bottom: 16px;
   color: var(--text-warning);
 }
 
-.tasks-map-message-title {
+.project-planner-message-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -1785,25 +1785,25 @@ If your plugin does not need CSS, delete this file.
   white-space: nowrap;
 }
 
-.tasks-map-message-description {
+.project-planner-message-description {
   font-size: 14px;
   color: var(--text-muted);
   margin-bottom: 16px;
   line-height: 1.5;
 }
 
-.tasks-map-message-link {
+.project-planner-message-link {
   color: var(--text-accent);
   text-decoration: none;
   font-weight: 500;
 }
 
-.tasks-map-message-link:hover {
+.project-planner-message-link:hover {
   text-decoration: underline;
 }
 
 /* Loading Spinner Styles */
-.tasks-map-loading-container {
+.project-planner-loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1817,29 +1817,29 @@ If your plugin does not need CSS, delete this file.
   z-index: 100;
 }
 
-.tasks-map-spinner {
+.project-planner-spinner {
   width: 40px;
   height: 40px;
   border: 3px solid var(--background-modifier-border);
   border-top-color: var(--interactive-accent);
   border-radius: 50%;
-  animation: tasks-map-spin 0.8s linear infinite;
+  animation: project-planner-spin 0.8s linear infinite;
 }
 
-.tasks-map-loading-text {
+.project-planner-loading-text {
   margin-top: 16px;
   font-size: 14px;
   color: var(--text-muted);
 }
 
-@keyframes tasks-map-spin {
+@keyframes project-planner-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
 /* Graph Empty State */
-.tasks-map-graph-empty-state {
+.project-planner-graph-empty-state {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1853,7 +1853,7 @@ If your plugin does not need CSS, delete this file.
   text-align: center;
 }
 
-.tasks-map-graph-empty-state__message {
+.project-planner-graph-empty-state__message {
   font-size: 14px;
   color: var(--text-faint);
   line-height: 1.6;
@@ -1861,7 +1861,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Status Counts Overlay */
-.tasks-map-status-counts-overlay {
+.project-planner-status-counts-overlay {
   position: absolute;
   left: 16px;
   bottom: 16px;
@@ -1874,65 +1874,65 @@ If your plugin does not need CSS, delete this file.
   display: flex;
   flex-direction: row;
   gap: 12px;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   backdrop-filter: blur(8px);
 }
 
-.tasks-map-status-counts-item {
+.project-planner-status-counts-item {
   display: flex;
   align-items: center;
   gap: 6px;
   line-height: 1;
 }
 
-.tasks-map-status-counts-dot {
+.project-planner-status-counts-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.tasks-map-status-counts-dot--todo {
+.project-planner-status-counts-dot--todo {
   background: var(--text-muted);
 }
 
-.tasks-map-status-counts-dot--in_progress {
-  background: var(--tasks-map-color-blue);
+.project-planner-status-counts-dot--in_progress {
+  background: var(--project-planner-color-blue);
 }
 
-.tasks-map-status-counts-dot--done {
-  background: var(--tasks-map-color-green);
+.project-planner-status-counts-dot--done {
+  background: var(--project-planner-color-green);
 }
 
-.tasks-map-status-counts-dot--canceled {
-  background: var(--tasks-map-color-red);
+.project-planner-status-counts-dot--canceled {
+  background: var(--project-planner-color-red);
 }
 
-.tasks-map-status-counts-label {
+.project-planner-status-counts-label {
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.tasks-map-status-counts-value {
+.project-planner-status-counts-value {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-normal);
 }
 
-.tasks-map-status-counts-total {
+.project-planner-status-counts-total {
   background: var(--interactive-accent);
   padding: 2px 8px;
   border-radius: 6px;
   margin-left: 4px;
 }
 
-.tasks-map-status-counts-total .tasks-map-status-counts-label,
-.tasks-map-status-counts-total .tasks-map-status-counts-value {
+.project-planner-status-counts-total .project-planner-status-counts-label,
+.project-planner-status-counts-total .project-planner-status-counts-value {
   color: var(--status-counts-total-color, #ffffff);
 }
 
 /* Unlinked Tasks Panel */
-.tasks-map-unlinked-panel {
+.project-planner-unlinked-panel {
   position: absolute;
   top: 16px;
   left: 16px;
@@ -1946,17 +1946,17 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   overflow: hidden;
 }
 
-.tasks-map-unlinked-panel--collapsed {
+.project-planner-unlinked-panel--collapsed {
   width: auto;
   max-height: none;
   bottom: auto;
   overflow: visible;
 }
-.tasks-map-unlinked-panel__header {
+.project-planner-unlinked-panel__header {
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -1965,11 +1965,11 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-unlinked-panel--collapsed .tasks-map-unlinked-panel__header {
+.project-planner-unlinked-panel--collapsed .project-planner-unlinked-panel__header {
   border-bottom: none;
 }
 
-.tasks-map-unlinked-panel__title {
+.project-planner-unlinked-panel__title {
   flex: 1;
   font-size: 12px;
   font-weight: 600;
@@ -1982,7 +1982,7 @@ If your plugin does not need CSS, delete this file.
   padding: 10px 12px;
 }
 
-.tasks-map-graph-container .tasks-map-unlinked-panel__header-icon {
+.project-planner-graph-container .project-planner-unlinked-panel__header-icon {
   display: flex;
   align-items: center;
   align-self: stretch;
@@ -2000,23 +2000,23 @@ If your plugin does not need CSS, delete this file.
   height: auto;
 }
 
-.tasks-map-graph-container .tasks-map-unlinked-panel__header-icon:hover {
+.project-planner-graph-container .project-planner-unlinked-panel__header-icon:hover {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-graph-container
-  .tasks-map-unlinked-panel--collapsed
-  .tasks-map-unlinked-panel__header-icon {
+.project-planner-graph-container
+  .project-planner-unlinked-panel--collapsed
+  .project-planner-unlinked-panel__header-icon {
   border-radius: 0 8px 8px 0;
   padding: 10px;
 }
 
-.tasks-map-unlinked-panel__count {
+.project-planner-unlinked-panel__count {
   font-weight: normal;
   color: var(--text-faint);
 }
 
-.tasks-map-unlinked-panel__filter-row {
+.project-planner-unlinked-panel__filter-row {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2025,7 +2025,7 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-graph-container .tasks-map-unlinked-panel__filter-input {
+.project-planner-graph-container .project-planner-unlinked-panel__filter-input {
   flex: 1;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
@@ -2037,12 +2037,12 @@ If your plugin does not need CSS, delete this file.
   min-width: 0;
 }
 
-.tasks-map-unlinked-panel__filter-input:focus {
+.project-planner-unlinked-panel__filter-input:focus {
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
-.tasks-map-unlinked-panel__filter-clear {
+.project-planner-unlinked-panel__filter-clear {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2055,25 +2055,25 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-unlinked-panel__filter-clear:hover {
+.project-planner-unlinked-panel__filter-clear:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-unlinked-panel__list {
+.project-planner-unlinked-panel__list {
   flex: 1;
   overflow-y: auto;
   padding: 4px 0;
 }
 
-.tasks-map-unlinked-panel__empty {
+.project-planner-unlinked-panel__empty {
   padding: 16px 12px;
   font-size: 12px;
   color: var(--text-faint);
   text-align: center;
 }
 
-.tasks-map-unlinked-panel__item {
+.project-planner-unlinked-panel__item {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2083,15 +2083,15 @@ If your plugin does not need CSS, delete this file.
   user-select: none;
 }
 
-.tasks-map-unlinked-panel__item:hover {
+.project-planner-unlinked-panel__item:hover {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-unlinked-panel__item:active {
+.project-planner-unlinked-panel__item:active {
   cursor: grabbing;
 }
 
-.tasks-map-unlinked-panel__item-summary {
+.project-planner-unlinked-panel__item-summary {
   font-size: 12px;
   color: var(--text-normal);
   line-height: 1.4;
@@ -2101,7 +2101,7 @@ If your plugin does not need CSS, delete this file.
   -webkit-box-orient: vertical;
 }
 
-.tasks-map-unlinked-panel__item-tags {
+.project-planner-unlinked-panel__item-tags {
   font-size: 11px;
   color: var(--text-faint);
   white-space: nowrap;
@@ -2110,31 +2110,31 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Filter Preset Section */
-.tasks-map-preset-section {
+.project-planner-preset-section {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.tasks-map-preset-row {
+.project-planner-preset-row {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.tasks-map-preset-select-wrapper {
+.project-planner-preset-select-wrapper {
   flex: 1;
   min-width: 0;
 }
 
-.tasks-map-preset-actions {
+.project-planner-preset-actions {
   display: flex;
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
 }
 
-.tasks-map-graph-container .tasks-map-preset-action-btn {
+.project-planner-graph-container .project-planner-preset-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2154,23 +2154,23 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-graph-container .tasks-map-preset-action-btn:hover {
+.project-planner-graph-container .project-planner-preset-action-btn:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
   box-shadow: none;
 }
 
-.tasks-map-graph-container .tasks-map-preset-action-btn--danger:hover {
+.project-planner-graph-container .project-planner-preset-action-btn--danger:hover {
   color: var(--text-error);
-  background: rgba(var(--tasks-map-color-red-rgb), 0.12);
+  background: rgba(var(--project-planner-color-red-rgb), 0.12);
 }
 
-.tasks-map-preset-action-btn:disabled {
+.project-planner-preset-action-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.tasks-map-preset-inline-input {
+.project-planner-preset-inline-input {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2181,7 +2181,7 @@ If your plugin does not need CSS, delete this file.
   box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
-.tasks-map-preset-text-input {
+.project-planner-preset-text-input {
   flex: 1;
   background: transparent;
   border: none;
@@ -2192,11 +2192,11 @@ If your plugin does not need CSS, delete this file.
   padding: 0;
 }
 
-.tasks-map-preset-text-input::placeholder {
+.project-planner-preset-text-input::placeholder {
   color: var(--text-faint);
 }
 
-.tasks-map-graph-container .tasks-map-preset-save-btn {
+.project-planner-graph-container .project-planner-preset-save-btn {
   width: 100%;
   padding: 6px 10px;
   appearance: none;
@@ -2211,14 +2211,14 @@ If your plugin does not need CSS, delete this file.
   text-align: center;
 }
 
-.tasks-map-graph-container .tasks-map-preset-save-btn:hover {
+.project-planner-graph-container .project-planner-preset-save-btn:hover {
   color: var(--text-muted);
   background: var(--background-modifier-hover);
   box-shadow: none;
 }
 
 /* Presets Panel */
-.tasks-map-presets-panel {
+.project-planner-presets-panel {
   pointer-events: auto;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -2226,16 +2226,16 @@ If your plugin does not need CSS, delete this file.
   min-width: 280px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 12px rgba(var(--tasks-map-color-black-rgb), 0.15);
+  box-shadow: 0 4px 12px rgba(var(--project-planner-color-black-rgb), 0.15);
   overflow: hidden;
 }
 
-.tasks-map-presets-panel--collapsed {
+.project-planner-presets-panel--collapsed {
   min-width: unset;
   overflow: visible;
 }
 
-.tasks-map-presets-panel__header {
+.project-planner-presets-panel__header {
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -2244,11 +2244,11 @@ If your plugin does not need CSS, delete this file.
   flex-shrink: 0;
 }
 
-.tasks-map-presets-panel--collapsed .tasks-map-presets-panel__header {
+.project-planner-presets-panel--collapsed .project-planner-presets-panel__header {
   border-bottom: none;
 }
 
-.tasks-map-presets-panel__title {
+.project-planner-presets-panel__title {
   flex: 1;
   font-size: 12px;
   font-weight: 600;
@@ -2259,7 +2259,7 @@ If your plugin does not need CSS, delete this file.
   padding: 10px 12px;
 }
 
-.tasks-map-graph-container .tasks-map-presets-panel__header-icon {
+.project-planner-graph-container .project-planner-presets-panel__header-icon {
   display: flex;
   align-items: center;
   align-self: stretch;
@@ -2277,23 +2277,23 @@ If your plugin does not need CSS, delete this file.
   height: auto;
 }
 
-.tasks-map-graph-container .tasks-map-presets-panel__header-icon:hover {
+.project-planner-graph-container .project-planner-presets-panel__header-icon:hover {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-graph-container
-  .tasks-map-presets-panel--collapsed
-  .tasks-map-presets-panel__header-icon {
+.project-planner-graph-container
+  .project-planner-presets-panel--collapsed
+  .project-planner-presets-panel__header-icon {
   border-radius: 0 8px 8px 0;
   padding: 10px;
 }
 
-.tasks-map-presets-panel__content {
+.project-planner-presets-panel__content {
   padding: 12px;
 }
 
 /* Embed container */
-.tasks-map-embed-container {
+.project-planner-embed-container {
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   overflow: hidden;
@@ -2302,7 +2302,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Embed graph area */
-.tasks-map-embed-inner {
+.project-planner-embed-inner {
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -2310,7 +2310,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Embed sidebar */
-.tasks-map-embed-sidebar {
+.project-planner-embed-sidebar {
   flex-shrink: 0;
   width: 28px;
   display: flex;
@@ -2320,7 +2320,7 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-secondary);
 }
 
-.tasks-map-embed-container .tasks-map-embed-sidebar__button {
+.project-planner-embed-container .project-planner-embed-sidebar__button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2337,13 +2337,13 @@ If your plugin does not need CSS, delete this file.
   height: auto;
 }
 
-.tasks-map-embed-container .tasks-map-embed-sidebar__button:hover {
+.project-planner-embed-container .project-planner-embed-sidebar__button:hover {
   background: var(--background-modifier-hover);
   box-shadow: none;
 }
 
 /* Embed error state */
-.tasks-map-embed-error {
+.project-planner-embed-error {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2352,18 +2352,18 @@ If your plugin does not need CSS, delete this file.
   font-size: 14px;
 }
 
-.tasks-map-embed-error__icon {
+.project-planner-embed-error__icon {
   flex-shrink: 0;
   font-size: 18px;
 }
 
-.tasks-map-embed-error__message {
+.project-planner-embed-error__message {
   line-height: 1.4;
 }
 
 /* ── Project group node ──────────────────────────────────────────────────── */
 
-.tasks-map-project-group {
+.project-planner-project-group {
   width: 100%;
   height: 100%;
   border: 1.5px solid var(--background-modifier-border-hover);
@@ -2372,18 +2372,18 @@ If your plugin does not need CSS, delete this file.
   opacity: 0.95;
 }
 
-.tasks-map-project-group.tasks-map-project-group--selected {
+.project-planner-project-group.project-planner-project-group--selected {
   border-color: var(--background-modifier-border-focus);
   box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
 }
 
-.tasks-map-project-group.tasks-map-project-group--drag-over {
+.project-planner-project-group.project-planner-project-group--drag-over {
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 2px var(--interactive-accent);
   background-color: var(--background-modifier-hover);
 }
 
-.tasks-map-project-group-label {
+.project-planner-project-group-label {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -2400,14 +2400,14 @@ If your plugin does not need CSS, delete this file.
 
 /* ── Multi-project dots on task nodes ───────────────────────────────────── */
 
-.tasks-map-task-node-projects {
+.project-planner-task-node-projects {
   display: flex;
   gap: 4px;
   padding: 4px 8px 6px;
   justify-content: flex-end;
 }
 
-.tasks-map-project-dot {
+.project-planner-project-dot {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -2439,7 +2439,7 @@ If your plugin does not need CSS, delete this file.
   outline-offset: 6px;
 }
 
-.tasks-map-tag-preview-container {
+.project-planner-tag-preview-container {
   display: flex;
   gap: 8px;
   margin-top: 10px;
@@ -2447,13 +2447,13 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Read-only report under a setting, e.g. what the rates note yielded */
-.tasks-map-setting-status {
+.project-planner-setting-status {
   margin-top: 12px;
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
-.tasks-map-setting-status--warning {
+.project-planner-setting-status--warning {
   color: var(--text-warning, var(--color-orange));
 }
 
@@ -2466,37 +2466,37 @@ If your plugin does not need CSS, delete this file.
    allowed; colours come from Obsidian's theme variables only.
    ========================================================================== */
 
-.tasks-map-finance {
+.project-planner-finance {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
 
-.tasks-map-finance__body {
+.project-planner-finance__body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding: 16px 20px 40px;
 }
 
-.tasks-map-finance__section {
+.project-planner-finance__section {
   margin-top: 28px;
 }
 
-.tasks-map-finance__section h3 {
+.project-planner-finance__section h3 {
   margin: 0 0 4px;
   font-size: var(--font-ui-medium, 15px);
 }
 
-.tasks-map-finance__note,
-.tasks-map-finance__empty {
+.project-planner-finance__note,
+.project-planner-finance__empty {
   margin: 0 0 8px;
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
-.tasks-map-finance__callout {
+.project-planner-finance__callout {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2508,7 +2508,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Toolbar */
-.tasks-map-finance-toolbar {
+.project-planner-finance-toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2518,7 +2518,7 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-secondary);
 }
 
-.tasks-map-finance-toolbar__icon {
+.project-planner-finance-toolbar__icon {
   display: flex;
   align-items: center;
   padding: 4px;
@@ -2528,23 +2528,23 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-finance-toolbar__icon:hover {
+.project-planner-finance-toolbar__icon:hover {
   color: var(--text-normal);
 }
 
-.tasks-map-finance-toolbar__search {
+.project-planner-finance-toolbar__search {
   display: flex;
   align-items: center;
   gap: 6px;
   color: var(--text-muted);
 }
 
-.tasks-map-finance-toolbar__search input {
+.project-planner-finance-toolbar__search input {
   width: 12em;
 }
 
-.tasks-map-finance-toolbar__field,
-.tasks-map-finance-toolbar__toggle {
+.project-planner-finance-toolbar__field,
+.project-planner-finance-toolbar__toggle {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2552,7 +2552,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-finance-toolbar__chip {
+.project-planner-finance-toolbar__chip {
   padding: 2px 8px;
   border-radius: var(--radius-s, 4px);
   background: var(--background-modifier-border);
@@ -2560,19 +2560,19 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-finance-toolbar__total {
+.project-planner-finance-toolbar__total {
   margin-left: auto;
   font-weight: var(--font-medium, 500);
 }
 
 /* KPI tiles */
-.tasks-map-finance-kpis {
+.project-planner-finance-kpis {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.tasks-map-finance-kpi {
+.project-planner-finance-kpi {
   flex: 1 1 140px;
   min-width: 140px;
   padding: 10px 14px;
@@ -2580,36 +2580,36 @@ If your plugin does not need CSS, delete this file.
   border-radius: var(--radius-m, 8px);
 }
 
-.tasks-map-finance-kpi__label {
+.project-planner-finance-kpi__label {
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
-.tasks-map-finance-kpi__value {
+.project-planner-finance-kpi__value {
   margin-top: 2px;
   font-size: var(--font-ui-large, 20px);
   font-weight: var(--font-medium, 500);
 }
 
-.tasks-map-finance-kpi__caveat {
+.project-planner-finance-kpi__caveat {
   margin-top: 4px;
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
 /* A total resting on suggested dates says so, every time */
-.tasks-map-finance-kpi__caveat--warning {
+.project-planner-finance-kpi__caveat--warning {
   color: var(--text-warning, var(--color-orange));
 }
 
 /* Bar list */
-.tasks-map-finance-bars {
+.project-planner-finance-bars {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.tasks-map-finance-bars__button {
+.project-planner-finance-bars__button {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2624,16 +2624,16 @@ If your plugin does not need CSS, delete this file.
   cursor: default;
 }
 
-.tasks-map-finance-bars__button:not(:disabled) {
+.project-planner-finance-bars__button:not(:disabled) {
   cursor: pointer;
 }
 
-.tasks-map-finance-bars__button:not(:disabled):hover
-  .tasks-map-finance-bars__label {
+.project-planner-finance-bars__button:not(:disabled):hover
+  .project-planner-finance-bars__label {
   color: var(--text-accent);
 }
 
-.tasks-map-finance-bars__label {
+.project-planner-finance-bars__label {
   flex: 0 0 30%;
   min-width: 0;
   overflow: hidden;
@@ -2641,13 +2641,13 @@ If your plugin does not need CSS, delete this file.
   white-space: nowrap;
 }
 
-.tasks-map-finance-bars__detail {
+.project-planner-finance-bars__detail {
   margin-left: 8px;
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
-.tasks-map-finance-bars__track {
+.project-planner-finance-bars__track {
   flex: 1;
   height: 10px;
   border-radius: var(--radius-s, 4px);
@@ -2655,14 +2655,14 @@ If your plugin does not need CSS, delete this file.
   overflow: hidden;
 }
 
-.tasks-map-finance-bars__fill {
+.project-planner-finance-bars__fill {
   display: block;
   height: 100%;
-  width: var(--tasks-map-finance-bar, 0%);
+  width: var(--project-planner-finance-bar, 0%);
   background: var(--interactive-accent);
 }
 
-.tasks-map-finance-bars__value {
+.project-planner-finance-bars__value {
   flex: 0 0 auto;
   min-width: 6em;
   text-align: right;
@@ -2670,7 +2670,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Cost over time */
-.tasks-map-finance-timeline__plot {
+.project-planner-finance-timeline__plot {
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -2679,7 +2679,7 @@ If your plugin does not need CSS, delete this file.
   overflow-x: auto;
 }
 
-.tasks-map-finance-timeline__slot {
+.project-planner-finance-timeline__slot {
   flex: 1 1 0;
   min-width: 28px;
   display: flex;
@@ -2687,7 +2687,7 @@ If your plugin does not need CSS, delete this file.
   height: 100%;
 }
 
-.tasks-map-finance-timeline__column {
+.project-planner-finance-timeline__column {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -2695,21 +2695,21 @@ If your plugin does not need CSS, delete this file.
   min-height: 0;
 }
 
-.tasks-map-finance-timeline__labour,
-.tasks-map-finance-timeline__materials {
+.project-planner-finance-timeline__labour,
+.project-planner-finance-timeline__materials {
   width: 100%;
-  height: var(--tasks-map-finance-column, 0%);
+  height: var(--project-planner-finance-column, 0%);
 }
 
-.tasks-map-finance-timeline__labour {
+.project-planner-finance-timeline__labour {
   background: var(--interactive-accent);
 }
 
-.tasks-map-finance-timeline__materials {
+.project-planner-finance-timeline__materials {
   background: var(--color-orange);
 }
 
-.tasks-map-finance-timeline__tick {
+.project-planner-finance-timeline__tick {
   flex: 0 0 auto;
   padding-top: 4px;
   font-size: var(--font-ui-smaller, 11px);
@@ -2718,7 +2718,7 @@ If your plugin does not need CSS, delete this file.
   white-space: nowrap;
 }
 
-.tasks-map-finance-timeline__key {
+.project-planner-finance-timeline__key {
   display: flex;
   gap: 16px;
   margin-top: 10px;
@@ -2726,35 +2726,35 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-finance-timeline__key-item {
+.project-planner-finance-timeline__key-item {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.tasks-map-finance-timeline__swatch {
+.project-planner-finance-timeline__swatch {
   width: 10px;
   height: 10px;
   border-radius: 2px;
 }
 
-.tasks-map-finance-timeline__swatch--labour {
+.project-planner-finance-timeline__swatch--labour {
   background: var(--interactive-accent);
 }
 
-.tasks-map-finance-timeline__swatch--materials {
+.project-planner-finance-timeline__swatch--materials {
   background: var(--color-orange);
 }
 
 /* Problems */
-.tasks-map-finance-issues,
-.tasks-map-finance-issues__details {
+.project-planner-finance-issues,
+.project-planner-finance-issues__details {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.tasks-map-finance-issues__header {
+.project-planner-finance-issues__header {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2769,13 +2769,13 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-finance-issues__details {
+.project-planner-finance-issues__details {
   padding: 2px 0 8px 22px;
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
-.tasks-map-finance-issues__detail-button {
+.project-planner-finance-issues__detail-button {
   padding: 1px 0;
   background: transparent;
   border: none;
@@ -2787,42 +2787,42 @@ If your plugin does not need CSS, delete this file.
 
 /* Finance modal. Rows are dense on purpose: a task with four people on it
    should still fit without scrolling. */
-.tasks-map-finance-modal__task {
+.project-planner-finance-modal__task {
   margin: 0;
   font-weight: var(--font-medium, 500);
 }
 
-.tasks-map-finance-modal__schedule,
-.tasks-map-finance-modal__hint {
+.project-planner-finance-modal__schedule,
+.project-planner-finance-modal__hint {
   margin: 2px 0 0;
   font-size: var(--font-ui-smaller, 12px);
   color: var(--text-muted);
 }
 
-.tasks-map-finance-modal h4 {
+.project-planner-finance-modal h4 {
   margin: 18px 0 4px;
 }
 
-.tasks-map-finance-modal__row {
+.project-planner-finance-modal__row {
   padding: 4px 0;
   border-top: none;
 }
 
-.tasks-map-finance-modal__row-info {
+.project-planner-finance-modal__row-info {
   display: none;
 }
 
-.tasks-map-finance-modal__row-control {
+.project-planner-finance-modal__row-control {
   justify-content: flex-start;
   flex-wrap: nowrap;
 }
 
-.tasks-map-finance-modal__share,
-.tasks-map-finance-modal__amount {
+.project-planner-finance-modal__share,
+.project-planner-finance-modal__amount {
   width: 5.5em;
 }
 
-.tasks-map-finance-modal__readout {
+.project-planner-finance-modal__readout {
   flex: 1;
   min-width: 0;
   text-align: right;
@@ -2833,7 +2833,7 @@ If your plugin does not need CSS, delete this file.
   text-overflow: ellipsis;
 }
 
-.tasks-map-finance-modal__chip {
+.project-planner-finance-modal__chip {
   margin-left: 10px;
   padding: 2px 8px;
   border-radius: var(--radius-s, 4px);
@@ -2843,7 +2843,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Shares that do not add up are shown, never quietly scaled to fit */
-.tasks-map-finance-modal__chip--warning {
+.project-planner-finance-modal__chip--warning {
   background: color-mix(
     in srgb,
     var(--color-orange) 20%,
@@ -2852,25 +2852,25 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-normal);
 }
 
-.tasks-map-finance-modal__summary {
+.project-planner-finance-modal__summary {
   margin: 16px 0 0;
   padding-top: 10px;
   border-top: 1px solid var(--background-modifier-border);
   font-weight: var(--font-medium, 500);
 }
 
-.tasks-map-tag-color-list {
+.project-planner-tag-color-list {
   max-height: 320px;
   overflow-y: auto;
   margin-bottom: 12px;
 }
 
-.tasks-map-tag-color-row {
+.project-planner-tag-color-row {
   padding: 6px 0;
   border-top: none;
 }
 
-.tasks-map-tag-color-empty {
+.project-planner-tag-color-empty {
   color: var(--text-faint);
   font-size: 13px;
   padding: 8px 0;
@@ -2882,14 +2882,14 @@ If your plugin does not need CSS, delete this file.
    from React, so dragging updates two variables instead of re-rendering a row.
 --------------------------------------------------------------------------- */
 
-.tasks-map-gantt-container {
+.project-planner-gantt-container {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
 
-.tasks-map-gantt-toolbar {
+.project-planner-gantt-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2899,14 +2899,14 @@ If your plugin does not need CSS, delete this file.
   flex: 0 0 auto;
 }
 
-.tasks-map-gantt-toolbar__group {
+.project-planner-gantt-toolbar__group {
   display: inline-flex;
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s, 4px);
   overflow: hidden;
 }
 
-.tasks-map-gantt-toolbar__scale {
+.project-planner-gantt-toolbar__scale {
   background: var(--background-primary);
   color: var(--text-muted);
   border: none;
@@ -2917,12 +2917,12 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-gantt-toolbar__scale--active {
+.project-planner-gantt-toolbar__scale--active {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
-.tasks-map-gantt-toolbar__button {
+.project-planner-gantt-toolbar__button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2931,7 +2931,7 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-gantt-toolbar__button--accent {
+.project-planner-gantt-toolbar__button--accent {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
@@ -2943,8 +2943,8 @@ If your plugin does not need CSS, delete this file.
    styling plain `button` outranks a lone class and would leave the one button
    whose colour carries state looking like every other one. The `background`
    shorthand rather than `background-color`: it clears a themed gradient too. */
-.tasks-map-gantt-toolbar button.tasks-map-gantt-toolbar__button--active,
-.tasks-map-gantt-toolbar button.tasks-map-gantt-toolbar__button--active:hover {
+.project-planner-gantt-toolbar button.project-planner-gantt-toolbar__button--active,
+.project-planner-gantt-toolbar button.project-planner-gantt-toolbar__button--active:hover {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   border: 1px solid var(--interactive-accent);
@@ -2952,12 +2952,12 @@ If your plugin does not need CSS, delete this file.
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 25%);
 }
 
-.tasks-map-gantt-toolbar__button:disabled {
+.project-planner-gantt-toolbar__button:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.tasks-map-gantt-toolbar__search {
+.project-planner-gantt-toolbar__search {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2967,7 +2967,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-faint);
 }
 
-.tasks-map-gantt-toolbar__search input {
+.project-planner-gantt-toolbar__search input {
   border: none;
   background: transparent;
   outline: none;
@@ -2977,7 +2977,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-normal);
 }
 
-.tasks-map-gantt-toolbar__toggle {
+.project-planner-gantt-toolbar__toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2985,32 +2985,32 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-gantt-toolbar__count {
+.project-planner-gantt-toolbar__count {
   font-size: 12px;
   color: var(--text-faint);
 }
 
-.tasks-map-gantt-toolbar__spacer {
+.project-planner-gantt-toolbar__spacer {
   flex: 1 1 auto;
 }
 
-.tasks-map-gantt-empty,
-.tasks-map-gantt-hint {
+.project-planner-gantt-empty,
+.project-planner-gantt-hint {
   padding: 12px;
   color: var(--text-faint);
   font-size: 12px;
 }
 
-.tasks-map-gantt-hint {
+.project-planner-gantt-hint {
   padding: 0 12px 8px;
 }
 
-.tasks-map-gantt-footer {
+.project-planner-gantt-footer {
   flex: 0 0 auto;
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.tasks-map-gantt-legend {
+.project-planner-gantt-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -3019,59 +3019,59 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-gantt-legend__item {
+.project-planner-gantt-legend__item {
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
 
-.tasks-map-gantt-legend__swatch {
+.project-planner-gantt-legend__swatch {
   width: 18px;
   height: 10px;
   border-radius: 3px;
   background: var(--color-blue, #2674b5);
 }
 
-.tasks-map-gantt-legend__swatch--in_progress {
+.project-planner-gantt-legend__swatch--in_progress {
   background: var(--color-orange, #e07c3a);
 }
 
-.tasks-map-gantt-legend__swatch--done {
+.project-planner-gantt-legend__swatch--done {
   background: var(--color-green, #4caf62);
 }
 
-.tasks-map-gantt-legend__swatch--canceled {
+.project-planner-gantt-legend__swatch--canceled {
   background: var(--text-faint);
 }
 
-.tasks-map-gantt-legend__swatch--inferred {
+.project-planner-gantt-legend__swatch--inferred {
   background: transparent;
   border: 1px dashed var(--text-muted);
 }
 
 /* The same thin rail the summary bars are drawn as */
-.tasks-map-gantt-legend__swatch--summary {
+.project-planner-gantt-legend__swatch--summary {
   height: 5px;
   border-radius: 2px;
   background: var(--text-muted);
 }
 
-.tasks-map-gantt-legend__swatch--upstream {
+.project-planner-gantt-legend__swatch--upstream {
   background: var(--color-purple, #7c5cbf);
 }
 
-.tasks-map-gantt-legend__swatch--downstream {
+.project-planner-gantt-legend__swatch--downstream {
   background: var(--color-orange, #e07c3a);
 }
 
-.tasks-map-gantt-legend__swatch--today {
+.project-planner-gantt-legend__swatch--today {
   width: 2px;
   height: 12px;
   border-radius: 0;
   background: var(--color-red, #e05c5c);
 }
 
-.tasks-map-gantt {
+.project-planner-gantt {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
@@ -3080,7 +3080,7 @@ If your plugin does not need CSS, delete this file.
 
 /* The single scroll container: vertical scrolling moves labels and bars
    together, and the label column stays pinned while scrolling sideways. */
-.tasks-map-gantt__scroll {
+.project-planner-gantt__scroll {
   display: flex;
   flex: 1 1 auto;
   min-width: 0;
@@ -3096,7 +3096,7 @@ If your plugin does not need CSS, delete this file.
    This box is no longer the only thing keeping the timeline out of the task
    names: every line below paints its own opaque backdrop, so however this
    column's height ends up being computed, no row can be left transparent. */
-.tasks-map-gantt__labels {
+.project-planner-gantt__labels {
   position: sticky;
   left: 0;
   z-index: 4;
@@ -3109,7 +3109,7 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Full-height grab strip on the column's right edge */
-.tasks-map-gantt__resizer {
+.project-planner-gantt__resizer {
   position: absolute;
   top: 0;
   right: -3px;
@@ -3120,12 +3120,12 @@ If your plugin does not need CSS, delete this file.
   z-index: 6;
 }
 
-.tasks-map-gantt__resizer:hover {
+.project-planner-gantt__resizer:hover {
   background: var(--interactive-accent);
   opacity: 0.35;
 }
 
-.tasks-map-gantt__labels-header {
+.project-planner-gantt__labels-header {
   position: sticky;
   top: 0;
   z-index: 5;
@@ -3149,7 +3149,7 @@ If your plugin does not need CSS, delete this file.
    reach this far down. Every state below tints *over* this colour rather than
    replacing it — a translucent `background` shorthand would put the bars back
    behind the text. */
-.tasks-map-gantt__label {
+.project-planner-gantt__label {
   position: relative;
   display: flex;
   align-items: center;
@@ -3166,13 +3166,13 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* A task holding other tasks reads as a heading for them */
-.tasks-map-gantt__label--summary .tasks-map-gantt__label-text {
+.project-planner-gantt__label--summary .project-planner-gantt__label-text {
   font-weight: 600;
 }
 
 /* The fold control. The empty variant keeps the slot on childless rows, so
    names at the same depth line up whether or not they have children. */
-.tasks-map-gantt__twisty {
+.project-planner-gantt__twisty {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -3186,33 +3186,33 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-gantt__twisty:hover {
+.project-planner-gantt__twisty:hover {
   color: var(--text-normal);
 }
 
-.tasks-map-gantt__twisty--empty {
+.project-planner-gantt__twisty--empty {
   cursor: default;
 }
 
 /* A solid-colour gradient, not `background`, so the opaque colour above
    survives: the hover tint a theme supplies here is usually translucent. */
-.tasks-map-gantt__label--selected,
-.tasks-map-gantt__row--selected {
+.project-planner-gantt__label--selected,
+.project-planner-gantt__row--selected {
   background-image: linear-gradient(
     var(--background-modifier-hover),
     var(--background-modifier-hover)
   );
 }
 
-.tasks-map-gantt__label--dimmed,
-.tasks-map-gantt__row--dimmed {
+.project-planner-gantt__label--dimmed,
+.project-planner-gantt__row--dimmed {
   opacity: 0.35;
 }
 
 /* Mixed into the column's own colour rather than into `transparent`. The
    result is the same shade a translucent tint composited to, but opaque, so
    the row keeps hiding the timeline behind it. */
-.tasks-map-gantt__label--connected {
+.project-planner-gantt__label--connected {
   background-color: color-mix(
     in srgb,
     var(--interactive-accent) 12%,
@@ -3220,7 +3220,7 @@ If your plugin does not need CSS, delete this file.
   );
 }
 
-.tasks-map-gantt__label--upstream {
+.project-planner-gantt__label--upstream {
   background-color: color-mix(
     in srgb,
     var(--color-purple, #7c5cbf) 14%,
@@ -3228,7 +3228,7 @@ If your plugin does not need CSS, delete this file.
   );
 }
 
-.tasks-map-gantt__label--downstream {
+.project-planner-gantt__label--downstream {
   background-color: color-mix(
     in srgb,
     var(--color-orange, #e07c3a) 14%,
@@ -3236,7 +3236,7 @@ If your plugin does not need CSS, delete this file.
   );
 }
 
-.tasks-map-gantt__tag-input {
+.project-planner-gantt__tag-input {
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -3249,7 +3249,7 @@ If your plugin does not need CSS, delete this file.
    The two `inherit`s copy whatever backdrop the row itself ended up with —
    plain, selected, connected, at risk — so the strip covers the text it sits
    on without having to restate a colour for every state. */
-.tasks-map-gantt__row-actions {
+.project-planner-gantt__row-actions {
   position: absolute;
   top: 0;
   right: 0;
@@ -3267,19 +3267,19 @@ If your plugin does not need CSS, delete this file.
 
 /* `focus-within` is what keeps the buttons usable from the keyboard: they stay
    in the DOM and in the tab order, and tabbing into one reveals the strip. */
-.tasks-map-gantt__label:hover .tasks-map-gantt__row-actions,
-.tasks-map-gantt__label:focus-within .tasks-map-gantt__row-actions {
+.project-planner-gantt__label:hover .project-planner-gantt__row-actions,
+.project-planner-gantt__label:focus-within .project-planner-gantt__row-actions {
   opacity: 1;
   pointer-events: auto;
 }
 
 /* Editing a tag turns the row into a text field that runs its full width;
    the overlay would sit on top of the input's right-hand end. */
-.tasks-map-gantt__row-actions--hidden {
+.project-planner-gantt__row-actions--hidden {
   display: none;
 }
 
-.tasks-map-gantt__row-action {
+.project-planner-gantt__row-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3290,16 +3290,16 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-gantt__row-action:hover {
+.project-planner-gantt__row-action:hover {
   color: var(--text-normal);
 }
 
 /* Drawing a dependency: the source is marked, every other row is a target */
-.tasks-map-gantt__label--linking {
+.project-planner-gantt__label--linking {
   box-shadow: inset 2px 0 0 0 var(--interactive-accent);
 }
 
-.tasks-map-gantt__label--link-target:hover {
+.project-planner-gantt__label--link-target:hover {
   background-color: color-mix(
     in srgb,
     var(--interactive-accent) 18%,
@@ -3308,7 +3308,7 @@ If your plugin does not need CSS, delete this file.
   cursor: crosshair;
 }
 
-.tasks-map-gantt-linking {
+.project-planner-gantt-linking {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3319,13 +3319,13 @@ If your plugin does not need CSS, delete this file.
   flex: 0 0 auto;
 }
 
-.tasks-map-gantt-linking__cancel {
+.project-planner-gantt-linking__cancel {
   padding: 2px 8px;
   font-size: 11px;
   cursor: pointer;
 }
 
-.tasks-map-gantt__grip {
+.project-planner-gantt__grip {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -3335,38 +3335,38 @@ If your plugin does not need CSS, delete this file.
   opacity: 0;
 }
 
-.tasks-map-gantt__label:hover .tasks-map-gantt__grip {
+.project-planner-gantt__label:hover .project-planner-gantt__grip {
   opacity: 1;
 }
 
 /* Date order arranges the rows, so the handle is kept only to hold its place
    in the column: it shows faintly on hover and says why it does nothing */
-.tasks-map-gantt__label:hover .tasks-map-gantt__grip--locked {
+.project-planner-gantt__label:hover .project-planner-gantt__grip--locked {
   opacity: 0.35;
   cursor: default;
 }
 
-.tasks-map-gantt__label--dragging,
-.tasks-map-gantt__row--dragging {
+.project-planner-gantt__label--dragging,
+.project-planner-gantt__row--dragging {
   opacity: 0.5;
 }
 
 /* Insertion line showing where a dragged row will land */
-.tasks-map-gantt__label--drop-before,
-.tasks-map-gantt__row--drop-before {
+.project-planner-gantt__label--drop-before,
+.project-planner-gantt__row--drop-before {
   box-shadow: inset 0 2px 0 0 var(--interactive-accent);
 }
 
-.tasks-map-gantt__label--drop-after,
-.tasks-map-gantt__row--drop-after {
+.project-planner-gantt__label--drop-after,
+.project-planner-gantt__row--drop-after {
   box-shadow: inset 0 -2px 0 0 var(--interactive-accent);
 }
 
 /* Dropping into the middle of a row nests the dragged task inside it. Marked
    as a filled target rather than as an insertion line, because the answer to
    "where does it land" is this whole row, not a gap at one of its edges. */
-.tasks-map-gantt__label--drop-inside,
-.tasks-map-gantt__row--drop-inside {
+.project-planner-gantt__label--drop-inside,
+.project-planner-gantt__row--drop-inside {
   box-shadow: inset 0 0 0 2px var(--interactive-accent);
   background-color: color-mix(
     in srgb,
@@ -3375,7 +3375,7 @@ If your plugin does not need CSS, delete this file.
   );
 }
 
-.tasks-map-gantt__group-header {
+.project-planner-gantt__group-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3392,29 +3392,29 @@ If your plugin does not need CSS, delete this file.
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.tasks-map-gantt__group-label {
+.project-planner-gantt__group-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tasks-map-gantt__group-count {
+.project-planner-gantt__group-count {
   color: var(--text-faint);
 }
 
-.tasks-map-gantt__group-spacer {
+.project-planner-gantt__group-spacer {
   height: var(--gantt-row-height);
   background: var(--background-secondary);
   border-bottom: 1px solid var(--background-modifier-border);
   box-sizing: border-box;
 }
 
-.tasks-map-gantt-toolbar__toggle select {
+.project-planner-gantt-toolbar__toggle select {
   font-size: 12px;
   padding: 2px 4px;
 }
 
-.tasks-map-gantt__label-text {
+.project-planner-gantt__label-text {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3422,14 +3422,14 @@ If your plugin does not need CSS, delete this file.
   font-size: 13px;
 }
 
-.tasks-map-gantt__label-tags {
+.project-planner-gantt__label-tags {
   display: inline-flex;
   flex: 0 0 auto;
   max-width: 90px;
   overflow: hidden;
 }
 
-.tasks-map-gantt__status {
+.project-planner-gantt__status {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
@@ -3437,23 +3437,23 @@ If your plugin does not need CSS, delete this file.
   background: var(--text-faint);
 }
 
-.tasks-map-gantt__status--todo {
+.project-planner-gantt__status--todo {
   background: var(--color-blue, #2674b5);
 }
-.tasks-map-gantt__status--in_progress {
+.project-planner-gantt__status--in_progress {
   background: var(--color-orange, #e07c3a);
 }
-.tasks-map-gantt__status--done {
+.project-planner-gantt__status--done {
   background: var(--color-green, #4caf62);
 }
-.tasks-map-gantt__status--canceled {
+.project-planner-gantt__status--canceled {
   background: var(--text-faint);
 }
 
 /* Sized to its content for the same reason as the label column: the date
    header and the milestone flags are sticky within it, so a timeline only one
    viewport tall would let both slide away once the chart scrolls past that. */
-.tasks-map-gantt__timeline {
+.project-planner-gantt__timeline {
   position: relative;
   flex: 0 0 auto;
   align-self: flex-start;
@@ -3462,7 +3462,7 @@ If your plugin does not need CSS, delete this file.
   min-height: 100%;
 }
 
-.tasks-map-gantt__header {
+.project-planner-gantt__header {
   position: sticky;
   top: 0;
   z-index: 3;
@@ -3470,15 +3470,15 @@ If your plugin does not need CSS, delete this file.
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.tasks-map-gantt__months,
-.tasks-map-gantt__ticks {
+.project-planner-gantt__months,
+.project-planner-gantt__ticks {
   position: relative;
   height: var(--gantt-row-height);
 }
 
-.tasks-map-gantt__month,
-.tasks-map-gantt__tick,
-.tasks-map-gantt__weekend {
+.project-planner-gantt__month,
+.project-planner-gantt__tick,
+.project-planner-gantt__weekend {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -3487,14 +3487,14 @@ If your plugin does not need CSS, delete this file.
   box-sizing: border-box;
 }
 
-.tasks-map-gantt__month {
+.project-planner-gantt__month {
   border-left: 1px solid var(--background-modifier-border);
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
-.tasks-map-gantt__month-label {
+.project-planner-gantt__month-label {
   padding-left: 6px;
   font-size: 11px;
   font-weight: 600;
@@ -3502,7 +3502,7 @@ If your plugin does not need CSS, delete this file.
   white-space: nowrap;
 }
 
-.tasks-map-gantt__tick {
+.project-planner-gantt__tick {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3511,27 +3511,27 @@ If your plugin does not need CSS, delete this file.
   border-left: 1px solid var(--background-modifier-border-hover);
 }
 
-.tasks-map-gantt__tick--major {
+.project-planner-gantt__tick--major {
   border-left-color: var(--background-modifier-border);
   color: var(--text-muted);
 }
 
-.tasks-map-gantt__tick--weekend {
+.project-planner-gantt__tick--weekend {
   background: var(--background-secondary);
 }
 
-.tasks-map-gantt__body {
+.project-planner-gantt__body {
   position: relative;
 }
 
-.tasks-map-gantt__weekend {
+.project-planner-gantt__weekend {
   height: 100%;
   background: var(--background-secondary);
   opacity: 0.5;
   pointer-events: none;
 }
 
-.tasks-map-gantt__today {
+.project-planner-gantt__today {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -3547,7 +3547,7 @@ If your plugin does not need CSS, delete this file.
    both by writing a single offset. The lane below the ticks is empty in the
    header itself: the flags float over it from the marker layer, which spans
    the whole timeline so the line can run on past the header. */
-.tasks-map-gantt__milestone-lane {
+.project-planner-gantt__milestone-lane {
   height: var(--gantt-row-height);
   /* The lane's border has to fit inside the row, or the label column's
      header no longer lines up with the first row of the timeline */
@@ -3557,7 +3557,7 @@ If your plugin does not need CSS, delete this file.
 
 /* No z-index here: the flag and the line each pick their own layer, so the
    line can sit under the bars while the flag sits over the header */
-.tasks-map-gantt__milestones {
+.project-planner-gantt__milestones {
   position: absolute;
   top: 0;
   right: 0;
@@ -3566,7 +3566,7 @@ If your plugin does not need CSS, delete this file.
   pointer-events: none;
 }
 
-.tasks-map-gantt__milestone {
+.project-planner-gantt__milestone {
   --milestone-color: var(--color-purple, #7c5cbf);
 
   position: absolute;
@@ -3576,14 +3576,14 @@ If your plugin does not need CSS, delete this file.
   width: 0;
 }
 
-.tasks-map-gantt__milestone--today {
+.project-planner-gantt__milestone--today {
   --milestone-color: var(--color-orange, #e07c3a);
 }
-.tasks-map-gantt__milestone--past {
+.project-planner-gantt__milestone--past {
   --milestone-color: var(--text-faint);
 }
 
-.tasks-map-gantt__milestone-line {
+.project-planner-gantt__milestone-line {
   position: absolute;
   top: calc(var(--gantt-row-height) * var(--gantt-header-rows, 3) + 1px);
   bottom: 0;
@@ -3596,7 +3596,7 @@ If your plugin does not need CSS, delete this file.
 
 /* Sticky keeps the flag in its lane at every scroll position, because the
    wrapper it sits in is as tall as the whole chart */
-.tasks-map-gantt__milestone-flag {
+.project-planner-gantt__milestone-flag {
   position: sticky;
   top: calc(var(--gantt-row-height) * 2);
   display: flex;
@@ -3621,7 +3621,7 @@ If your plugin does not need CSS, delete this file.
   z-index: 3;
 }
 
-.tasks-map-gantt__milestone-diamond {
+.project-planner-gantt__milestone-diamond {
   flex: 0 0 auto;
   width: 10px;
   height: 10px;
@@ -3629,33 +3629,33 @@ If your plugin does not need CSS, delete this file.
   transform: rotate(45deg);
 }
 
-.tasks-map-gantt__milestone-label {
+.project-planner-gantt__milestone-label {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 600;
 }
 
-.tasks-map-gantt__milestone-flag:hover .tasks-map-gantt__milestone-label {
+.project-planner-gantt__milestone-flag:hover .project-planner-gantt__milestone-label {
   text-decoration: underline;
 }
 
-.tasks-map-gantt__milestone--dragging .tasks-map-gantt__milestone-flag {
+.project-planner-gantt__milestone--dragging .project-planner-gantt__milestone-flag {
   cursor: grabbing;
 }
 
-.tasks-map-gantt__milestone--dragging .tasks-map-gantt__milestone-line {
+.project-planner-gantt__milestone--dragging .project-planner-gantt__milestone-line {
   opacity: 1;
 }
 
 /* A milestone filed among the tasks. It borrows the label row's box so it
    lines up with the task names, and says what it is with the diamond and the
    date rather than with a status dot it has no business carrying. */
-.tasks-map-gantt__label--milestone {
+.project-planner-gantt__label--milestone {
   color: var(--milestone-color, var(--color-purple, #7c5cbf));
   font-weight: 600;
 }
 
-.tasks-map-gantt__milestone-dot {
+.project-planner-gantt__milestone-dot {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
@@ -3663,7 +3663,7 @@ If your plugin does not need CSS, delete this file.
   transform: rotate(45deg);
 }
 
-.tasks-map-gantt__milestone-date {
+.project-planner-gantt__milestone-date {
   flex: 0 0 auto;
   font-size: 11px;
   font-weight: 400;
@@ -3672,7 +3672,7 @@ If your plugin does not need CSS, delete this file.
 
 /* The diamond on a row milestone's line of the timeline. Positioned by the
    same custom property the lane flag uses, so one drag handler drives both. */
-.tasks-map-gantt__milestone-point {
+.project-planner-gantt__milestone-point {
   --milestone-color: var(--color-purple, #7c5cbf);
 
   position: absolute;
@@ -3683,14 +3683,14 @@ If your plugin does not need CSS, delete this file.
   z-index: 2;
 }
 
-.tasks-map-gantt__milestone-point--today {
+.project-planner-gantt__milestone-point--today {
   --milestone-color: var(--color-orange, #e07c3a);
 }
-.tasks-map-gantt__milestone-point--past {
+.project-planner-gantt__milestone-point--past {
   --milestone-color: var(--text-faint);
 }
 
-.tasks-map-gantt__milestone-handle {
+.project-planner-gantt__milestone-handle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3704,11 +3704,11 @@ If your plugin does not need CSS, delete this file.
   touch-action: none;
 }
 
-.tasks-map-gantt__milestone-point--dragging .tasks-map-gantt__milestone-handle {
+.project-planner-gantt__milestone-point--dragging .project-planner-gantt__milestone-handle {
   cursor: grabbing;
 }
 
-.tasks-map-gantt-legend__swatch--milestone {
+.project-planner-gantt-legend__swatch--milestone {
   width: 9px;
   height: 9px;
   border-radius: 0;
@@ -3716,35 +3716,42 @@ If your plugin does not need CSS, delete this file.
   transform: rotate(45deg);
 }
 
-.tasks-map-gantt-milestone-modal__error {
+.project-planner-gantt-milestone-modal__error {
   margin: 0 0 8px;
   font-size: 12px;
   color: var(--text-error);
 }
 
-.tasks-map-task-edit-modal__error {
+/* Says what the exported picture is before the questions about it */
+.project-planner-gantt-export-modal__desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit-modal__error {
   margin: 0 0 8px;
   font-size: 12px;
   color: var(--text-error);
 }
 
-.tasks-map-task-edit-modal__hint {
+.project-planner-task-edit-modal__hint {
   margin: 0 0 8px;
   font-size: 12px;
   color: var(--text-muted);
 }
 
 /* The words are the field people came here for, so it gets the room */
-.tasks-map-task-edit-modal__text {
+.project-planner-task-edit-modal__text {
   width: 100%;
   min-width: 260px;
 }
 
-.tasks-map-task-edit-modal__progress {
+.project-planner-task-edit-modal__progress {
   width: 80px;
 }
 
-.tasks-map-gantt__arrows {
+.project-planner-gantt__arrows {
   position: absolute;
   top: 0;
   left: 0;
@@ -3753,7 +3760,7 @@ If your plugin does not need CSS, delete this file.
   z-index: 1;
 }
 
-.tasks-map-gantt__arrow {
+.project-planner-gantt__arrow {
   fill: none;
   stroke: var(--text-faint);
   stroke-width: 1.5;
@@ -3761,29 +3768,29 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Must follow the base rule: same specificity, so source order decides */
-.tasks-map-gantt__arrow--connected {
+.project-planner-gantt__arrow--connected {
   stroke: var(--interactive-accent);
   stroke-width: 2.5;
   opacity: 1;
 }
 
-.tasks-map-gantt__arrow--dimmed {
+.project-planner-gantt__arrow--dimmed {
   opacity: 0.12;
 }
 
-.tasks-map-gantt__arrow--upstream {
+.project-planner-gantt__arrow--upstream {
   stroke: var(--color-purple, #7c5cbf);
   stroke-width: 2.5;
   opacity: 1;
 }
 
-.tasks-map-gantt__arrow--downstream {
+.project-planner-gantt__arrow--downstream {
   stroke: var(--color-orange, #e07c3a);
   stroke-width: 2.5;
   opacity: 1;
 }
 
-.tasks-map-gantt__arrowhead {
+.project-planner-gantt__arrowhead {
   fill: var(--text-faint);
   opacity: 0.7;
 }
@@ -3792,18 +3799,18 @@ If your plugin does not need CSS, delete this file.
    rows and the flat row pitch the arrow and drop-target maths assume — with
    content-box every row was a pixel taller than its name, and the two columns
    slid apart further with every task */
-.tasks-map-gantt__row {
+.project-planner-gantt__row {
   position: relative;
   height: var(--gantt-row-height);
   box-sizing: border-box;
   border-bottom: 1px solid var(--background-modifier-border-hover);
 }
 
-.tasks-map-gantt__row--selected {
+.project-planner-gantt__row--selected {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-gantt-bar {
+.project-planner-gantt-bar {
   position: absolute;
   top: 4px;
   height: calc(var(--gantt-row-height) - 12px);
@@ -3822,17 +3829,17 @@ If your plugin does not need CSS, delete this file.
   z-index: 2;
 }
 
-.tasks-map-gantt-bar--in_progress {
+.project-planner-gantt-bar--in_progress {
   background: var(--color-orange, #e07c3a);
 }
-.tasks-map-gantt-bar--done {
+.project-planner-gantt-bar--done {
   background: var(--color-green, #4caf62);
 }
-.tasks-map-gantt-bar--canceled {
+.project-planner-gantt-bar--canceled {
   background: var(--text-faint);
 }
 
-.tasks-map-gantt-bar--inferred {
+.project-planner-gantt-bar--inferred {
   background: transparent;
   border: 1px dashed var(--text-muted);
   color: var(--text-muted);
@@ -3846,7 +3853,7 @@ If your plugin does not need CSS, delete this file.
 
    Sits after the status colours on purpose; it shares their specificity and is
    meant to win. */
-.tasks-map-gantt-bar--summary {
+.project-planner-gantt-bar--summary {
   top: calc(var(--gantt-row-height) / 2 - 6px);
   height: 6px;
   border-radius: 2px;
@@ -3855,12 +3862,12 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* No room for a name in a 6px rail, and the label column already says it */
-.tasks-map-gantt-bar--summary .tasks-map-gantt-bar__label {
+.project-planner-gantt-bar--summary .project-planner-gantt-bar__label {
   display: none;
 }
 
-.tasks-map-gantt-bar--summary::before,
-.tasks-map-gantt-bar--summary::after {
+.project-planner-gantt-bar--summary::before,
+.project-planner-gantt-bar--summary::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -3871,25 +3878,33 @@ If your plugin does not need CSS, delete this file.
   border-right: 4px solid transparent;
 }
 
-.tasks-map-gantt-bar--summary::before {
+.project-planner-gantt-bar--summary::before {
   left: 0;
 }
 
-.tasks-map-gantt-bar--summary::after {
+.project-planner-gantt-bar--summary::after {
   right: 0;
 }
 
-.tasks-map-gantt-bar--dragging {
+.project-planner-gantt-bar--dragging {
   cursor: grabbing;
   opacity: 0.85;
   box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-.tasks-map-gantt-bar--selected {
+.project-planner-gantt-bar--selected {
   box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-.tasks-map-gantt-bar--saving {
+/* Carried along by a shift-drag rather than dragged: dashed, so it reads as a
+   consequence of the bar under the pointer and not as another grabbed bar. */
+.project-planner-gantt-bar--cascading {
+  opacity: 0.85;
+  outline: 1px dashed var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.project-planner-gantt-bar--saving {
   opacity: 0.6;
   cursor: progress;
 }
@@ -3904,7 +3919,7 @@ If your plugin does not need CSS, delete this file.
    Solid rather than a wash, because it is now sitting against a known colour
    rather than having to work over every status in turn. No right-hand edge
    line either: green against orange is already a hard boundary. */
-.tasks-map-gantt-bar__progress {
+.project-planner-gantt-bar__progress {
   position: absolute;
   top: 0;
   left: 0;
@@ -3920,13 +3935,13 @@ If your plugin does not need CSS, delete this file.
 /* An inferred bar is an outline, not a filled shape — a solid green block
    inside it would read as a real bar. Kept as a wash so the suggestion still
    looks like a suggestion. */
-.tasks-map-gantt-bar--inferred .tasks-map-gantt-bar__progress {
+.project-planner-gantt-bar--inferred .project-planner-gantt-bar__progress {
   background: color-mix(in srgb, var(--color-green, #4caf62) 35%, transparent);
 }
 
 /* Both sit above the fill: without a position they would paint underneath it,
    hiding the name and the resize handles' hover state */
-.tasks-map-gantt-bar__label {
+.project-planner-gantt-bar__label {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
@@ -3937,7 +3952,7 @@ If your plugin does not need CSS, delete this file.
   pointer-events: none;
 }
 
-.tasks-map-gantt-bar__handle {
+.project-planner-gantt-bar__handle {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
@@ -3947,7 +3962,7 @@ If your plugin does not need CSS, delete this file.
   border-radius: 4px;
 }
 
-.tasks-map-gantt-bar__handle:hover {
+.project-planner-gantt-bar__handle:hover {
   background: rgba(255, 255, 255, 0.35);
 }
 
@@ -3963,27 +3978,27 @@ If your plugin does not need CSS, delete this file.
    highlight rules above and are meant to win.
    ========================================================================== */
 
-.tasks-map-gantt-bar--critical {
+.project-planner-gantt-bar--critical {
   outline: 2px solid var(--color-red, #c0554d);
   outline-offset: 1px;
 }
 
-.tasks-map-gantt-bar--at-risk {
+.project-planner-gantt-bar--at-risk {
   border-left: 3px solid var(--color-yellow, #d9a441);
 }
 
-.tasks-map-gantt__arrow--critical {
+.project-planner-gantt__arrow--critical {
   stroke: var(--color-red, #c0554d);
   stroke-width: 2.5;
   opacity: 1;
 }
 
-.tasks-map-gantt__label--critical {
+.project-planner-gantt__label--critical {
   box-shadow: inset 3px 0 0 var(--color-red, #c0554d);
 }
 
-/* Opaque, like the other row tints: see `.tasks-map-gantt__label` */
-.tasks-map-gantt__label--at-risk {
+/* Opaque, like the other row tints: see `.project-planner-gantt__label` */
+.project-planner-gantt__label--at-risk {
   background-color: color-mix(
     in srgb,
     var(--color-yellow, #d9a441) 10%,
@@ -3991,7 +4006,7 @@ If your plugin does not need CSS, delete this file.
   );
 }
 
-.tasks-map-gantt__risk {
+.project-planner-gantt__risk {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -3999,26 +4014,26 @@ If your plugin does not need CSS, delete this file.
   cursor: help;
 }
 
-.tasks-map-gantt-hint--warning {
+.project-planner-gantt-hint--warning {
   color: var(--color-yellow, #d9a441);
 }
 
-.tasks-map-gantt-legend__swatch--critical {
+.project-planner-gantt-legend__swatch--critical {
   background: transparent;
   border: 2px solid var(--color-red, #c0554d);
 }
 
-.tasks-map-gantt-legend__swatch--at-risk {
+.project-planner-gantt-legend__swatch--at-risk {
   background: var(--color-yellow, #d9a441);
 }
 
 /* The same chain, on the map */
-.tasks-map-task-node-root--critical {
+.project-planner-task-node-root--critical {
   box-shadow: 0 0 0 2px var(--color-red, #c0554d);
   border-radius: var(--radius-m, 8px);
 }
 
-.tasks-map-hash-edge-path--critical {
+.project-planner-hash-edge-path--critical {
   stroke: var(--color-red, #c0554d);
   stroke-width: 2.5;
   opacity: 1;
@@ -4033,14 +4048,14 @@ If your plugin does not need CSS, delete this file.
    cards below it stay put, which is what makes a long drag readable.
    ========================================================================== */
 
-.tasks-map-kanban-container {
+.project-planner-kanban-container {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
 
-.tasks-map-kanban-toolbar {
+.project-planner-kanban-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4050,7 +4065,7 @@ If your plugin does not need CSS, delete this file.
   flex: 0 0 auto;
 }
 
-.tasks-map-kanban-toolbar__button {
+.project-planner-kanban-toolbar__button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4059,17 +4074,17 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-kanban-toolbar__button--accent {
+.project-planner-kanban-toolbar__button--accent {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
-.tasks-map-kanban-toolbar__button:disabled {
+.project-planner-kanban-toolbar__button:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.tasks-map-kanban-toolbar__search {
+.project-planner-kanban-toolbar__search {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4079,7 +4094,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-faint);
 }
 
-.tasks-map-kanban-toolbar__search input {
+.project-planner-kanban-toolbar__search input {
   border: none;
   background: transparent;
   outline: none;
@@ -4089,7 +4104,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-normal);
 }
 
-.tasks-map-kanban-toolbar__toggle {
+.project-planner-kanban-toolbar__toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4097,17 +4112,17 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-kanban-toolbar__count,
-.tasks-map-kanban-toolbar__note {
+.project-planner-kanban-toolbar__count,
+.project-planner-kanban-toolbar__note {
   font-size: 12px;
   color: var(--text-faint);
 }
 
-.tasks-map-kanban-toolbar__spacer {
+.project-planner-kanban-toolbar__spacer {
   flex: 1 1 auto;
 }
 
-.tasks-map-kanban-empty {
+.project-planner-kanban-empty {
   padding: 12px;
   color: var(--text-faint);
   font-size: 12px;
@@ -4115,7 +4130,7 @@ If your plugin does not need CSS, delete this file.
 
 /* Stretched rather than shrink-to-fit: a column's empty space below its last
    card is where "drop at the end" is aimed, so it has to be worth aiming at */
-.tasks-map-kanban-board {
+.project-planner-kanban-board {
   display: flex;
   align-items: stretch;
   gap: 12px;
@@ -4126,7 +4141,7 @@ If your plugin does not need CSS, delete this file.
   height: 100%;
 }
 
-.tasks-map-kanban-column {
+.project-planner-kanban-column {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
@@ -4137,11 +4152,11 @@ If your plugin does not need CSS, delete this file.
   background: var(--background-secondary);
 }
 
-.tasks-map-kanban-column--collapsed {
+.project-planner-kanban-column--collapsed {
   width: 40px;
 }
 
-.tasks-map-kanban-column__collapsed-handle {
+.project-planner-kanban-column__collapsed-handle {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4155,7 +4170,7 @@ If your plugin does not need CSS, delete this file.
   height: 100%;
 }
 
-.tasks-map-kanban-column__collapsed-label {
+.project-planner-kanban-column__collapsed-label {
   writing-mode: vertical-rl;
   white-space: nowrap;
   overflow: hidden;
@@ -4164,21 +4179,21 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Only while a card is in the air, so the board is quiet at rest */
-.tasks-map-kanban-column--droppable {
+.project-planner-kanban-column--droppable {
   border-color: var(--interactive-accent);
 }
 
-.tasks-map-kanban-column--locked {
+.project-planner-kanban-column--locked {
   border-style: dashed;
   border-color: var(--background-modifier-border);
   opacity: 0.6;
 }
 
-.tasks-map-kanban-column--over {
+.project-planner-kanban-column--over {
   background: var(--background-modifier-hover);
 }
 
-.tasks-map-kanban-column__header {
+.project-planner-kanban-column__header {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4187,7 +4202,7 @@ If your plugin does not need CSS, delete this file.
   flex: 0 0 auto;
 }
 
-.tasks-map-kanban-column__title {
+.project-planner-kanban-column__title {
   flex: 1 1 auto;
   font-weight: 600;
   font-size: 13px;
@@ -4196,7 +4211,7 @@ If your plugin does not need CSS, delete this file.
   text-overflow: ellipsis;
 }
 
-.tasks-map-kanban-column__count {
+.project-planner-kanban-column__count {
   flex: 0 0 auto;
   font-size: 11px;
   color: var(--text-muted);
@@ -4205,8 +4220,8 @@ If your plugin does not need CSS, delete this file.
   padding: 1px 7px;
 }
 
-.tasks-map-kanban-column__collapse,
-.tasks-map-kanban-column__add {
+.project-planner-kanban-column__collapse,
+.project-planner-kanban-column__add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4218,13 +4233,13 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.tasks-map-kanban-column__lock {
+.project-planner-kanban-column__lock {
   display: inline-flex;
   color: var(--text-faint);
   cursor: help;
 }
 
-.tasks-map-kanban-column__body {
+.project-planner-kanban-column__body {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -4234,7 +4249,7 @@ If your plugin does not need CSS, delete this file.
   min-height: 60px;
 }
 
-.tasks-map-kanban-column__empty {
+.project-planner-kanban-column__empty {
   padding: 12px 8px;
   font-size: 12px;
   color: var(--text-faint);
@@ -4243,7 +4258,7 @@ If your plugin does not need CSS, delete this file.
   border-radius: var(--radius-s, 4px);
 }
 
-.tasks-map-kanban-card {
+.project-planner-kanban-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -4255,50 +4270,50 @@ If your plugin does not need CSS, delete this file.
   cursor: grab;
 }
 
-.tasks-map-kanban-card--todo {
+.project-planner-kanban-card--todo {
   border-left-color: var(--text-faint);
 }
 
-.tasks-map-kanban-card--in_progress {
+.project-planner-kanban-card--in_progress {
   border-left-color: var(--interactive-accent);
 }
 
-.tasks-map-kanban-card--done {
+.project-planner-kanban-card--done {
   border-left-color: var(--color-green, #4c9a5a);
 }
 
-.tasks-map-kanban-card--canceled {
+.project-planner-kanban-card--canceled {
   border-left-color: var(--color-red, #c0554d);
 }
 
-.tasks-map-kanban-card--selected {
+.project-planner-kanban-card--selected {
   box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-.tasks-map-kanban-card--dragging {
+.project-planner-kanban-card--dragging {
   opacity: 0.4;
 }
 
-.tasks-map-kanban-card--saving {
+.project-planner-kanban-card--saving {
   opacity: 0.7;
   cursor: progress;
 }
 
-.tasks-map-kanban-card--drop-before {
+.project-planner-kanban-card--drop-before {
   border-top: 2px solid var(--interactive-accent);
 }
 
-.tasks-map-kanban-card--drop-after {
+.project-planner-kanban-card--drop-after {
   border-bottom: 2px solid var(--interactive-accent);
 }
 
-.tasks-map-kanban-card__header {
+.project-planner-kanban-card__header {
   display: flex;
   align-items: flex-start;
   gap: 6px;
 }
 
-.tasks-map-kanban-card__status {
+.project-planner-kanban-card__status {
   flex: 0 0 auto;
   display: inline-flex;
   color: var(--text-muted);
@@ -4306,51 +4321,51 @@ If your plugin does not need CSS, delete this file.
   margin-top: 1px;
 }
 
-.tasks-map-kanban-card__summary {
+.project-planner-kanban-card__summary {
   flex: 1 1 auto;
   font-size: 13px;
   line-height: 1.35;
   word-break: break-word;
 }
 
-.tasks-map-kanban-card--done .tasks-map-kanban-card__summary,
-.tasks-map-kanban-card--canceled .tasks-map-kanban-card__summary {
+.project-planner-kanban-card--done .project-planner-kanban-card__summary,
+.project-planner-kanban-card--canceled .project-planner-kanban-card__summary {
   color: var(--text-muted);
   text-decoration: line-through;
 }
 
-.tasks-map-kanban-card__star {
+.project-planner-kanban-card__star {
   flex: 0 0 auto;
   font-size: 11px;
 }
 
-.tasks-map-kanban-card__progress {
+.project-planner-kanban-card__progress {
   height: 4px;
   border-radius: 2px;
   background: var(--background-modifier-border);
   overflow: hidden;
 }
 
-.tasks-map-kanban-card__progress-fill {
+.project-planner-kanban-card__progress-fill {
   height: 100%;
-  width: var(--tasks-map-card-progress, 0%);
+  width: var(--project-planner-card-progress, 0%);
   background: var(--interactive-accent);
 }
 
-.tasks-map-kanban-card__tags {
+.project-planner-kanban-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.tasks-map-kanban-card__footer {
+.project-planner-kanban-card__footer {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.tasks-map-kanban-card__due {
+.project-planner-kanban-card__due {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -4361,7 +4376,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-muted);
 }
 
-.tasks-map-kanban-card__due--overdue {
+.project-planner-kanban-card__due--overdue {
   background: color-mix(
     in srgb,
     var(--color-red, #c0554d) 20%,
@@ -4370,7 +4385,7 @@ If your plugin does not need CSS, delete this file.
   color: var(--color-red, #c0554d);
 }
 
-.tasks-map-kanban-card__due--today {
+.project-planner-kanban-card__due--today {
   background: color-mix(
     in srgb,
     var(--color-yellow, #d9a441) 20%,
@@ -4379,13 +4394,13 @@ If your plugin does not need CSS, delete this file.
   color: var(--color-yellow, #d9a441);
 }
 
-.tasks-map-kanban-card__people {
+.project-planner-kanban-card__people {
   display: inline-flex;
   gap: 3px;
   margin-left: auto;
 }
 
-.tasks-map-kanban-card__avatar {
+.project-planner-kanban-card__avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4396,4 +4411,482 @@ If your plugin does not need CSS, delete this file.
   font-weight: 600;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
+}
+
+/* ---------------------------------------------------------------------------
+   The task editor.
+
+   One dialog reachable from every view, so it carries more than any of the
+   dialogs it replaced. The layout leans on that: the common edit — name,
+   status, dates, progress — sits above the fold, and the sections below it are
+   dense on purpose, so a task with four people and three costs on it still fits
+   without the save button leaving the screen.
+   --------------------------------------------------------------------------- */
+
+.project-planner-task-edit-modal-frame {
+  width: min(560px, 90vw);
+}
+
+.project-planner-task-edit-modal {
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.project-planner-task-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.project-planner-task-edit__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-planner-task-edit__title-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.project-planner-task-edit__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-ui-large, 16px);
+  font-weight: var(--font-medium, 500);
+}
+
+.project-planner-task-edit__status {
+  flex: 0 0 auto;
+}
+
+.project-planner-task-edit__note-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--font-ui-smaller, 12px);
+}
+
+.project-planner-task-edit__note-name {
+  color: var(--text-accent);
+}
+
+.project-planner-task-edit__note-none {
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit__hint {
+  margin: 0;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.project-planner-task-edit__section h4 {
+  margin: 0;
+  font-size: var(--font-ui-smaller, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit__section label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit__dates,
+.project-planner-task-edit__hours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.project-planner-task-edit__progress {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.project-planner-task-edit__progress label {
+  flex: 1;
+}
+
+.project-planner-task-edit__percent {
+  width: 72px;
+}
+
+/* Contributor and cost rows share a shape: the thing, the number, what it
+   comes to, and a way to take it off again. */
+.project-planner-task-edit__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.project-planner-task-edit__row {
+  display: grid;
+  grid-template-columns: 1fr 72px minmax(84px, auto) 24px;
+  gap: 6px;
+  align-items: center;
+}
+
+.project-planner-task-edit__share,
+.project-planner-task-edit__amount {
+  width: 100%;
+}
+
+.project-planner-task-edit__readout {
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.project-planner-task-edit__remove {
+  padding: 0;
+  width: 24px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.project-planner-task-edit__remove:hover {
+  color: var(--text-error);
+}
+
+.project-planner-task-edit__row-footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* The running share. It turns when the numbers stop adding up, which is the
+   whole reason the totals are on screen while the shares are being typed. */
+.project-planner-task-edit__chip {
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: var(--font-ui-smaller, 12px);
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit__chip--warning {
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+}
+
+.project-planner-task-edit__disclosure {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.project-planner-task-edit__totals {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+}
+
+.project-planner-task-edit__error {
+  margin: 0;
+  color: var(--text-error);
+  font-size: var(--font-ui-smaller, 12px);
+}
+
+.project-planner-task-edit__buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Open questions
+   -------------------------------------------------------------------------- */
+
+.project-planner-open-questions {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.project-planner-open-questions-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.project-planner-open-questions-toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-planner-open-questions-toolbar__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.project-planner-open-questions-toolbar__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s, 4px);
+  color: var(--text-faint);
+}
+
+.project-planner-open-questions-toolbar__search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  font-size: 12px;
+  width: 180px;
+  color: var(--text-normal);
+}
+
+.project-planner-open-questions-toolbar__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.project-planner-open-questions-toolbar__count {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.project-planner-open-questions-toolbar__spacer {
+  flex: 1 1 auto;
+}
+
+.project-planner-open-questions__message {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.project-planner-open-questions__hint {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.project-planner-open-questions__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  padding: 12px;
+  overflow-y: auto;
+  align-content: start;
+  flex: 1 1 auto;
+}
+
+.project-planner-open-questions-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: var(--radius-s, 4px);
+  background: var(--background-primary);
+}
+
+.project-planner-open-questions-card--resolved {
+  border-left-color: var(--color-green, #4c9a5a);
+  opacity: 0.65;
+}
+
+.project-planner-open-questions-card--saving {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.project-planner-open-questions-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.project-planner-open-questions-card__toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.project-planner-open-questions-card__toggle:hover {
+  color: var(--interactive-accent);
+}
+
+.project-planner-open-questions-card__question {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-normal);
+  overflow-wrap: anywhere;
+}
+
+.project-planner-open-questions-card--resolved
+  .project-planner-open-questions-card__question {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.project-planner-open-questions-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.project-planner-open-questions-card__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-planner-open-questions-card__resolved-on {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.project-planner-open-questions-card__answer {
+  padding: 6px 8px;
+  border-left: 2px solid var(--color-green, #4c9a5a);
+  border-radius: 0 var(--radius-s, 4px) var(--radius-s, 4px) 0;
+  background: var(--background-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  cursor: text;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.project-planner-open-questions-card__answer:hover {
+  color: var(--text-normal);
+}
+
+.project-planner-open-questions-card__add-answer {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 2px 6px;
+  background: transparent;
+  box-shadow: none;
+  font-size: 11px;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.project-planner-open-questions-card__add-answer:hover {
+  color: var(--interactive-accent);
+}
+
+.project-planner-open-questions-card__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-planner-open-questions-card__textarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 12px;
+  line-height: 1.45;
+  font-family: inherit;
+}
+
+.project-planner-open-questions-card__editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-planner-open-questions-card__editor-hint {
+  flex: 1 1 auto;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.project-planner-open-questions-card__button {
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.project-planner-open-questions-card__button--accent {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+/* Says what the handover pack is before the questions about it */
+.project-planner-handover-modal__desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/*
+ * Where every note is rendered on the way into the handover pack.
+ *
+ * Obsidian's Markdown renderer needs its output to be in a laid-out document —
+ * some post-processors give up on a detached element, and `display: none`
+ * leaves images and callouts unmeasured — so the host has to be in the page but
+ * must never be seen. Parked off-screen and sealed off from pointer and screen
+ * reader alike, since the user is meant to keep working while it runs.
+ */
+.project-planner-handover-render {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 794px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }

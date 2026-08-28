@@ -23,7 +23,7 @@ import {
 import { todayIso } from "src/lib/date-utils";
 import { moveRelativeTo, normalizeOrderIds } from "src/lib/gantt-order";
 import {
-  DueBucketKey,
+  DateBucketKey,
   KanbanBucket,
   KanbanChange,
   KanbanGroupBy,
@@ -33,31 +33,25 @@ import {
   orderTasksByDue,
   retagForBucket,
   taskDueDate,
+  taskStartDate,
   taskTag,
 } from "src/lib/kanban-buckets";
-import {
-  TaskEditFields,
-  applyTaskEdit,
-  datesFromDraft,
-  taskEditChanged,
-  withTaskChanges,
-} from "src/lib/task-write";
-import { plainTaskText, taskTextDescription } from "src/lib/task-text";
-import { findTaskDate } from "src/lib/task-dates";
+import { withTaskChanges } from "src/lib/task-write";
+import { openTaskEditor } from "src/lib/open-task-editor";
+import { plainTaskText } from "src/lib/task-text";
 import { withCompanionNote } from "src/lib/companion-note";
 import { useUndoHistory } from "src/hooks/use-undo-history";
 import { promptForTaskLine } from "src/components/task-line-modal";
-import { promptForTaskEdit } from "src/components/task-edit-modal";
 import { DropPlacement, CardCallbacks } from "src/components/kanban-card";
 import { KanbanColumn } from "src/components/kanban-column";
 import { KanbanToolbar } from "src/components/kanban-toolbar";
-import { TasksMapSettings } from "src/types/settings";
-import TasksMapPlugin from "../main";
+import { ProjectPlannerSettings } from "src/types/settings";
+import ProjectPlannerPlugin from "../main";
 import { t } from "../i18n";
 
 interface KanbanViewProps {
-  settings: TasksMapSettings;
-  plugin: TasksMapPlugin;
+  settings: ProjectPlannerSettings;
+  plugin: ProjectPlannerPlugin;
 }
 
 /** What a card is doing while it is in the air. */
@@ -183,7 +177,8 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
   const labels = useMemo(
     () => ({
       status: (status: TaskStatus) => t(`kanban.status_${status}`),
-      due: (key: DueBucketKey) => t(`kanban.due_${key}`),
+      due: (key: DateBucketKey) => t(`kanban.due_${key}`),
+      start: (key: DateBucketKey) => t(`kanban.start_${key}`),
       priority: (value: string) => t("kanban.priority", { symbol: value }),
       noTag: t("kanban.no_tag"),
       noPerson: t("kanban.no_person"),
@@ -306,6 +301,21 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
           return async () => {
             const current = currentTask(taskId, updated);
             const reverted = await current.setDates({ due: previous }, app);
+            if (reverted) applyTaskUpdate(taskId, reverted);
+          };
+        }
+
+        case "start": {
+          const previous = taskStartDate(task);
+          if (previous === change.start) return null;
+
+          const updated = await task.setDates({ start: change.start }, app);
+          if (!updated) return null;
+          applyTaskUpdate(taskId, updated);
+
+          return async () => {
+            const current = currentTask(taskId, updated);
+            const reverted = await current.setDates({ start: previous }, app);
             if (reverted) applyTaskUpdate(taskId, reverted);
           };
         }
@@ -517,61 +527,6 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
     [app, applyTaskUpdate, currentTask, plugin]
   );
 
-  /**
-   * Writes one task edit, redrawing first and putting the card back if the
-   * vault refuses it.
-   */
-  const writeTaskEdit = useCallback(
-    async (taskId: string, draft: TaskEditFields): Promise<boolean> => {
-      const task = tasksRef.current.find(
-        (candidate) => candidate.id === taskId
-      );
-      if (!task) return false;
-
-      const previous: TaskEditFields = {
-        text: taskTextDescription(task.text),
-        status: task.status,
-        start: findTaskDate(task.dates, "start"),
-        due: findTaskDate(task.dates, "due"),
-        progress: task.progress.percent,
-      };
-
-      if (!taskEditChanged(draft, previous)) return true;
-
-      applyTaskUpdate(
-        taskId,
-        withTaskChanges(task, {
-          status: draft.status,
-          progress: { percent: draft.progress },
-          dates: datesFromDraft(task.dates, draft),
-          ...(task.type === "dataview" && draft.text !== previous.text
-            ? { summary: draft.text }
-            : {}),
-        })
-      );
-
-      markSaving(taskId, true);
-      try {
-        // An inline task with no ID in its line is found by its text, which is
-        // ambiguous when two tasks read the same — and about to change
-        await stampTaskId(task);
-        applyTaskUpdate(
-          taskId,
-          await applyTaskEdit(app, task, draft, previous)
-        );
-        return true;
-      } catch (error) {
-        console.error("Could not save the task edit", error);
-        new Notice(t("task_edit.write_failed", { task: task.summary }));
-        applyTaskUpdate(taskId, task);
-        return false;
-      } finally {
-        markSaving(taskId, false);
-      }
-    },
-    [app, applyTaskUpdate, markSaving, stampTaskId]
-  );
-
   const handleOpenTask = useCallback(
     async (taskId: string) => {
       const task = tasksRef.current.find(
@@ -579,39 +534,21 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
       );
       if (!task) return;
 
-      const previous: TaskEditFields = {
-        text: taskTextDescription(task.text),
-        status: task.status,
-        start: findTaskDate(task.dates, "start"),
-        due: findTaskDate(task.dates, "due"),
-        progress: task.progress.percent,
-      };
-
-      const result = await promptForTaskEdit(app, {
-        initial: previous,
-        suggested: null,
-        summary: false,
-        canEditText: task.type === "dataview",
-      });
-      if (!result) return;
-
-      // A dialog opened and closed again is not an edit, and does not belong
-      // on the undo stack in front of whatever the user actually did
-      if (!taskEditChanged(result.draft, previous)) return;
-
-      const saved = await writeTaskEdit(taskId, result.draft);
-      if (!saved) return;
-
-      plugin.undoHistory.push({
-        label: t("task_edit.undo_edit", { task: plainTaskText(task.summary) }),
-        // The same write, run backwards; it reads the task afresh, so an undo
-        // long after the fact still finds the line where it is now
-        undo: async () => {
-          await writeTaskEdit(taskId, previous);
-        },
-      });
+      markSaving(taskId, true);
+      try {
+        await openTaskEditor({
+          app,
+          task,
+          tasks: tasksRef.current,
+          settings,
+          undoHistory: plugin.undoHistory,
+          onTaskUpdated: (updated) => applyTaskUpdate(taskId, updated),
+        });
+      } finally {
+        markSaving(taskId, false);
+      }
     },
-    [app, plugin, writeTaskEdit]
+    [app, applyTaskUpdate, markSaving, plugin, settings]
   );
 
   const askForTaskLine = useCallback(async (): Promise<string | null> => {
@@ -828,15 +765,17 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
 
   if (isLoading) {
     return (
-      <div className="tasks-map-loading-container">
-        <div className="tasks-map-spinner" />
-        <div className="tasks-map-loading-text">{t("kanban.loading")}</div>
+      <div className="project-planner-loading-container">
+        <div className="project-planner-spinner" />
+        <div className="project-planner-loading-text">
+          {t("kanban.loading")}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="tasks-map-kanban-container">
+    <div className="project-planner-kanban-container">
       <KanbanToolbar
         groupBy={groupBy}
         onGroupByChange={handleGroupByChange}
@@ -859,11 +798,11 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
           them: four empty status columns are a worse answer to an empty vault
           than saying so. */}
       {visibleTasks.length === 0 ? (
-        <div className="tasks-map-kanban-empty">
+        <div className="project-planner-kanban-empty">
           {tasks.length === 0 ? t("kanban.empty") : t("kanban.empty_filtered")}
         </div>
       ) : (
-        <div className="tasks-map-kanban-board">
+        <div className="project-planner-kanban-board">
           {buckets.map((bucket) => (
             <KanbanColumn
               key={bucket.key}

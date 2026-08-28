@@ -1,6 +1,6 @@
 # Settings
 
-Access the settings through **Obsidian Settings → Community plugins → Tasks Map**.
+Access the settings through **Obsidian Settings → Community plugins → Project Planner**.
 
 ## Language
 

@@ -12,6 +12,8 @@ export interface BarDragResult {
   taskId: string;
   mode: BarDragMode;
   days: number;
+  /** Shift was down: carry everything downstream along by the same days. */
+  cascade: boolean;
 }
 
 /** How far the pointer must travel vertically before a drag reorders. */
@@ -50,6 +52,18 @@ interface GanttBarProps {
    */
   summary?: boolean;
   onCommit: (_result: BarDragResult) => void;
+  /**
+   * How far a shift-drag currently stands, so the chart can move the rest of
+   * the tail with it. `null` means the tail is not coming: shift is up, the
+   * drag turned into a reorder, or it is over.
+   */
+  onCascadePreview: (_taskId: string, _days: number | null) => void;
+  /**
+   * Hands this bar's element to the chart, which moves the bars a shift-drag
+   * carries along. They are not the ones being dragged, so they have no drag
+   * state of their own to read it from.
+   */
+  onRegister: (_taskId: string, _element: HTMLDivElement | null) => void;
   /** A click that moved nothing: open this task for editing. */
   onOpen: (_taskId: string) => void;
   /** Dragging a bar up or down reorders it, like dragging its row. */
@@ -77,6 +91,8 @@ export function GanttBar({
   dayWidth,
   summary = false,
   onCommit,
+  onCascadePreview,
+  onRegister,
   onOpen,
   onVerticalPreview,
   onVerticalDrop,
@@ -92,10 +108,20 @@ export function GanttBar({
     days: number;
     pointerId: number;
     vertical: boolean;
+    /** Shift is down, so the tasks downstream are moving too. */
+    cascade: boolean;
     /** A summary bar: it can be clicked, but it cannot be moved. */
     readOnly: boolean;
   } | null>(null);
   const [dragging, setDragging] = useState(false);
+
+  const setBarRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      barRef.current = element;
+      onRegister(task.id, element);
+    },
+    [onRegister, task.id]
+  );
 
   const label = plainTaskText(task.summary);
   const offsetDays = diffDays(timelineStart, bar.start);
@@ -165,6 +191,7 @@ export function GanttBar({
         days: 0,
         pointerId: event.pointerId,
         vertical: false,
+        cascade: false,
         readOnly,
       };
       if (!readOnly) setDragging(true);
@@ -192,6 +219,9 @@ export function GanttBar({
         drag.vertical = true;
         // Put the bar back where it started: this drag is about order now
         applyPreview("move", 0);
+        // ...and so is nothing about dates, so the tail goes home too
+        drag.cascade = false;
+        onCascadePreview(task.id, null);
       }
 
       if (drag.vertical) {
@@ -200,12 +230,17 @@ export function GanttBar({
       }
 
       const days = Math.round(dx / dayWidth);
-      if (days === drag.days) return;
+      // Shift can be pressed or released part-way through a drag, so the tail
+      // is picked up and put down live rather than decided at the grab
+      const cascade = drag.mode === "move" && event.shiftKey;
+      if (days === drag.days && cascade === drag.cascade) return;
 
       drag.days = days;
+      drag.cascade = cascade;
       applyPreview(drag.mode, days);
+      onCascadePreview(task.id, cascade ? days : null);
     },
-    [applyPreview, dayWidth, onVerticalPreview, task.id]
+    [applyPreview, dayWidth, onCascadePreview, onVerticalPreview, task.id]
   );
 
   const endDrag = useCallback(
@@ -216,6 +251,11 @@ export function GanttBar({
       dragRef.current = null;
       setDragging(false);
       barRef.current?.releasePointerCapture(event.pointerId);
+
+      // The tail goes back to where the rows say it is either way: either this
+      // drag is committing, and the rewritten dates put it in its new place, or
+      // it moved nothing and the preview should simply be undone
+      if (drag.cascade) onCascadePreview(task.id, null);
 
       // A summary bar never moved, so this is always a click
       if (drag.readOnly) {
@@ -255,10 +295,11 @@ export function GanttBar({
             ? Math.max(days, -(spanDays - 1))
             : days;
 
-      onCommit({ taskId: task.id, mode, days: clamped });
+      onCommit({ taskId: task.id, mode, days: clamped, cascade: drag.cascade });
     },
     [
       applyPreview,
+      onCascadePreview,
       onCommit,
       onOpen,
       onVerticalDrop,
@@ -269,15 +310,15 @@ export function GanttBar({
   );
 
   const classNames = [
-    "tasks-map-gantt-bar",
-    `tasks-map-gantt-bar--${effectiveTaskStatus(task.status, task.progress)}`,
-    summary ? "tasks-map-gantt-bar--summary" : "",
-    inferred && !summary ? "tasks-map-gantt-bar--inferred" : "",
-    dragging ? "tasks-map-gantt-bar--dragging" : "",
-    selected ? "tasks-map-gantt-bar--selected" : "",
-    saving ? "tasks-map-gantt-bar--saving" : "",
-    analysis.critical ? "tasks-map-gantt-bar--critical" : "",
-    analysis.atRisk ? "tasks-map-gantt-bar--at-risk" : "",
+    "project-planner-gantt-bar",
+    `project-planner-gantt-bar--${effectiveTaskStatus(task.status, task.progress)}`,
+    summary ? "project-planner-gantt-bar--summary" : "",
+    inferred && !summary ? "project-planner-gantt-bar--inferred" : "",
+    dragging ? "project-planner-gantt-bar--dragging" : "",
+    selected ? "project-planner-gantt-bar--selected" : "",
+    saving ? "project-planner-gantt-bar--saving" : "",
+    analysis.critical ? "project-planner-gantt-bar--critical" : "",
+    analysis.atRisk ? "project-planner-gantt-bar--at-risk" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -302,13 +343,15 @@ export function GanttBar({
     percent === null ? null : t("gantt.tooltip_progress", { n: percent }),
     slack,
     t("gantt.tooltip_click_edit"),
+    // Shift is invisible until someone says so, and a summary bar does not move
+    summary ? null : t("gantt.tooltip_shift_drag"),
   ]
     .filter(Boolean)
     .join("\n");
 
   return (
     <div
-      ref={barRef}
+      ref={setBarRef}
       className={classNames}
       title={tooltip}
       aria-label={`${label} — ${tooltip}`}
@@ -318,20 +361,23 @@ export function GanttBar({
       onPointerCancel={endDrag}
     >
       {percent === null || summary ? null : (
-        <span ref={progressRef} className="tasks-map-gantt-bar__progress" />
+        <span
+          ref={progressRef}
+          className="project-planner-gantt-bar__progress"
+        />
       )}
       {/* A summary spans its children rather than holding dates of its own,
           so there is nothing for a resize handle to write */}
       {!summary && (
         <span
-          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--start"
+          className="project-planner-gantt-bar__handle project-planner-gantt-bar__handle--start"
           onPointerDown={handlePointerDown("resize-start")}
         />
       )}
-      <span className="tasks-map-gantt-bar__label">{label}</span>
+      <span className="project-planner-gantt-bar__label">{label}</span>
       {!summary && (
         <span
-          className="tasks-map-gantt-bar__handle tasks-map-gantt-bar__handle--end"
+          className="project-planner-gantt-bar__handle project-planner-gantt-bar__handle--end"
           onPointerDown={handlePointerDown("resize-end")}
         />
       )}

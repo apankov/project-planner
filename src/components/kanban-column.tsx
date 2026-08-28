@@ -94,14 +94,14 @@ export function KanbanColumn({
 
   if (collapsed) {
     return (
-      <div className="tasks-map-kanban-column tasks-map-kanban-column--collapsed">
+      <div className="project-planner-kanban-column project-planner-kanban-column--collapsed">
         <button
-          className="tasks-map-kanban-column__collapsed-handle"
+          className="project-planner-kanban-column__collapsed-handle"
           onClick={() => onToggleCollapse(bucket.key)}
           title={t("kanban.expand_column")}
         >
           <ChevronRight size={14} />
-          <span className="tasks-map-kanban-column__collapsed-label">
+          <span className="project-planner-kanban-column__collapsed-label">
             {bucket.label} ({bucket.tasks.length})
           </span>
         </button>
@@ -110,43 +110,46 @@ export function KanbanColumn({
   }
 
   const classNames = [
-    "tasks-map-kanban-column",
-    draggingTaskId ? "tasks-map-kanban-column--droppable" : "",
-    draggingTaskId && locked ? "tasks-map-kanban-column--locked" : "",
-    dropAtEnd ? "tasks-map-kanban-column--over" : "",
+    "project-planner-kanban-column",
+    draggingTaskId ? "project-planner-kanban-column--droppable" : "",
+    draggingTaskId && locked ? "project-planner-kanban-column--locked" : "",
+    dropAtEnd ? "project-planner-kanban-column--over" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
     <div className={classNames} onDragOver={handleDragOver} onDrop={handleDrop}>
-      <div className="tasks-map-kanban-column__header">
+      <div className="project-planner-kanban-column__header">
         <button
-          className="tasks-map-kanban-column__collapse"
+          className="project-planner-kanban-column__collapse"
           onClick={() => onToggleCollapse(bucket.key)}
           title={t("kanban.collapse_column")}
         >
           <ChevronDown size={14} />
         </button>
 
-        <span className="tasks-map-kanban-column__title" title={bucket.label}>
+        <span
+          className="project-planner-kanban-column__title"
+          title={bucket.label}
+        >
           {bucket.label}
         </span>
 
-        <span className="tasks-map-kanban-column__count">
+        <span className="project-planner-kanban-column__count">
           {bucket.tasks.length}
         </span>
 
         {locked ? (
           <span
-            className="tasks-map-kanban-column__lock"
+            className="project-planner-kanban-column__lock"
             title={t("kanban.column_read_only")}
           >
             <Lock size={12} />
           </span>
         ) : (
           <button
-            className="tasks-map-kanban-column__add"
+            className="project-planner-kanban-column__add"
             onClick={() => onAddCard(bucket.key)}
             title={t("kanban.add_card_here")}
           >
@@ -155,9 +158,9 @@ export function KanbanColumn({
         )}
       </div>
 
-      <div className="tasks-map-kanban-column__body">
+      <div className="project-planner-kanban-column__body">
         {bucket.tasks.length === 0 ? (
-          <div className="tasks-map-kanban-column__empty">
+          <div className="project-planner-kanban-column__empty">
             {locked ? t("kanban.column_empty") : t("kanban.column_drop_hint")}
           </div>
         ) : (

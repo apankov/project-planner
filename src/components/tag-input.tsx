@@ -32,7 +32,7 @@ export function TagInput({
   }, []);
 
   // Filter out tags that are already on the task
-  // Tags in allTags are sorted by frequency (most used first) from TaskMapGraphView
+  // Tags in allTags are sorted by frequency (most used first) from GraphView
   const availableTags = allTags.filter((tag) => !existingTags.includes(tag));
 
   const options: TagOption[] = availableTags.map((tag) => ({
@@ -77,8 +77,10 @@ export function TagInput({
     <CreatableSelect
       ref={selectRef}
       unstyled
-      classNamePrefix="tasks-map-tag-select"
-      className={hasError || hasSpaceError ? "tasks-map-tag-select-error" : ""}
+      classNamePrefix="project-planner-tag-select"
+      className={
+        hasError || hasSpaceError ? "project-planner-tag-select-error" : ""
+      }
       options={options}
       inputValue={inputValue}
       onInputChange={handleInputChange}

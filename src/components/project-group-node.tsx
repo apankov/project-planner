@@ -12,16 +12,16 @@ export default function ProjectGroupNode({
   selected,
 }: NodeProps<ProjectGroupNodeData>) {
   const classes = [
-    "tasks-map-project-group",
-    selected ? "tasks-map-project-group--selected" : "",
-    data.isDragOver ? "tasks-map-project-group--drag-over" : "",
+    "project-planner-project-group",
+    selected ? "project-planner-project-group--selected" : "",
+    data.isDragOver ? "project-planner-project-group--drag-over" : "",
   ]
     .filter(Boolean)
     .join(" ");
   return (
     <div className={classes}>
       <NodeResizer minWidth={100} minHeight={100} isVisible={selected} />
-      <div className="tasks-map-project-group-label">
+      <div className="project-planner-project-group-label">
         <FolderOpen size={13} />
         <span>{data.label}</span>
       </div>

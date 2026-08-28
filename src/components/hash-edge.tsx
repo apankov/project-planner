@@ -83,7 +83,7 @@ export default function HashEdge({
     <g ref={groupRef} onMouseEnter={handleMouseEnter}>
       {/* Invisible thick path for easier selection */}
       <path
-        className="react-flow__edge-interaction tasks-map-hash-edge-interaction"
+        className="react-flow__edge-interaction project-planner-hash-edge-interaction"
         d={edgePath}
         stroke="transparent"
         strokeWidth={16}
@@ -93,13 +93,15 @@ export default function HashEdge({
         id={id}
         className={[
           "react-flow__edge-path",
-          "tasks-map-hash-edge-path",
-          selected ? "tasks-map-hash-edge-path--selected" : "",
-          data?.connected ? "tasks-map-hash-edge-path--connected" : "",
-          data?.direction ? `tasks-map-hash-edge-path--${data.direction}` : "",
-          data?.dimmed ? "tasks-map-hash-edge-path--dimmed" : "",
-          data?.critical ? "tasks-map-hash-edge-path--critical" : "",
-          data?.dropTarget ? "tasks-map-hash-edge-path--drop-target" : "",
+          "project-planner-hash-edge-path",
+          selected ? "project-planner-hash-edge-path--selected" : "",
+          data?.connected ? "project-planner-hash-edge-path--connected" : "",
+          data?.direction
+            ? `project-planner-hash-edge-path--${data.direction}`
+            : "",
+          data?.dimmed ? "project-planner-hash-edge-path--dimmed" : "",
+          data?.critical ? "project-planner-hash-edge-path--critical" : "",
+          data?.dropTarget ? "project-planner-hash-edge-path--drop-target" : "",
           ...getEdgeStyleClasses(style),
         ]
           .filter(Boolean)
@@ -122,7 +124,7 @@ export default function HashEdge({
           y={labelY - 8}
           textAnchor="middle"
           fontSize={12}
-          className="tasks-map-hash-edge-text"
+          className="project-planner-hash-edge-text"
         >
           {data?.hash}
         </text>

@@ -7,14 +7,15 @@ import {
   assignSolePerson,
   bucketKeyFor,
   buildBuckets,
-  dueBucketKey,
-  dueDateForBucket,
+  dateBucketKey,
+  dateForBucket,
   endOfWeek,
   isKanbanGroupBy,
   isWritableGroupBy,
   orderTasksByDue,
   retagForBucket,
   taskPerson,
+  taskStartDate,
   taskTag,
 } from "../src/lib/kanban-buckets";
 
@@ -24,6 +25,7 @@ const TODAY = "2026-08-10";
 const LABELS = {
   status: (status: string) => `status:${status}`,
   due: (key: string) => `due:${key}`,
+  start: (key: string) => `start:${key}`,
   priority: (value: string) => `priority:${value}`,
   noTag: "No tag",
   noPerson: "Unassigned",
@@ -41,6 +43,7 @@ function makeTask(
     link?: string;
     projects?: string[];
     due?: string;
+    start?: string;
     people?: string[];
   } = {}
 ): BaseTask {
@@ -55,7 +58,12 @@ function makeTask(
     incomingLinks: [],
     starred: false,
     projects: overrides.projects ?? [],
-    dates: overrides.due ? [{ type: "due", date: overrides.due }] : [],
+    dates: [
+      ...(overrides.start
+        ? [{ type: "start" as const, date: overrides.start }]
+        : []),
+      ...(overrides.due ? [{ type: "due" as const, date: overrides.due }] : []),
+    ],
     finance: {
       ...EMPTY_TASK_FINANCE,
       allocations: (overrides.people ?? []).map((person) => ({
@@ -75,12 +83,18 @@ function build(tasks: BaseTask[], groupBy: string, order?: string[]) {
 }
 
 describe("isKanbanGroupBy", () => {
-  it.each(["status", "due", "person", "tag", "project", "priority", "file"])(
-    "accepts %s",
-    (value) => {
-      expect(isKanbanGroupBy(value)).toBe(true);
-    }
-  );
+  it.each([
+    "status",
+    "due",
+    "start",
+    "person",
+    "tag",
+    "project",
+    "priority",
+    "file",
+  ])("accepts %s", (value) => {
+    expect(isKanbanGroupBy(value)).toBe(true);
+  });
 
   it("rejects anything else", () => {
     expect(isKanbanGroupBy("colour")).toBe(false);
@@ -88,7 +102,7 @@ describe("isKanbanGroupBy", () => {
 });
 
 describe("isWritableGroupBy", () => {
-  it.each(["status", "due", "person", "tag"] as const)(
+  it.each(["status", "due", "start", "person", "tag"] as const)(
     "%s can be written by a drop",
     (groupBy) => {
       expect(isWritableGroupBy(groupBy)).toBe(true);
@@ -103,7 +117,7 @@ describe("isWritableGroupBy", () => {
   );
 });
 
-describe("dueBucketKey", () => {
+describe("dateBucketKey", () => {
   it.each([
     ["2026-08-09", "overdue"],
     ["2026-08-01", "overdue"],
@@ -115,16 +129,16 @@ describe("dueBucketKey", () => {
     ["2026-08-23", "next_week"],
     ["2026-08-24", "later"],
   ])("puts %s in %s", (due, expected) => {
-    expect(dueBucketKey(due, TODAY)).toBe(expected);
+    expect(dateBucketKey(due, TODAY)).toBe(expected);
   });
 
-  it("puts a task with no due date in the no-date bucket", () => {
-    expect(dueBucketKey(null, TODAY)).toBe("none");
+  it("puts a task with no date in the no-date bucket", () => {
+    expect(dateBucketKey(null, TODAY)).toBe("none");
   });
 
   it("treats an unreadable date as no date at all", () => {
-    expect(dueBucketKey("next tuesday", TODAY)).toBe("none");
-    expect(dueBucketKey("2026-02-31", TODAY)).toBe("none");
+    expect(dateBucketKey("next tuesday", TODAY)).toBe("none");
+    expect(dateBucketKey("2026-02-31", TODAY)).toBe("none");
   });
 });
 
@@ -135,40 +149,53 @@ describe("endOfWeek", () => {
   });
 });
 
-describe("dueDateForBucket", () => {
+describe("dateForBucket", () => {
+  const RANGED = ["today", "tomorrow", "this_week", "next_week", "later"];
+
   it.each([
     ["today", "2026-08-10"],
     ["tomorrow", "2026-08-11"],
     ["this_week", "2026-08-16"],
     ["next_week", "2026-08-23"],
     ["later", "2026-08-24"],
-  ])("writes %s as %s", (key, expected) => {
+  ])("writes a due date for %s as %s", (key, expected) => {
     expect(
-      dueDateForBucket(key as Parameters<typeof dueDateForBucket>[0], TODAY)
+      dateForBucket(key as Parameters<typeof dateForBucket>[0], TODAY)
+    ).toBe(expected);
+  });
+
+  it.each([
+    ["today", "2026-08-10"],
+    ["tomorrow", "2026-08-11"],
+    ["this_week", "2026-08-12"],
+    ["next_week", "2026-08-17"],
+    ["later", "2026-08-24"],
+  ])("starts work at the beginning of %s, on %s", (key, expected) => {
+    expect(
+      dateForBucket(key as Parameters<typeof dateForBucket>[0], TODAY, "start")
     ).toBe(expected);
   });
 
   it("clears the date for the no-date bucket", () => {
-    expect(dueDateForBucket("none", TODAY)).toBeNull();
+    expect(dateForBucket("none", TODAY)).toBeNull();
+    expect(dateForBucket("none", TODAY, "start")).toBeNull();
   });
 
   it("has no day for overdue, so nothing can be dropped there", () => {
-    expect(dueDateForBucket("overdue", TODAY)).toBeUndefined();
+    expect(dateForBucket("overdue", TODAY)).toBeUndefined();
+    expect(dateForBucket("overdue", TODAY, "start")).toBeUndefined();
   });
 
   it("round-trips: what a bucket writes lands back in that bucket", () => {
-    for (const key of [
-      "today",
-      "tomorrow",
-      "this_week",
-      "next_week",
-      "later",
-    ]) {
-      const due = dueDateForBucket(
-        key as Parameters<typeof dueDateForBucket>[0],
-        TODAY
-      );
-      expect(dueBucketKey(due as string, TODAY)).toBe(key);
+    for (const groupBy of ["due", "start"] as const) {
+      for (const key of RANGED) {
+        const date = dateForBucket(
+          key as Parameters<typeof dateForBucket>[0],
+          TODAY,
+          groupBy
+        );
+        expect(dateBucketKey(date as string, TODAY)).toBe(key);
+      }
     }
   });
 });
@@ -263,6 +290,52 @@ describe("buildBuckets by due date", () => {
     const buckets = build([], "due");
     const none = buckets.find((bucket) => bucket.key === "none");
     expect(none?.change).toEqual({ field: "due", due: null });
+  });
+});
+
+describe("buildBuckets by start date", () => {
+  it("reads the start date, not the due date", () => {
+    const task = makeTask("a", { start: "2026-08-11", due: "2026-09-01" });
+    expect(bucketKeyFor(task, "start", TODAY)).toBe("tomorrow");
+    expect(taskStartDate(task)).toBe("2026-08-11");
+  });
+
+  it("draws the same columns a due board does", () => {
+    const keys = build([makeTask("a")], "start").map((bucket) => bucket.key);
+    expect(keys).toEqual([
+      "today",
+      "tomorrow",
+      "this_week",
+      "next_week",
+      "later",
+      "none",
+    ]);
+  });
+
+  it("leads with work that should have started already", () => {
+    const buckets = build(
+      [makeTask("late", { start: "2026-08-01" }), makeTask("unplanned")],
+      "start"
+    );
+    expect(buckets[0].key).toBe("overdue");
+    expect(buckets[0].label).toBe("start:overdue");
+    expect(buckets[0].tasks.map((task) => task.id)).toEqual(["late"]);
+    expect(buckets[0].change).toBeNull();
+  });
+
+  it("writes the start date a drop means", () => {
+    const buckets = build([], "start");
+    const tomorrow = buckets.find((bucket) => bucket.key === "tomorrow");
+    expect(tomorrow?.change).toEqual({ field: "start", start: "2026-08-11" });
+
+    const none = buckets.find((bucket) => bucket.key === "none");
+    expect(none?.change).toEqual({ field: "start", start: null });
+  });
+
+  it("files a task with no start date under no-date, due date or not", () => {
+    const buckets = build([makeTask("a", { due: "2026-08-11" })], "start");
+    const none = buckets.find((bucket) => bucket.key === "none");
+    expect(none?.tasks.map((task) => task.id)).toEqual(["a"]);
   });
 });
 

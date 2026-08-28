@@ -16,6 +16,7 @@ every card sits in exactly one column.
 | ------------- | ------------------------------------------------------------------ | ----------------------- |
 | Status        | To do, In progress, Done, Cancelled                                 | The task's checkbox      |
 | Due date      | Late, Today, Tomorrow, Rest of this week, Next week, Later, No date | The 📅 due date          |
+| Start date    | Late start, and the same days ahead                                 | The 🛫 start date        |
 | Person        | One per name in `[people:: ...]`, plus Unassigned                   | The task's people        |
 | Tag           | One per tag in use, plus No tag                                     | The task's tags          |
 | Project       | One per project                                                     | *nothing — read only*    |
@@ -27,7 +28,9 @@ answers the question has whether or not anything is sitting there yet. The
 other groupings only draw the columns their tasks actually use.
 
 **Late** is the exception at the other end: it only appears when something is
-overdue, and it takes no cards — nobody drags a card to make it late.
+overdue, and it takes no cards — nobody drags a card to make it late. Grouping
+by start date works the same way, on the 🛫 date instead, with **Late start**
+holding the work that should already have begun.
 
 ### Read-only groupings
 
@@ -37,17 +40,19 @@ still be **reordered inside** them, and everything else on a card still works.
 
 ## What a date column writes
 
-Dropping a card into a date column writes a real due date, so the card stays
-where you put it:
+Dropping a card into a date column writes a real date, so the card stays where
+you put it. A due date is a deadline, so a column covering a range writes its
+**last** day; a start date is when work begins, so the same column writes its
+**first** day:
 
-| Column            | Due date written           |
-| ----------------- | -------------------------- |
-| Today             | today                      |
-| Tomorrow          | tomorrow                   |
-| Rest of this week | Sunday of this week        |
-| Next week         | Sunday of next week        |
-| Later             | the Monday after that      |
-| No date           | clears the due date        |
+| Column            | Due date written           | Start date written         |
+| ----------------- | -------------------------- | -------------------------- |
+| Today             | today                      | today                      |
+| Tomorrow          | tomorrow                   | tomorrow                   |
+| Rest of this week | Sunday of this week        | the day after tomorrow     |
+| Next week         | Sunday of next week        | Monday of next week        |
+| Later             | the Monday after that      | the Monday after that      |
+| No date           | clears the due date        | clears the start date      |
 
 "Rest of this week" disappears on a Saturday, when the only day left in the
 week is tomorrow and already has a column of its own.

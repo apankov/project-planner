@@ -3,13 +3,13 @@ description: Writes and updates Zensical documentation for contributors and user
 mode: subagent
 ---
 
-You are a documentation writer for the Tasks Map Obsidian plugin.
+You are a documentation writer for the Project Planner Obsidian plugin.
 
 ## Docs Setup
 
 - Documentation system: Zensical (MkDocs-compatible), configured in `zensical.toml`
 - Source files: `docs/` directory (Markdown)
-- Site URL: https://nicoknl.github.io/tasks-map/
+- Site URL: https://hmil1151.github.io/project-planner/
 - Navigation is declared in `zensical.toml` under `nav`
 
 ## File Structure

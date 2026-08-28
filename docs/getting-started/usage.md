@@ -2,10 +2,10 @@
 
 ## Opening the View
 
-Open the Tasks Map view in one of two ways:
+Open the Project Planner view in one of two ways:
 
 - Click the **map** icon in the left ribbon.
-- Open the command palette (`Ctrl+P` / `Cmd+P`) and run **Tasks Map: Open map view**.
+- Open the command palette (`Ctrl+P` / `Cmd+P`) and run **Project Planner: Open map view**.
 
 The view opens in the main editor area and displays all tasks from your vault as an interactive graph.
 
@@ -36,7 +36,7 @@ Click the **⋮** button on a node to open the context menu:
 | Action      | Description                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Create task | Open the Tasks plugin modal to create a new child task (requires the [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin) |
-| Edit task   | Open the Tasks plugin modal to edit the task in place (requires the Tasks plugin)                                                            |
+| Edit task   | Open the task editor: name, note, dates, owner, contributors, links, status, progress and tags                                               |
 | Delete task | Remove the task from the vault                                                                                                               |
 
 ### Tags on Nodes
@@ -92,4 +92,4 @@ Both checkboxes can be active at the same time.
 
 Click **Reload Tasks** to re-read all tasks from the vault. Use this after making changes to notes outside the graph view.
 
-You can also embed a Tasks Map directly in a note — see [Embedding a Tasks Map](embedding.md).
+You can also embed a Project Planner directly in a note — see [Embedding a Project Planner](embedding.md).

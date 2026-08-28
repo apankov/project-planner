@@ -4,6 +4,7 @@ import { getTaskDateProperties } from "./task-dates";
 import { FINANCE_FIELD_REMOVAL, getTaskFinance } from "./task-finance";
 import { getTaskProgress } from "./task-progress";
 import { getTaskParentId } from "./task-parent";
+import { getTaskOwner } from "./task-owner";
 import { DataviewTask } from "src/types/dataview-task";
 import { NoteTask } from "src/types/note-task";
 
@@ -26,6 +27,7 @@ import {
   STAR_PATTERN_GLOBAL,
   PROGRESS_FIELD_REMOVAL,
   PARENT_FIELD_REMOVAL,
+  OWNER_FIELD_REMOVAL,
 } from "./task-regex";
 
 const ID_MATCH_PATTERNS = [
@@ -55,6 +57,7 @@ export class TaskFactory {
       dates: getTaskDateProperties(text),
       finance: getTaskFinance(text),
       progress: getTaskProgress(text),
+      owner: getTaskOwner(text),
       parentId: getTaskParentId(text),
     };
 
@@ -193,6 +196,7 @@ export class TaskFactory {
       .replace(FINANCE_FIELD_REMOVAL, "") // Remove finance fields: [people:: Alice 60%]
       .replace(PROGRESS_FIELD_REMOVAL, "") // Remove progress fields: [progress:: 40]
       .replace(PARENT_FIELD_REMOVAL, "") // Remove parent fields: [parent:: a1b2c3]
+      .replace(OWNER_FIELD_REMOVAL, "") // Remove owner fields: [owner:: Alice]
       .replace(STAR_PATTERN_GLOBAL, "") // Remove star emoji: ⭐
       .replace(/([\p{Extended_Pictographic}]+(\s*[#a-zA-Z0-9_-]+)?)/gu, "") // Remove other emojis
       .replace(/([\p{Extended_Pictographic}]+)/gu, "") // Remove remaining emojis

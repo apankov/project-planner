@@ -8,7 +8,7 @@ interface StarButtonProps {
 export function StarButton({ starred, onClick }: StarButtonProps) {
   return (
     <span
-      className="tasks-map-star-button"
+      className="project-planner-star-button"
       onClick={onClick}
       title={starred ? "Remove star" : "Add star"}
       role="button"

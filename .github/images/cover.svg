@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420" role="img" aria-label="Project Planner — plan projects from your Markdown tasks">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="55%" stop-color="#3b1f7a" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#c4b5fd" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0" />
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e9d5ff" />
+    </marker>
+  </defs>
+
+  <!-- backdrop -->
+  <rect x="0" y="0" width="1280" height="420" rx="24" fill="url(#bg)" />
+  <circle cx="1140" cy="40" r="220" fill="url(#glow)" />
+  <circle cx="120" cy="400" r="180" fill="url(#glow)" />
+
+  <!-- wordmark -->
+  <g transform="translate(72, 0)">
+    <g transform="translate(0, 96)">
+      <rect x="0" y="0" width="46" height="46" rx="12" fill="#a78bfa" />
+      <rect x="10" y="12" width="26" height="6" rx="3" fill="#2e1065" />
+      <rect x="10" y="23" width="18" height="6" rx="3" fill="#2e1065" />
+      <rect x="10" y="34" width="22" height="6" rx="3" fill="#2e1065" />
+    </g>
+
+    <text x="62" y="132" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="700" fill="url(#title)">Project Planner</text>
+
+    <text x="0" y="196" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="25" font-weight="500" fill="#ddd6fe">Turn the tasks already in your vault into a real plan.</text>
+    <text x="0" y="232" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="19" font-weight="400" fill="#a5b4fc">Dependency graph · Gantt with critical path · Kanban · Cost tracking</text>
+
+    <!-- feature pills -->
+    <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">
+      <rect x="0" y="266" width="112" height="32" rx="16" fill="#ffffff" fill-opacity="0.10" stroke="#ffffff" stroke-opacity="0.18" />
+      <text x="56" y="287" fill="#e9d5ff" text-anchor="middle">Graph</text>
+
+      <rect x="122" y="266" width="112" height="32" rx="16" fill="#ffffff" fill-opacity="0.10" stroke="#ffffff" stroke-opacity="0.18" />
+      <text x="178" y="287" fill="#e9d5ff" text-anchor="middle">Gantt</text>
+
+      <rect x="244" y="266" width="112" height="32" rx="16" fill="#ffffff" fill-opacity="0.10" stroke="#ffffff" stroke-opacity="0.18" />
+      <text x="300" y="287" fill="#e9d5ff" text-anchor="middle">Board</text>
+
+      <rect x="366" y="266" width="112" height="32" rx="16" fill="#ffffff" fill-opacity="0.10" stroke="#ffffff" stroke-opacity="0.18" />
+      <text x="422" y="287" fill="#e9d5ff" text-anchor="middle">Finance</text>
+    </g>
+
+    <text x="0" y="348" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="500" fill="#8b8bd0">An Obsidian plugin · powered by your Markdown tasks</text>
+  </g>
+
+  <!-- gantt illustration -->
+  <g transform="translate(700, 56)">
+    <rect x="0" y="0" width="512" height="308" rx="18" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.14" />
+
+    <!-- timeline grid -->
+    <g stroke="#ffffff" stroke-opacity="0.10">
+      <line x1="112" y1="28" x2="112" y2="284" />
+      <line x1="208" y1="28" x2="208" y2="284" />
+      <line x1="304" y1="28" x2="304" y2="284" />
+      <line x1="400" y1="28" x2="400" y2="284" />
+      <line x1="480" y1="28" x2="480" y2="284" />
+    </g>
+    <line x1="20" y1="28" x2="492" y2="28" stroke="#ffffff" stroke-opacity="0.16" />
+
+    <!-- month ticks -->
+    <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#a5b4fc">
+      <text x="120" y="20">W1</text>
+      <text x="216" y="20">W2</text>
+      <text x="312" y="20">W3</text>
+      <text x="408" y="20">W4</text>
+    </g>
+
+    <!-- row labels -->
+    <g fill="#ffffff" fill-opacity="0.28">
+      <rect x="20" y="50" width="70" height="7" rx="3.5" />
+      <rect x="20" y="98" width="56" height="7" rx="3.5" />
+      <rect x="28" y="146" width="48" height="7" rx="3.5" />
+      <rect x="20" y="194" width="64" height="7" rx="3.5" />
+      <rect x="28" y="242" width="44" height="7" rx="3.5" />
+    </g>
+
+    <!-- dependency links -->
+    <g fill="none" stroke="#e9d5ff" stroke-opacity="0.55" stroke-width="1.6" marker-end="url(#arrow)">
+      <path d="M 212 54 L 220 54 L 220 96 L 228 96" />
+      <path d="M 212 54 L 220 54 L 220 144 L 228 144" />
+      <path d="M 342 102 L 350 102 L 350 192 L 358 192" />
+      <path d="M 318 150 L 326 150 L 326 240 L 334 240" />
+    </g>
+
+    <!-- bars: amber marks the critical path -->
+    <rect x="112" y="45" width="100" height="18" rx="9" fill="#fbbf24" />
+    <rect x="228" y="93" width="114" height="18" rx="9" fill="#fbbf24" />
+    <rect x="228" y="141" width="90" height="18" rx="9" fill="#38bdf8" />
+    <rect x="358" y="189" width="106" height="18" rx="9" fill="#fbbf24" />
+    <rect x="334" y="237" width="72" height="18" rx="9" fill="#f472b6" />
+
+    <!-- progress fill on the first bar -->
+    <rect x="112" y="45" width="62" height="18" rx="9" fill="#ffffff" fill-opacity="0.30" />
+
+    <!-- milestone -->
+    <line x1="480" y1="28" x2="480" y2="284" stroke="#34d399" stroke-opacity="0.7" stroke-width="1.6" stroke-dasharray="4 4" />
+    <path d="M 480 28 l 9 10 l -9 10 l -9 -10 z" fill="#34d399" />
+
+    <!-- legend -->
+    <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600">
+      <circle cx="26" cy="279" r="5" fill="#fbbf24" />
+      <text x="38" y="283" fill="#ddd6fe">critical path</text>
+      <circle cx="140" cy="279" r="5" fill="#34d399" />
+      <text x="152" y="283" fill="#ddd6fe">milestone</text>
+    </g>
+  </g>
+</svg>

@@ -21,17 +21,17 @@ export interface Kpi {
 
 export default function FinanceKpis({ kpis }: { kpis: Kpi[] }) {
   return (
-    <div className="tasks-map-finance-kpis">
+    <div className="project-planner-finance-kpis">
       {kpis.map((kpi) => (
-        <div className="tasks-map-finance-kpi" key={kpi.key}>
-          <div className="tasks-map-finance-kpi__label">{kpi.label}</div>
-          <div className="tasks-map-finance-kpi__value">{kpi.value}</div>
+        <div className="project-planner-finance-kpi" key={kpi.key}>
+          <div className="project-planner-finance-kpi__label">{kpi.label}</div>
+          <div className="project-planner-finance-kpi__value">{kpi.value}</div>
           {kpi.caveat && (
             <div
               className={
                 kpi.warning
-                  ? "tasks-map-finance-kpi__caveat tasks-map-finance-kpi__caveat--warning"
-                  : "tasks-map-finance-kpi__caveat"
+                  ? "project-planner-finance-kpi__caveat project-planner-finance-kpi__caveat--warning"
+                  : "project-planner-finance-kpi__caveat"
               }
             >
               {kpi.caveat}

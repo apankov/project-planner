@@ -3,13 +3,13 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { FilterPreset } from "src/types/settings";
 import { FilterState } from "src/types/filter-state";
 import FilterPresetBar from "./filter-preset-bar";
-import type TasksMapPlugin from "../main";
+import type ProjectPlannerPlugin from "../main";
 import { t } from "../i18n";
 
 interface FilterPresetsPanelProps {
   presets: FilterPreset[];
   filterState: FilterState;
-  plugin: TasksMapPlugin;
+  plugin: ProjectPlannerPlugin;
   onApply: (_filter: FilterState) => void;
   onSave: (_name: string, _filter: FilterState) => Promise<void>;
   onRename: (_id: string, _name: string) => Promise<void>;
@@ -34,14 +34,14 @@ export default function FilterPresetsPanel({
 
   return (
     <div
-      className={`tasks-map-presets-panel${isCollapsed ? " tasks-map-presets-panel--collapsed" : ""}`}
+      className={`project-planner-presets-panel${isCollapsed ? " project-planner-presets-panel--collapsed" : ""}`}
     >
-      <div className="tasks-map-presets-panel__header">
-        <span className="tasks-map-presets-panel__title">
+      <div className="project-planner-presets-panel__header">
+        <span className="project-planner-presets-panel__title">
           {t("presets.panel_title")}
         </span>
         <button
-          className="tasks-map-presets-panel__header-icon"
+          className="project-planner-presets-panel__header-icon"
           onClick={toggleCollapsed}
           aria-label={
             isCollapsed
@@ -59,7 +59,7 @@ export default function FilterPresetsPanel({
       </div>
 
       {!isCollapsed && (
-        <div className="tasks-map-presets-panel__content">
+        <div className="project-planner-presets-panel__content">
           <FilterPresetBar
             presets={presets}
             filterState={filterState}

@@ -1,6 +1,6 @@
 [project]
-site_name = "Tasks Map"
-site_url = "https://nicoknl.github.io/tasks-map/"
+site_name = "Project Planner"
+site_url = "https://hmil1151.github.io/project-planner/"
 
 nav = [
   { "Home" = "index.md" },
@@ -8,6 +8,7 @@ nav = [
     "getting-started/index.md",
     "getting-started/installation.md",
     "getting-started/usage.md",
+    "getting-started/task-editor.md",
     "getting-started/unlinked-tasks-panel.md",
     "getting-started/gantt.md",
     "getting-started/board.md",

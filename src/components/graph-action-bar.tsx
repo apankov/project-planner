@@ -41,56 +41,56 @@ export default function GraphActionBar({
 }: GraphActionBarProps) {
   return (
     <div
-      className="tasks-map-action-bar"
+      className="project-planner-action-bar"
       role="toolbar"
       aria-label={t("controls.actions")}
     >
       <button
-        className="tasks-map-action-bar__button"
+        className="project-planner-action-bar__button"
         onClick={reloadTasks}
         title={t("controls.reload_desc")}
         aria-label={t("filters.reload_tasks")}
       >
         <RefreshCw size={14} />
-        <span className="tasks-map-action-bar__label">
+        <span className="project-planner-action-bar__label">
           {t("filters.reload_tasks")}
         </span>
       </button>
 
       <button
-        className="tasks-map-action-bar__button"
+        className="project-planner-action-bar__button"
         onClick={fitView}
         title={t("controls.fit_view_desc")}
         aria-label={t("controls.fit_view")}
       >
         <Maximize2 size={14} />
-        <span className="tasks-map-action-bar__label">
+        <span className="project-planner-action-bar__label">
           {t("controls.fit_view")}
         </span>
       </button>
 
       <button
-        className="tasks-map-action-bar__button"
+        className="project-planner-action-bar__button"
         onClick={onUndo}
         disabled={!canUndo}
         title={undoLabel ?? t("controls.undo_desc")}
         aria-label={t("controls.undo")}
       >
         <Undo2 size={14} />
-        <span className="tasks-map-action-bar__label">
+        <span className="project-planner-action-bar__label">
           {t("controls.undo")}
         </span>
       </button>
 
       {onOpenGantt && (
         <button
-          className="tasks-map-action-bar__button"
+          className="project-planner-action-bar__button"
           onClick={onOpenGantt}
           title={t("controls.open_gantt_desc")}
           aria-label={t("controls.open_gantt")}
         >
           <GanttChartSquare size={14} />
-          <span className="tasks-map-action-bar__label">
+          <span className="project-planner-action-bar__label">
             {t("controls.open_gantt")}
           </span>
         </button>
@@ -98,13 +98,13 @@ export default function GraphActionBar({
 
       {onOpenKanban && (
         <button
-          className="tasks-map-action-bar__button"
+          className="project-planner-action-bar__button"
           onClick={onOpenKanban}
           title={t("controls.open_kanban_desc")}
           aria-label={t("controls.open_kanban")}
         >
           <Columns3 size={14} />
-          <span className="tasks-map-action-bar__label">
+          <span className="project-planner-action-bar__label">
             {t("controls.open_kanban")}
           </span>
         </button>
@@ -112,13 +112,13 @@ export default function GraphActionBar({
 
       {onOpenFinance && (
         <button
-          className="tasks-map-action-bar__button"
+          className="project-planner-action-bar__button"
           onClick={onOpenFinance}
           title={t("controls.open_finance_desc")}
           aria-label={t("controls.open_finance")}
         >
           <Coins size={14} />
-          <span className="tasks-map-action-bar__label">
+          <span className="project-planner-action-bar__label">
             {t("controls.open_finance")}
           </span>
         </button>

@@ -12,47 +12,47 @@ interface GanttLegendProps {
 /** Explains what the bar colours and the dashed outline mean. */
 export function GanttLegend({ showCriticalPath }: GanttLegendProps) {
   return (
-    <div className="tasks-map-gantt-legend">
+    <div className="project-planner-gantt-legend">
       {STATUSES.map((status) => (
-        <span key={status} className="tasks-map-gantt-legend__item">
+        <span key={status} className="project-planner-gantt-legend__item">
           <span
-            className={`tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--${status}`}
+            className={`project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--${status}`}
           />
           {t(`gantt.legend_${status}`)}
         </span>
       ))}
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--inferred" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--inferred" />
         {t("gantt.legend_suggested")}
       </span>
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--summary" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--summary" />
         {t("gantt.legend_summary")}
       </span>
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--today" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--today" />
         {t("gantt.legend_today")}
       </span>
       {showCriticalPath && (
-        <span className="tasks-map-gantt-legend__item">
-          <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--critical" />
+        <span className="project-planner-gantt-legend__item">
+          <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--critical" />
           {t("gantt.legend_critical")}
         </span>
       )}
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--at-risk" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--at-risk" />
         {t("gantt.legend_at_risk")}
       </span>
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--milestone" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--milestone" />
         {t("gantt.legend_milestone")}
       </span>
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--upstream" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--upstream" />
         {t("gantt.legend_upstream")}
       </span>
-      <span className="tasks-map-gantt-legend__item">
-        <span className="tasks-map-gantt-legend__swatch tasks-map-gantt-legend__swatch--downstream" />
+      <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--downstream" />
         {t("gantt.legend_downstream")}
       </span>
     </div>

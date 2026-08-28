@@ -135,14 +135,14 @@ export default function GuiOverlay(props: GuiOverlayProps) {
 
   return (
     <div
-      className={`tasks-map-filter-panel ${isMinimized ? "tasks-map-filter-panel--minimized" : ""}`}
+      className={`project-planner-filter-panel ${isMinimized ? "project-planner-filter-panel--minimized" : ""}`}
     >
-      <div className="tasks-map-filter-panel__header">
-        <span className="tasks-map-filter-panel__title">
+      <div className="project-planner-filter-panel__header">
+        <span className="project-planner-filter-panel__title">
           {t("filters.title")}
         </span>
         <button
-          className="tasks-map-filter-panel__header-icon"
+          className="project-planner-filter-panel__header-icon"
           onClick={toggleMinimized}
           aria-label={
             isMinimized
@@ -161,11 +161,11 @@ export default function GuiOverlay(props: GuiOverlayProps) {
 
       {!isMinimized && (
         <>
-          <div className="tasks-map-filter-panel__content">
-            <div className="tasks-map-search-bar">
-              <div className="tasks-map-search-bar-row">
+          <div className="project-planner-filter-panel__content">
+            <div className="project-planner-search-bar">
+              <div className="project-planner-search-bar-row">
                 <button
-                  className="tasks-map-search-icon-button"
+                  className="project-planner-search-icon-button"
                   onClick={submitSearch}
                   title={t("search.placeholder")}
                 >
@@ -174,7 +174,7 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 <input
                   ref={inputRef}
                   type="text"
-                  className="tasks-map-search-input"
+                  className="project-planner-search-input"
                   placeholder={t("search.placeholder")}
                   value={searchQuery}
                   onChange={handleSearchChange}
@@ -188,7 +188,7 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 />
                 {searchQuery && (
                   <button
-                    className="tasks-map-search-clear"
+                    className="project-planner-search-clear"
                     onClick={clearSearch}
                     title={t("search.clear")}
                   >
@@ -197,15 +197,15 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 )}
               </div>
               {searchResultCount !== null && (
-                <span className="tasks-map-search-result-count">
+                <span className="project-planner-search-result-count">
                   {searchResultCount > 0
                     ? t("search.results_count", { count: searchResultCount })
                     : t("search.no_results")}
                 </span>
               )}
               {searchResultCount !== null && (
-                <div className="tasks-map-traversal-options">
-                  <label className="tasks-map-gui-overlay-checkbox-label">
+                <div className="project-planner-traversal-options">
+                  <label className="project-planner-gui-overlay-checkbox-label">
                     <input
                       type="checkbox"
                       checked={showDependencies}
@@ -218,13 +218,13 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                           ),
                         }))
                       }
-                      className="tasks-map-gui-overlay-checkbox-input"
+                      className="project-planner-gui-overlay-checkbox-input"
                     />
-                    <span className="tasks-map-gui-overlay-checkbox-text">
+                    <span className="project-planner-gui-overlay-checkbox-text">
                       {t("search.show_dependencies")}
                     </span>
                   </label>
-                  <label className="tasks-map-gui-overlay-checkbox-label">
+                  <label className="project-planner-gui-overlay-checkbox-label">
                     <input
                       type="checkbox"
                       checked={showDependents}
@@ -237,9 +237,9 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                           ),
                         }))
                       }
-                      className="tasks-map-gui-overlay-checkbox-input"
+                      className="project-planner-gui-overlay-checkbox-input"
                     />
-                    <span className="tasks-map-gui-overlay-checkbox-text">
+                    <span className="project-planner-gui-overlay-checkbox-text">
                       {t("search.show_dependents")}
                     </span>
                   </label>
@@ -247,24 +247,24 @@ export default function GuiOverlay(props: GuiOverlayProps) {
               )}
               {showSuggestions && suggestions.length > 0 && (
                 <div
-                  className="tasks-map-search-suggestions"
+                  className="project-planner-search-suggestions"
                   ref={suggestionsRef}
                 >
                   {suggestions.map((task, index) => (
                     <div
                       key={task.id}
-                      className={`tasks-map-search-suggestion ${
+                      className={`project-planner-search-suggestion ${
                         index === selectedSuggestion
-                          ? "tasks-map-search-suggestion--active"
+                          ? "project-planner-search-suggestion--active"
                           : ""
                       }`}
                       onMouseDown={() => handleSelectSuggestion(task)}
                     >
-                      <span className="tasks-map-search-suggestion-summary">
+                      <span className="project-planner-search-suggestion-summary">
                         {task.summary}
                       </span>
                       {task.tags.length > 0 && (
-                        <span className="tasks-map-search-suggestion-tags">
+                        <span className="project-planner-search-suggestion-tags">
                           {task.tags.slice(0, 3).join(", ")}
                         </span>
                       )}
@@ -274,9 +274,9 @@ export default function GuiOverlay(props: GuiOverlayProps) {
               )}
             </div>
 
-            <div className="tasks-map-filter-section">
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-filter-label">
+            <div className="project-planner-filter-section">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-filter-label">
                   {t("filters.status")}
                 </label>
                 <MultiSelect
@@ -292,8 +292,8 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 />
               </div>
 
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-filter-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-filter-label">
                   {t("filters.include_labels")}
                 </label>
                 <TagSelect
@@ -305,8 +305,8 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 />
               </div>
 
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-filter-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-filter-label">
                   {t("filters.exclude_labels")}
                 </label>
                 <TagSelect
@@ -318,8 +318,8 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 />
               </div>
 
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-filter-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-filter-label">
                   {t("filters.files_folders")}
                 </label>
                 <MultiSelect
@@ -335,8 +335,8 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                 />
               </div>
 
-              <div className="tasks-map-filter-item">
-                <label className="tasks-map-gui-overlay-checkbox-label">
+              <div className="project-planner-filter-item">
+                <label className="project-planner-gui-overlay-checkbox-label">
                   <input
                     type="checkbox"
                     checked={filterState.onlyStarred}
@@ -346,9 +346,9 @@ export default function GuiOverlay(props: GuiOverlayProps) {
                         onlyStarred: e.target.checked,
                       }))
                     }
-                    className="tasks-map-gui-overlay-checkbox-input"
+                    className="project-planner-gui-overlay-checkbox-input"
                   />
-                  <span className="tasks-map-gui-overlay-checkbox-text">
+                  <span className="project-planner-gui-overlay-checkbox-text">
                     {t("filters.only_starred")}
                   </span>
                 </label>

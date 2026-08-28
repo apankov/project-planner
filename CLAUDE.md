@@ -63,20 +63,20 @@ test/
 ├── mocks/            # obsidian, react, reactflow, lucide-react, react-select
 └── fixture/          # Sample vault (Dataview + NoteTask + Finance notes)
 global.css            # THE stylesheet source; esbuild emits styles.css
-docs/                 # Zensical site → nicoknl.github.io/tasks-map
+docs/                 # Zensical site → hmil1151.github.io/project-planner
 ```
 
 ## Architecture
 
 - **Four views + one embed.** Graph, Gantt, Kanban, and Finance each pair an
   Obsidian `ItemView` (`TasksMapGanttItemView.tsx`) with a React component
-  (`GanttView.tsx`); the ItemView owns `createRoot`. A `tasks-map` fenced code
+  (`GanttView.tsx`); the ItemView owns `createRoot`. A `project-planner` fenced code
   block renders the graph inline via `registerMarkdownCodeBlockProcessor`.
 - **View ids live in `src/lib/view-focus.ts`**, not in `main.tsx`, because the
   plugin imports the views — views importing the plugin for a runtime value
   would form a cycle. Same module owns the cross-view "focus this task" event.
 - **Settings propagate by window event.** `main.tsx` dispatches
-  `tasks-map:settings-changed`; every view wrapper listens and re-clones
+  `project-planner:settings-changed`; every view wrapper listens and re-clones
   `plugin.settings`. There is no settings store.
 - **Domain model.** Abstract `BaseTask` → `DataviewTask` (inline `- [ ]` lines)
   and `NoteTask` (a whole note tagged `task`). Always construct via
@@ -112,6 +112,6 @@ docs/                 # Zensical site → nicoknl.github.io/tasks-map
 - **Never hand-edit version fields** in `package.json`, `package-lock.json`,
   `manifest.json`, or `versions.json`. The release workflow owns them via
   `semver-config.toml` + `.github/scripts/bump_version.py`.
-- **CSS class names must match** `^(tasks-map-|react-flow|theme-dark)…`
+- **CSS class names must match** `^(project-planner-|react-flow|theme-dark)…`
   (stylelint `selector-class-pattern`), and `!important` is banned.
 - **Never overwrite a vault's `data.json`** — it holds live user settings.
