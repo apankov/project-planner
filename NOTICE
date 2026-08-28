@@ -1,0 +1,16 @@
+Project Planner
+Copyright (c) 2025-2026 Harrison Milburn
+
+This software began as a fork of the Tasks Map plugin by Nico Klaassen
+(https://github.com/NicoKNL/tasks-map) and has since been substantially
+extended. Tasks Map is released under the MIT License, and its original
+copyright notice is retained in LICENSE as that license requires.
+
+The graph canvas, the dual inline/note task model, the Dataview integration
+and the filtering core all began in that project. What has been added since
+is described under "Relationship to Tasks Map" in README.md.
+
+This file carries the attribution that previously sat inside LICENSE. It was
+moved so that LICENSE holds the unmodified MIT text: licence detection
+compares the file against a template and treats added prose as a
+modification, which left the repository reading as unlicensed.
