@@ -16,12 +16,12 @@
     "export_handover_pack": "Export a handover pack (PDF)"
   },
   "ribbon": {
-    "open_tasks_map": "Open project graph",
-    "open_tasks_gantt": "Open Tasks Gantt",
-    "open_tasks_kanban": "Open tasks board",
+    "open_tasks_map": "Open graph view",
+    "open_tasks_gantt": "Open Gantt view",
+    "open_tasks_kanban": "Open board view",
     "open_open_questions": "Open open questions",
     "open_tasks_finance": "Open task finance",
-    "export_handover_pack": "Export a handover pack"
+    "export_handover_pack": "Export a handover pack (PDF)"
   },
   "view": {
     "title": "Project graph",

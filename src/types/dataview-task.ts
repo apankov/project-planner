@@ -331,17 +331,14 @@ export class DataviewTask extends BaseTask {
     position: TaskInsertPosition = "after"
   ): Promise<void> {
     if (!this.link) {
-      console.log("!task.link: ", newTaskLine);
       return;
     }
     const vault = app?.vault;
     if (!vault) {
-      console.log("!vault: ", newTaskLine);
       return;
     }
     const file = vault.getFileByPath(this.link);
     if (!file) {
-      console.log("!file: ", newTaskLine);
       return;
     }
 
@@ -350,7 +347,6 @@ export class DataviewTask extends BaseTask {
       const taskLineIdx = findTaskLineByIdOrText(lines, this.id, this.text);
 
       if (taskLineIdx === -1) {
-        console.log("taskLineIdx === -1: ", newTaskLine);
         return fileContent;
       }
 

@@ -16,12 +16,12 @@
     "export_handover_pack": "导出交接文件包（PDF）"
   },
   "ribbon": {
-    "open_tasks_map": "打开项目图谱",
-    "open_tasks_gantt": "打开任务甘特图",
-    "open_tasks_kanban": "打开任务看板",
+    "open_tasks_map": "打开图谱视图",
+    "open_tasks_gantt": "打开甘特图视图",
+    "open_tasks_kanban": "打开看板视图",
     "open_open_questions": "打开待解问题",
     "open_tasks_finance": "打开任务财务",
-    "export_handover_pack": "导出交接文件包"
+    "export_handover_pack": "导出交接文件包（PDF）"
   },
   "view": {
     "title": "项目图谱",

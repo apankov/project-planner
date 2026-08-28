@@ -16,12 +16,12 @@
     "export_handover_pack": "Overdrachtspakket exporteren (PDF)"
   },
   "ribbon": {
-    "open_tasks_map": "Projectgrafiek openen",
-    "open_tasks_gantt": "Takengantt openen",
-    "open_tasks_kanban": "Takenbord openen",
+    "open_tasks_map": "Grafiekweergave openen",
+    "open_tasks_gantt": "Gantt-weergave openen",
+    "open_tasks_kanban": "Bordweergave openen",
     "open_open_questions": "Open vragen openen",
     "open_tasks_finance": "Taakfinanciën openen",
-    "export_handover_pack": "Overdrachtspakket exporteren"
+    "export_handover_pack": "Overdrachtspakket exporteren (PDF)"
   },
   "view": {
     "title": "Projectgrafiek",

@@ -95,23 +95,19 @@ export class NoteTask extends BaseTask {
     _position: TaskInsertPosition = "after"
   ): Promise<void> {
     if (!this.link) {
-      console.log("!task.link: ", newTaskLine);
       return;
     }
     const vault = app?.vault;
     if (!vault) {
-      console.log("!vault: ", newTaskLine);
       return;
     }
     const originalFile = vault.getFileByPath(this.link);
     if (!originalFile) {
-      console.log("!originalFile: ", newTaskLine);
       return;
     }
 
     const folderPath = originalFile.parent?.path;
     if (!folderPath) {
-      console.log("!folderPath: ", newTaskLine);
       return;
     }
 
