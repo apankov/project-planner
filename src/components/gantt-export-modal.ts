@@ -87,9 +87,9 @@ export class GanttExportModal extends Modal {
       .setName(t("gantt.export_modal_paper"))
       .setDesc(t("gantt.export_modal_paper_desc"))
       .addDropdown((dropdown) => {
-        GANTT_EXPORT_PAPERS.forEach((paper) =>
-          dropdown.addOption(paper, t(`gantt.export_paper_${paper}`))
-        );
+        GANTT_EXPORT_PAPERS.forEach((paper) => {
+          dropdown.addOption(paper, t(`gantt.export_paper_${paper}`));
+        });
         dropdown.setValue(this.draft.paper);
         dropdown.onChange((value) => {
           this.draft.paper = readPaper(value);
@@ -100,12 +100,12 @@ export class GanttExportModal extends Modal {
       .setName(t("gantt.export_modal_quality"))
       .setDesc(t("gantt.export_modal_quality_desc"))
       .addDropdown((dropdown) => {
-        GANTT_EXPORT_RATIOS.forEach((ratio) =>
+        GANTT_EXPORT_RATIOS.forEach((ratio) => {
           dropdown.addOption(
             String(ratio),
             t("gantt.export_quality_option", { n: ratio })
-          )
-        );
+          );
+        });
         dropdown.setValue(String(this.draft.pixelRatio));
         dropdown.onChange((value) => {
           this.draft.pixelRatio = readRatio(value);

@@ -1,4 +1,4 @@
-import { App, Vault, parseYaml, stringifyYaml } from "obsidian";
+import { App, Vault, stringifyYaml } from "obsidian";
 import { BaseTask } from "./base-task";
 import { TaskStatus } from "./task";
 import { TaskInsertPosition, TaskDateUpdate } from "./base-task";
@@ -15,11 +15,26 @@ import {
 } from "../lib/task-progress";
 import { normalizeParentId, parentFrontmatterPatch } from "../lib/task-parent";
 import { normalizeOwner, ownerFrontmatterPatch } from "../lib/task-owner";
-import { findFrontmatter, updateFrontmatter } from "../lib/frontmatter-write";
+import {
+  findFrontmatter,
+  parseFrontmatterRecord,
+  updateFrontmatter,
+} from "../lib/frontmatter-write";
 
 interface DependencyEntry {
   uid: string;
   reltype: string;
+}
+
+/**
+ * The uid of a `blockedBy` entry, or null for an entry not written the way we
+ * write them. Entries can legitimately be plain strings — `blockedBy: [frame]`
+ * is documented — so anything unrecognised is left alone rather than dropped.
+ */
+function dependencyUid(entry: unknown): string | null {
+  if (!entry || typeof entry !== "object") return null;
+  const uid = (entry as { uid?: unknown }).uid;
+  return typeof uid === "string" ? uid : null;
 }
 
 /** Strips the checkbox, tags and emoji metadata off a task line. */
@@ -543,7 +558,7 @@ export class NoteTask extends BaseTask {
       const bodyContent = lines.slice(frontmatterEnd + 1).join("\n");
 
       // Parse YAML into an object
-      const frontmatterData = parseYaml(frontmatterYaml) || {};
+      const frontmatterData = parseFrontmatterRecord(frontmatterYaml);
 
       // Extract task name from path (e.g., "TaskNotes/Tasks/Task2.md" -> "Task2")
       const taskName =
@@ -552,24 +567,19 @@ export class NoteTask extends BaseTask {
         "";
       const uidValue = `[[${taskName}]]`;
 
-      // Ensure blockedBy array exists
-      if (!frontmatterData.blockedBy) {
-        frontmatterData.blockedBy = [];
-      } else if (!Array.isArray(frontmatterData.blockedBy)) {
-        frontmatterData.blockedBy = [];
-      }
+      // Anything that is not a list starts again as one
+      const existing = Array.isArray(frontmatterData.blockedBy)
+        ? (frontmatterData.blockedBy as unknown[])
+        : [];
 
       // Check if dependency already exists
-      const exists = frontmatterData.blockedBy.some(
-        (dep: DependencyEntry) => dep && dep.uid === uidValue
-      );
+      const exists = existing.some((dep) => dependencyUid(dep) === uidValue);
 
-      if (!exists) {
-        frontmatterData.blockedBy.push({
-          uid: uidValue,
-          reltype: "FINISHTOSTART",
-        });
-      }
+      const entry: DependencyEntry = {
+        uid: uidValue,
+        reltype: "FINISHTOSTART",
+      };
+      frontmatterData.blockedBy = exists ? existing : [...existing, entry];
 
       const newFrontmatterYaml = stringifyYaml(frontmatterData);
 
@@ -604,7 +614,7 @@ export class NoteTask extends BaseTask {
       const bodyContent = lines.slice(frontmatterEnd + 1).join("\n");
 
       // Parse YAML into an object
-      const frontmatterData = parseYaml(frontmatterYaml) || {};
+      const frontmatterData = parseFrontmatterRecord(frontmatterYaml);
 
       // Extract task name from the path (e.g., "TaskNotes/Tasks/Task2.md" -> "Task2")
       // The fromTaskId might be a full path or just a task name
@@ -618,12 +628,14 @@ export class NoteTask extends BaseTask {
 
       // Remove the dependency from blockedBy array
       if (Array.isArray(frontmatterData.blockedBy)) {
-        frontmatterData.blockedBy = frontmatterData.blockedBy.filter(
-          (dep: DependencyEntry) => dep && dep.uid !== uidToRemove
+        const remaining = (frontmatterData.blockedBy as unknown[]).filter(
+          (dep) => !!dep && dependencyUid(dep) !== uidToRemove
         );
 
-        if (frontmatterData.blockedBy.length === 0) {
+        if (remaining.length === 0) {
           delete frontmatterData.blockedBy;
+        } else {
+          frontmatterData.blockedBy = remaining;
         }
       }
 

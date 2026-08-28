@@ -306,7 +306,7 @@ export function withNoteProperties(
   properties: TaskNoteProperties
 ): BaseTask {
   const merged = Object.assign(
-    Object.create(Object.getPrototypeOf(task)),
+    Object.create(Object.getPrototypeOf(task) as object | null),
     task
   ) as BaseTask;
 

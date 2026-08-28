@@ -349,7 +349,7 @@ function fixedBuckets(
     return STATUS_BUCKET_ORDER.map((status) => ({
       key: status,
       label: labels.status(status),
-      change: { field: "status", status } as KanbanChange,
+      change: { field: "status", status },
     }));
   }
 
@@ -371,8 +371,8 @@ function fixedBuckets(
       label,
       change:
         groupBy === "due"
-          ? ({ field: "due", due: date } as KanbanChange)
-          : ({ field: "start", start: date } as KanbanChange),
+          ? { field: "due", due: date }
+          : { field: "start", start: date },
     };
   });
 }

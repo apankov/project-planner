@@ -1,6 +1,6 @@
 {
     "name": "project-planner",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Plan projects from your Markdown tasks with a dependency graph, Gantt chart with critical path, kanban board, and cost tracking.",
     "main": "main.js",
     "engines": {
@@ -15,8 +15,8 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "lint": "eslint 'src/**/*.{ts,tsx}'",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
+        "lint": "eslint \"src/**/*.{ts,tsx}\"",
+        "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
         "lint:css": "stylelint \"*.css\" \"src/**/*.css\"",
         "lint:css:fix": "stylelint \"*.css\" \"src/**/*.css\" --fix",
         "format": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",

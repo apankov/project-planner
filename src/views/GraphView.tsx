@@ -9,6 +9,7 @@ import ReactFlow, {
   type SelectionDragHandler,
   type EdgeMouseHandler,
   type NodeMouseHandler,
+  type Connection,
   type OnConnect,
   type OnConnectStart,
 } from "reactflow";
@@ -76,7 +77,7 @@ import {
   focusTargetFor,
 } from "src/lib/view-focus";
 
-import { TaskStatus } from "src/types/task";
+import { TaskStatus, TaskEdgeData } from "src/types/task";
 import { ProjectPlannerSettings } from "src/types/settings";
 import { FilterState } from "src/types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "src/types/embed-config";
@@ -495,9 +496,11 @@ export default function GraphView({
 
   const createUpdatedTask = useCallback(
     (task: BaseTask, incomingLinks: string[]) =>
-      Object.assign(Object.create(Object.getPrototypeOf(task)), task, {
-        incomingLinks,
-      }) as BaseTask,
+      Object.assign(
+        Object.create(Object.getPrototypeOf(task) as object | null),
+        task,
+        { incomingLinks }
+      ) as BaseTask,
     []
   );
 
@@ -861,7 +864,7 @@ export default function GraphView({
     if (!selected) return;
 
     const { edge, sourceTask, targetTask } = selected;
-    if (!edge || !edge.data?.hash) return;
+    if (!edge || !(edge.data as TaskEdgeData | undefined)?.hash) return;
 
     if (vault) {
       await removeLinkSignsBetweenTasks(vault, targetTask, sourceTask.id);
@@ -1007,8 +1010,8 @@ export default function GraphView({
     vault,
   ]);
 
-  const onConnect = useCallback<OnConnect>(
-    async (params) => {
+  const connectTasks = useCallback(
+    async (params: Connection) => {
       // Reset so onConnectEnd (which fires after onConnect) does not
       // misinterpret this as a canvas-drop and open the create modal.
       connectStartRef.current = null;
@@ -1087,6 +1090,18 @@ export default function GraphView({
       settings.debugVisualization,
       settings.linkingStyle,
     ]
+  );
+
+  // ReactFlow wants nothing back from this handler, so the vault write runs on
+  // its own and reports its own failure. Handing it the async function directly
+  // would leave a rejection with nowhere to go.
+  const onConnect = useCallback<OnConnect>(
+    (params) => {
+      void connectTasks(params).catch((error: unknown) => {
+        console.error("Could not link the two tasks", error);
+      });
+    },
+    [connectTasks]
   );
 
   /**
@@ -1439,7 +1454,10 @@ export default function GraphView({
           const isDragOver = hoveredGroupIds.has(n.id);
           if ((n.data as { isDragOver?: boolean }).isDragOver === isDragOver)
             return n;
-          return { ...n, data: { ...n.data, isDragOver } };
+          return {
+            ...n,
+            data: { ...(n.data as Record<string, unknown>), isDragOver },
+          };
         })
       );
     },
@@ -1628,7 +1646,10 @@ export default function GraphView({
       nds.map((n) => {
         if (n.type !== "projectGroup") return n;
         if (!(n.data as { isDragOver?: boolean }).isDragOver) return n;
-        return { ...n, data: { ...n.data, isDragOver: false } };
+        return {
+          ...n,
+          data: { ...(n.data as Record<string, unknown>), isDragOver: false },
+        };
       })
     );
   }, [setNodes]);

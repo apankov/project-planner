@@ -52,5 +52,33 @@ export default defineConfig([
                 }
             ],
         },
+    },
+    // Type-aware rules, which need a TypeScript program and so cost real time
+    // to run. `no-explicit-any` above catches the `any` we write ourselves;
+    // these catch the `any` that leaks in from libraries whose signatures are
+    // untyped — ReactFlow's edge `data`, `parseYaml`'s return — and which is
+    // invisible without types. Obsidian's plugin review runs them, so we run
+    // them too rather than hear about it second-hand.
+    {
+        files: ["src/**/*.{ts,tsx}"],
+        languageOptions: {
+            parser: tsparser,
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        plugins: {
+            "@typescript-eslint": tseslint,
+        },
+        rules: {
+            "@typescript-eslint/no-unsafe-assignment": "error",
+            "@typescript-eslint/no-unsafe-member-access": "error",
+            "@typescript-eslint/no-unsafe-argument": "error",
+            "@typescript-eslint/no-unsafe-call": "error",
+            "@typescript-eslint/no-unsafe-return": "error",
+            "@typescript-eslint/no-unnecessary-type-assertion": "error",
+            "@typescript-eslint/no-misused-promises": "error",
+        },
     }
 ]);

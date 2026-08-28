@@ -92,8 +92,10 @@ const ENTRY_SEPARATOR = /;|,(?!\d)/;
  */
 function cleanLabel(value: string): string {
   return value
-    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, path, alias) =>
-      alias ? alias : String(path).split("/").pop()
+    .replace(
+      /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
+      (_match: string, path: string, alias?: string) =>
+        alias ? alias : (path.split("/").pop() ?? path)
     )
     .replace(/\s+/g, " ")
     .trim();

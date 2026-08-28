@@ -41,7 +41,7 @@ export function withTaskChanges(
   changes: TaskFieldChanges
 ): BaseTask {
   return Object.assign(
-    Object.create(Object.getPrototypeOf(task)),
+    Object.create(Object.getPrototypeOf(task) as object | null),
     task,
     changes
   ) as BaseTask;

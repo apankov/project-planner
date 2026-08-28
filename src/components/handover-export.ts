@@ -299,22 +299,21 @@ async function renderVaultNotes(
   );
 
   const notes: HandoverNote[] = [];
-  const host = activeDocument.createElement("div");
   // Off-screen but still laid out: Obsidian's renderer expects to be in a
   // document, and a detached element makes some post-processors give up
-  host.addClass("project-planner-handover-render");
+  const host = activeDocument.body.createDiv({
+    cls: "project-planner-handover-render",
+  });
   // The user goes on working while this runs, so it is hidden from the
   // accessibility tree too rather than only from the eye
   host.setAttribute("aria-hidden", "true");
-  activeDocument.body.appendChild(host);
 
   try {
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index];
       onProgress(index, files.length);
 
-      const container = activeDocument.createElement("div");
-      host.appendChild(container);
+      const container = host.createDiv();
 
       try {
         const raw = await app.vault.cachedRead(file);

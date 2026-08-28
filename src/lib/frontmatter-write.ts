@@ -25,6 +25,22 @@ export interface FrontmatterPatch {
   remove: string[];
 }
 
+/**
+ * Frontmatter as YAML hands it back. `parseYaml` is typed `any`, and the
+ * content is whatever the user wrote, so the shape is a hope rather than a
+ * fact. Narrowing it to a record once, here, keeps every caller from reaching
+ * through `any` to read it — including a document that parses to a bare string
+ * or a list, which is not frontmatter and is treated as none.
+ */
+export type FrontmatterRecord = Record<string, unknown>;
+
+export function parseFrontmatterRecord(yaml: string): FrontmatterRecord {
+  const parsed: unknown = parseYaml(yaml);
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    ? (parsed as FrontmatterRecord)
+    : {};
+}
+
 /** Where a note's frontmatter block starts and ends, or -1 for neither. */
 export function findFrontmatter(lines: string[]): {
   frontmatterStart: number;
@@ -104,7 +120,7 @@ export async function updateFrontmatter(
       .slice(frontmatterStart + 1, frontmatterEnd)
       .join("\n");
     const bodyContent = lines.slice(frontmatterEnd + 1).join("\n");
-    const frontmatterData = parseYaml(frontmatterYaml) || {};
+    const frontmatterData = parseFrontmatterRecord(frontmatterYaml);
 
     mutate(frontmatterData);
 

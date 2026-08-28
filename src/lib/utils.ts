@@ -599,7 +599,7 @@ export function getLayoutedElements(
 
     // ── Pass 1: flat dagre on all task nodes ──────────────────────────────
     taskNodes.forEach((node) => {
-      const task = node.data?.task as BaseTask | undefined;
+      const task = (node.data as { task?: BaseTask } | undefined)?.task;
       nodeDimensions.set(
         node.id,
         task
@@ -892,7 +892,7 @@ export function getLayoutedElements(
   // Store calculated dimensions for each node
   nodes.forEach((node) => {
     // Get task from node data to estimate dimensions
-    const task = node.data?.task as BaseTask | undefined;
+    const task = (node.data as { task?: BaseTask } | undefined)?.task;
     const dimensions = task
       ? estimateNodeDimensions(task, showTags)
       : { width: NODEWIDTH, height: NODEHEIGHT };
@@ -1501,10 +1501,11 @@ export function getNoteTasks(app: App): BaseTask[] {
     }
 
     // Check if the note has #task tag in frontmatter
-    const tags = cache.frontmatter.tags;
-    const hasTaskTag = Array.isArray(tags)
-      ? tags.some((tag: string) => tag === "task" || tag === "#task")
-      : tags === "task" || tags === "#task";
+    const tags: unknown = cache.frontmatter.tags;
+    const tagList: unknown[] = Array.isArray(tags)
+      ? (tags as unknown[])
+      : [tags];
+    const hasTaskTag = tagList.some((tag) => tag === "task" || tag === "#task");
 
     if (!hasTaskTag) {
       continue;
@@ -1553,7 +1554,8 @@ function parseTaskNote(
   const factory = new TaskFactory();
 
   // Extract task properties from frontmatter
-  const status = frontmatter.status || " "; // Default to todo
+  const rawStatus: unknown = frontmatter.status;
+  const status = typeof rawStatus === "string" && rawStatus ? rawStatus : " "; // Default to todo
   const title = file.basename; // Use note title as task text
 
   // Create a RawTask-like object
@@ -1576,8 +1578,9 @@ function parseTaskNote(
       task.tags = tags.map((t: string) => t.replace(/^#/, ""));
     }
 
-    if (frontmatter.priority) {
-      task.priority = normalizeNotePriority(frontmatter.priority);
+    const rawPriority: unknown = frontmatter.priority;
+    if (rawPriority) {
+      task.priority = normalizeNotePriority(String(rawPriority));
     }
 
     if (typeof frontmatter.starred === "boolean") {
@@ -1611,10 +1614,14 @@ function parseTaskNote(
     // Also support simpler dependsOn format
     if (frontmatter.dependsOn) {
       try {
-        const deps = Array.isArray(frontmatter.dependsOn)
-          ? frontmatter.dependsOn
-          : [frontmatter.dependsOn];
-        allIncomingLinks.push(...deps);
+        const raw: unknown = frontmatter.dependsOn;
+        const deps: unknown[] = Array.isArray(raw) ? (raw as unknown[]) : [raw];
+        // Anything not written as a string is not a link. `blockedBy` below is
+        // where the object form lives; pushing one in here only ever put
+        // "[object Object]" into a list of ids.
+        allIncomingLinks.push(
+          ...deps.filter((dep): dep is string => typeof dep === "string")
+        );
       } catch {
         // Failed to parse dependsOn
       }
@@ -1654,14 +1661,14 @@ function parseBlockedByLinks(blockedBy: unknown, app: App): string[] {
     return links;
   }
 
-  for (const item of blockedBy) {
+  for (const item of blockedBy as unknown[]) {
     try {
       let linkTarget: string | null = null;
 
       // Format 1: Complex object with uid and reltype
       // { uid: "[[Example task 1]]", reltype: "FINISHTOSTART" }
       if (typeof item === "object" && item !== null && "uid" in item) {
-        const uid = item.uid;
+        const uid: unknown = item.uid;
         if (typeof uid === "string") {
           linkTarget = uid;
         } else {

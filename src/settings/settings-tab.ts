@@ -127,7 +127,9 @@ export class ProjectPlannerSettingTab extends PluginSettingTab {
         const codes = [...CURRENCY_CODES];
         if (!codes.includes(current)) codes.push(current);
 
-        codes.forEach((code) => dropdown.addOption(code, code));
+        codes.forEach((code) => {
+          dropdown.addOption(code, code);
+        });
         dropdown.setValue(current).onChange(async (value) => {
           this.plugin.settings.financeCurrency = value;
           await this.plugin.saveSettings();

@@ -13,6 +13,7 @@ import {
   showsArrowAtEnd,
   showsArrowAtStart,
 } from "src/lib/edge-style-manager";
+import { TaskEdgeData } from "src/types/task";
 
 function getEdgePath(
   edgeStyle: string,
@@ -44,7 +45,7 @@ export default function HashEdge({
   targetX,
   targetY,
   selected,
-}: EdgeProps) {
+}: EdgeProps<TaskEdgeData>) {
   const groupRef = useRef<SVGGElement>(null);
 
   const handleMouseEnter = useCallback(() => {

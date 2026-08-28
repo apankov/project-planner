@@ -113,7 +113,7 @@ function coercePositiveNumber(value: unknown, defaultVal: number): number {
  */
 function coerceStringArray(value: unknown, defaultVal: string[]): string[] {
   if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
-    return value as string[];
+    return value;
   }
   return defaultVal;
 }

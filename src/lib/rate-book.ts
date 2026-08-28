@@ -172,8 +172,10 @@ function parseRate(value: string): number | null {
 /** Names match on meaning, not on typing: case, spacing and links are noise. */
 export function normalizePersonKey(name: string): string {
   return name
-    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, path, alias) =>
-      alias ? alias : String(path).split("/").pop()
+    .replace(
+      /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
+      (_match: string, path: string, alias?: string) =>
+        alias ? alias : (path.split("/").pop() ?? path)
     )
     .replace(/\s+/g, " ")
     .trim()

@@ -228,7 +228,9 @@ export class TaskFinanceModal extends Modal {
       if (people.length > 0 && (known || !allocation.person)) {
         setting.addDropdown((dropdown) => {
           dropdown.addOption("", t("finance.modal_pick_person"));
-          people.forEach((person) => dropdown.addOption(person, person));
+          people.forEach((person) => {
+            dropdown.addOption(person, person);
+          });
           dropdown.addOption(OTHER_PERSON, t("finance.modal_other_person"));
           dropdown.setValue(allocation.person);
           dropdown.onChange((value) => {

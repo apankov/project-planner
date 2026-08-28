@@ -89,12 +89,12 @@ export class GanttMilestoneModal extends Modal {
       .setName(t("gantt.milestone_modal_display"))
       .setDesc(t("gantt.milestone_modal_display_desc"))
       .addDropdown((dropdown) => {
-        MILESTONE_DISPLAYS.forEach((display) =>
+        MILESTONE_DISPLAYS.forEach((display) => {
           dropdown.addOption(
             display,
             t(`gantt.milestone_modal_display_${display}`)
-          )
-        );
+          );
+        });
         dropdown.setValue(this.display);
         dropdown.onChange((value) => {
           this.display = readMilestoneDisplay(value);
