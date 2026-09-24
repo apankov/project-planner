@@ -29,6 +29,7 @@ import GraphEmbedView, {
   EmbedError,
   filterStateFromSource,
 } from "./views/GraphEmbedView";
+import { buildDataviewSource } from "./lib/task-source";
 import {
   ProjectPlannerSettings,
   DEFAULT_SETTINGS,
@@ -299,6 +300,7 @@ export default class ProjectPlannerPlugin extends Plugin {
         plugin={this}
         initialFilter={parsed.filter}
         embedConfig={parsed.config}
+        source={buildDataviewSource(parsed.source)}
       />
     );
   }
