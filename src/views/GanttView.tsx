@@ -27,7 +27,12 @@ import { openTaskEditor } from "src/lib/open-task-editor";
 import { promptForTaskLine } from "src/components/task-line-modal";
 import { withCompanionNote } from "src/lib/companion-note";
 import { diffDays, todayIso } from "src/lib/date-utils";
-import { getTimelineRange, resizeBar, shiftBar } from "src/lib/gantt-schedule";
+import {
+  fillTimeline,
+  getTimelineRange,
+  resizeBar,
+  shiftBar,
+} from "src/lib/gantt-schedule";
 import { planCascade } from "src/lib/gantt-cascade";
 import {
   GanttRow,
@@ -151,6 +156,9 @@ export default function GanttView({
   });
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  // Width the chart has to fill; the timeline runs on until it does
+  const [containerWidth, setContainerWidth] = useState(0);
   // Undo runs long after its action, so it reads tasks through a ref
   const tasksRef = useRef<BaseTask[]>([]);
   const hasCenteredRef = useRef(false);
@@ -425,13 +433,21 @@ export default function GanttView({
   // chart all read from this one place, so they go quiet together.
   const visibleRisks = settings.ganttShowWarnings ? risksByTaskId : NO_RISKS;
 
+  // Days that fit beside the label column, so the grid reaches the right edge
+  const minTimelineDays = Math.ceil(
+    Math.max(0, containerWidth - settings.ganttLabelWidth) / scale.dayWidth
+  );
+
   const timeline = useMemo(
     () =>
-      getTimelineRange(
-        rows.map((row) => row.bar),
-        { today, anchors: milestones.map((milestone) => milestone.date) }
+      fillTimeline(
+        getTimelineRange(
+          rows.map((row) => row.bar),
+          { today, anchors: milestones.map((milestone) => milestone.date) }
+        ),
+        minTimelineDays
       ),
-    [milestones, rows, today]
+    [milestones, minTimelineDays, rows, today]
   );
 
   const scrollToToday = useCallback(() => {
@@ -485,6 +501,18 @@ export default function GanttView({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [linkingFromId]);
+
+  // The container only exists once tasks have loaded, so it is watched from then
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerWidth(el.clientWidth);
+    const observer = new ResizeObserver(() =>
+      setContainerWidth(el.clientWidth)
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isLoading]);
 
   useEffect(() => {
     tasksRef.current = tasks;
@@ -1522,7 +1550,7 @@ export default function GanttView({
   }
 
   return (
-    <div className="project-planner-gantt-container">
+    <div className="project-planner-gantt-container" ref={containerRef}>
       <GanttToolbar
         scale={scale}
         onScaleChange={setScale}
