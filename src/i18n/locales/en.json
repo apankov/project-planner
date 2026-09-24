@@ -450,7 +450,10 @@
     "finance_currency": "Currency",
     "finance_currency_desc": "Currency costs are shown in; rates in the note are plain numbers",
     "finance_include_inferred": "Include suggested dates",
-    "finance_include_inferred_desc": "Count tasks whose Gantt dates were suggested rather than written"
+    "finance_include_inferred_desc": "Count tasks whose Gantt dates were suggested rather than written",
+    "task_source_desc": "Which part of the vault every view reads tasks from, written as a Dataview FROM source. Leave empty for the whole vault.",
+    "task_source": "Task source",
+    "task_source_placeholder": "-\"Archive\""
   },
   "filters": {
     "status": "Status",
@@ -780,5 +783,8 @@
     "issue_allocations_off": "the shares on this task total {{total}}%, not 100%",
     "issue_no_allocations": "hours are recorded but nobody is allocated",
     "issue_inferred_schedule": "the cost rests on estimated dates"
+  },
+  "task_source": {
+    "invalid": "Project Planner: Dataview could not read the task source {{source}}. Check its syntax."
   }
 }

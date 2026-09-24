@@ -450,7 +450,10 @@
     "finance_currency": "货币",
     "finance_currency_desc": "显示成本所用的货币；笔记中的费率为纯数字",
     "finance_include_inferred": "包含建议日期",
-    "finance_include_inferred_desc": "统计 Gantt 日期为系统建议而非已写入的任务"
+    "finance_include_inferred_desc": "统计 Gantt 日期为系统建议而非已写入的任务",
+    "task_source_desc": "所有视图读取任务的库范围，使用 Dataview FROM 来源语法。留空表示整个库。",
+    "task_source": "任务来源",
+    "task_source_placeholder": "-\"Archive\""
   },
   "filters": {
     "status": "状态",
@@ -780,5 +783,8 @@
     "issue_allocations_off": "该任务的分配比例合计为 {{total}}%，而非 100%",
     "issue_no_allocations": "已记录工时但未分配人员",
     "issue_inferred_schedule": "成本建立在估算日期上"
+  },
+  "task_source": {
+    "invalid": "Project Planner：Dataview 无法读取任务来源 {{source}}，请检查语法。"
   }
 }

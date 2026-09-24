@@ -450,7 +450,10 @@
     "finance_currency": "Valuta",
     "finance_currency_desc": "Valuta waarin kosten worden getoond; tarieven in de notitie zijn kale getallen",
     "finance_include_inferred": "Voorgestelde datums meetellen",
-    "finance_include_inferred_desc": "Tel taken mee waarvan de Gantt-datums zijn voorgesteld in plaats van vastgelegd"
+    "finance_include_inferred_desc": "Tel taken mee waarvan de Gantt-datums zijn voorgesteld in plaats van vastgelegd",
+    "task_source_desc": "Uit welk deel van de kluis elke weergave taken leest, geschreven als Dataview FROM-bron. Leeg laten voor de hele kluis.",
+    "task_source": "Taakbron",
+    "task_source_placeholder": "-\"Archive\""
   },
   "filters": {
     "status": "Status",
@@ -780,5 +783,8 @@
     "issue_allocations_off": "de verdeling op deze taak telt op tot {{total}}%, niet 100%",
     "issue_no_allocations": "er zijn uren vastgelegd maar niemand toegewezen",
     "issue_inferred_schedule": "de kosten berusten op geschatte datums"
+  },
+  "task_source": {
+    "invalid": "Project Planner: Dataview kon de taakbron {{source}} niet lezen. Controleer de syntaxis."
   }
 }
