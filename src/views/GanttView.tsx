@@ -1637,6 +1637,10 @@ export default function GanttView({
         onHideCompletedChange={setHideCompleted}
         skipWeekends={settings.ganttSkipWeekends}
         onSkipWeekendsChange={(skip) => void plugin.setGanttSkipWeekends(skip)}
+        compactRows={settings.ganttCompactRows}
+        onCompactRowsChange={(compact) =>
+          void plugin.setGanttCompactRows(compact)
+        }
         showCriticalPath={settings.showCriticalPath}
         onShowCriticalPathChange={(show) =>
           void plugin.setShowCriticalPath(show)
@@ -1688,6 +1692,7 @@ export default function GanttView({
           timelineEnd={timeline.end}
           today={today}
           dayWidth={dayWidth}
+          compact={settings.ganttCompactRows}
           app={app}
           palette={settings.tagColorPalette}
           colorOverrides={settings.tagColorOverrides}
