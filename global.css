@@ -2922,6 +2922,25 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-on-accent);
 }
 
+/* A select among the scale buttons: same face, and keeps the theme's arrow,
+   so only the colour changes when it is the active scale */
+.project-planner-gantt-toolbar__window {
+  height: auto;
+  padding: 4px 24px 4px 10px;
+  border-left: 1px solid var(--background-modifier-border);
+  border-right: 1px solid var(--background-modifier-border);
+  background-color: var(--background-primary);
+}
+
+.project-planner-gantt-toolbar__window.project-planner-gantt-toolbar__scale--active {
+  background-color: var(--interactive-accent);
+}
+
+.project-planner-gantt-toolbar__window option {
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
 .project-planner-gantt-toolbar__button {
   display: inline-flex;
   align-items: center;

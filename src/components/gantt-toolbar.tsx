@@ -16,12 +16,24 @@ import {
   GanttGroupBy,
   isGanttGroupBy,
 } from "src/lib/gantt-order";
-import { GANTT_SCALES, GanttScale } from "./gantt-chart";
+import {
+  FIXED_GANTT_SCALES,
+  GanttScaleId,
+  WINDOW_GANTT_SCALES,
+  isWindowGanttScale,
+  windowMonths,
+} from "src/lib/gantt-scale";
 import { t } from "../i18n";
 
+function scaleClassName(active: boolean): string {
+  return `project-planner-gantt-toolbar__scale ${
+    active ? "project-planner-gantt-toolbar__scale--active" : ""
+  }`;
+}
+
 interface GanttToolbarProps {
-  scale: GanttScale;
-  onScaleChange: (_scale: GanttScale) => void;
+  scale: GanttScaleId;
+  onScaleChange: (_scale: GanttScaleId) => void;
   onScrollToToday: () => void;
   onReload: () => void;
   onApplyInferred: () => void;
@@ -84,19 +96,48 @@ export function GanttToolbar({
   return (
     <div className="project-planner-gantt-toolbar">
       <div className="project-planner-gantt-toolbar__group">
-        {GANTT_SCALES.map((option) => (
+        {FIXED_GANTT_SCALES.map((option) => (
           <button
-            key={option.id}
-            className={`project-planner-gantt-toolbar__scale ${
-              option.id === scale.id
-                ? "project-planner-gantt-toolbar__scale--active"
-                : ""
-            }`}
+            key={option}
+            className={scaleClassName(option === scale)}
             onClick={() => onScaleChange(option)}
           >
-            {t(`gantt.scale_${option.id}`)}
+            {t(`gantt.scale_${option}`)}
           </button>
         ))}
+        {/* A window scale shows that many months across the chart, however
+            wide it is; six of them would crowd out the rest of the toolbar
+            as buttons. */}
+        <select
+          className={`project-planner-gantt-toolbar__window ${scaleClassName(
+            isWindowGanttScale(scale)
+          )}`}
+          value={isWindowGanttScale(scale) ? scale : ""}
+          title={t("gantt.scale_window_desc")}
+          aria-label={t("gantt.scale_window_desc")}
+          onChange={(event) => {
+            const value = event.target.value;
+            if (isWindowGanttScale(value)) onScaleChange(value);
+          }}
+        >
+          <option value="" disabled hidden>
+            {t("gantt.scale_window")}
+          </option>
+          {WINDOW_GANTT_SCALES.map((option) => (
+            <option key={option} value={option}>
+              {t("gantt.scale_window_months", {
+                count: windowMonths(option),
+              })}
+            </option>
+          ))}
+        </select>
+        <button
+          className={scaleClassName(scale === "fit")}
+          onClick={() => onScaleChange("fit")}
+          title={t("gantt.scale_fit_desc")}
+        >
+          {t("gantt.scale_fit")}
+        </button>
       </div>
 
       <button

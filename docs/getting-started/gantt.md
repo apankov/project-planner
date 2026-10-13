@@ -130,13 +130,28 @@ another task, to move the highlight. The map does the same thing.
 
 | Control              | Purpose                                                     |
 | -------------------- | ------------------------------------------------------------ |
-| Days / Weeks / Months | Zoom level of the timeline                                  |
+| Days / Weeks / Months | Fixed zoom levels of the timeline                          |
+| Period (2–18 mo)     | Fits that many months across the chart                      |
+| Fit                  | Fits the whole plan across the chart                        |
 | Today                | Scrolls the timeline back to today                          |
 | Search               | Filters rows by task text or tag                            |
 | Hide completed       | Removes done and canceled tasks from the chart              |
 | Apply suggested dates | Writes every dashed bar to its note                        |
 | Reload               | Re-reads tasks from the vault                               |
 | Task column divider  | Drag to widen the column for long task names                |
+
+### Scale
+
+**Days**, **Weeks** and **Months** draw a day at a fixed width, so a long plan
+scrolls sideways. For a plan that runs for years, pick a **period** instead:
+2, 3, 4, 6, 12 or 18 months fill the width of the chart, whatever its size.
+**Fit** fits the whole plan, first task to last. Periods and Fit follow the
+window as it is resized.
+
+The header follows the width of a day: day numbers when zoomed in, weeks under
+months, then months under quarters, then quarters under years. Changing the
+scale keeps the date in the middle of the view where it was. The Gantt tab
+remembers its scale.
 
 Task names render `[[wikilinks]]` as real links, so a task whose text is a
 link opens that note when clicked.
