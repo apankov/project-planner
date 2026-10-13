@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   Coins,
+  Focus,
   GripVertical,
   IndentIncrease,
   Link2,
@@ -146,6 +147,8 @@ interface GanttChartProps {
   onToggleCollapse: (_taskId: string, _branch: boolean) => void;
   /** Opens the picker for which task this one should sit inside. */
   onSetParent: (_taskId: string) => void;
+  /** Narrows the chart to this task's branch */
+  onFocusBranch: (_taskId: string) => void;
   /** Absent when finance is switched off, which hides the button. */
   onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
@@ -332,6 +335,7 @@ export function GanttChart({
   onStartLink,
   onShowInMap,
   onToggleCollapse,
+  onFocusBranch,
   onSetParent,
   onEditFinance,
   onAddTag,
@@ -982,6 +986,19 @@ export function GanttChart({
                       : ""
                   }`}
                 >
+                  {line.hasChildren && (
+                    <button
+                      className="project-planner-gantt__row-action"
+                      title={t("gantt.focus_branch")}
+                      aria-label={t("gantt.focus_branch")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onFocusBranch(line.row.task.id);
+                      }}
+                    >
+                      <Focus size={12} />
+                    </button>
+                  )}
                   <button
                     className="project-planner-gantt__row-action"
                     title={t("gantt.add_tag")}

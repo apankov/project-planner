@@ -3354,6 +3354,20 @@ If your plugin does not need CSS, delete this file.
   flex: 0 0 auto;
 }
 
+/* Calmer than the linking bar: a view the user chose, not a pending action */
+.project-planner-gantt-focus {
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.project-planner-gantt-focus__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .project-planner-gantt-linking__cancel {
   padding: 2px 8px;
   font-size: 11px;

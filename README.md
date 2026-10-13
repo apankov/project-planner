@@ -289,7 +289,8 @@ Dragging snaps to whole days and a bar can never be shorter than one day.
   span up into one bar, and a collapsed row still shows the tasks inside it as
   faint strips and one-day gates as diamonds. **Alt-click** folds a whole
   branch; **Levels 1 2 3 … All** fold the chart to a depth.
-- **Compact** — slimmer rows fit a third more of a long plan.
+- **Focus a branch** — narrow the chart to one parent, what is inside it and
+  the parents above it. **Compact** rows fit a third more of a long plan.
 - **Zoom** — days, weeks or months; a **period** of 2–18 months fitted to the
   width; or **Fit** for the whole plan. With a **Today** button.
 
