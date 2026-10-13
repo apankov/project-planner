@@ -51,6 +51,7 @@ import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
 import { effectiveTaskStatus } from "src/lib/task-progress";
 import { GanttBar, BarDragResult } from "./gantt-bar";
+import { GanttRollup } from "./gantt-rollup";
 import {
   GanttMilestoneMarker,
   GanttMilestoneRow,
@@ -137,7 +138,8 @@ interface GanttChartProps {
   onStartLink: (_taskId: string) => void;
   onShowInMap: (_taskId: string) => void;
   /** Folds a parent's subtree away, or opens it again. */
-  onToggleCollapse: (_taskId: string) => void;
+  /** `branch` folds or opens everything beneath the task along with it */
+  onToggleCollapse: (_taskId: string, _branch: boolean) => void;
   /** Opens the picker for which task this one should sit inside. */
   onSetParent: (_taskId: string) => void;
   /** Absent when finance is switched off, which hides the button. */
@@ -725,6 +727,11 @@ export function GanttChart({
   );
 
   /** What the analysis says about one row, for the bar to draw. */
+  const isAtRisk = useCallback(
+    (taskId: string) => risksByTaskId.has(taskId),
+    [risksByTaskId]
+  );
+
   const analysisFor = useCallback(
     (taskId: string) => ({
       critical: showCriticalPath && criticalIds.has(taskId),
@@ -899,7 +906,9 @@ export function GanttChart({
                   <button
                     className="project-planner-gantt__twisty"
                     title={
-                      line.collapsed ? t("gantt.expand") : t("gantt.collapse")
+                      line.collapsed
+                        ? t("gantt.expand_hint")
+                        : t("gantt.collapse_hint")
                     }
                     aria-label={
                       line.collapsed ? t("gantt.expand") : t("gantt.collapse")
@@ -907,7 +916,7 @@ export function GanttChart({
                     aria-expanded={!line.collapsed}
                     onClick={(event) => {
                       event.stopPropagation();
-                      onToggleCollapse(line.row.task.id);
+                      onToggleCollapse(line.row.task.id, event.altKey);
                     }}
                   >
                     {line.collapsed ? (
@@ -1158,6 +1167,13 @@ export function GanttChart({
                     "project-planner-gantt__row"
                   )}
                 >
+                  {line.rollup && (
+                    <GanttRollup
+                      rows={line.rollup}
+                      timelineStart={timelineStart}
+                      isAtRisk={isAtRisk}
+                    />
+                  )}
                   <GanttBar
                     task={line.row.task}
                     bar={line.row.bar}

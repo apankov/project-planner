@@ -25,6 +25,9 @@ import {
 } from "src/lib/gantt-scale";
 import { t } from "../i18n";
 
+/** Deeper plans still get "all"; past this a level button saves little */
+const MAX_OUTLINE_BUTTONS = 4;
+
 function scaleClassName(active: boolean): string {
   return `project-planner-gantt-toolbar__scale ${
     active ? "project-planner-gantt-toolbar__scale--active" : ""
@@ -34,6 +37,10 @@ function scaleClassName(active: boolean): string {
 interface GanttToolbarProps {
   scale: GanttScaleId;
   onScaleChange: (_scale: GanttScaleId) => void;
+  /** Levels the task tree goes down; 1 when no task has children */
+  outlineDepth: number;
+  /** Folds the chart to show `level` levels; `Infinity` opens everything */
+  onShowLevel: (_level: number) => void;
   onScrollToToday: () => void;
   onReload: () => void;
   onApplyInferred: () => void;
@@ -67,6 +74,8 @@ interface GanttToolbarProps {
 export function GanttToolbar({
   scale,
   onScaleChange,
+  outlineDepth,
+  onShowLevel,
   onScrollToToday,
   onReload,
   onApplyInferred,
@@ -139,6 +148,39 @@ export function GanttToolbar({
           {t("gantt.scale_fit")}
         </button>
       </div>
+
+      {/* One-off folds rather than a mode, so they never look pressed: a row
+          opened by hand afterwards stays open */}
+      {outlineDepth > 1 && (
+        <div
+          className="project-planner-gantt-toolbar__group"
+          title={t("gantt.outline_desc")}
+        >
+          <span className="project-planner-gantt-toolbar__group-label">
+            {t("gantt.outline")}
+          </span>
+          {Array.from(
+            { length: Math.min(outlineDepth - 1, MAX_OUTLINE_BUTTONS) },
+            (_, index) => index + 1
+          ).map((level) => (
+            <button
+              key={level}
+              className={scaleClassName(false)}
+              onClick={() => onShowLevel(level)}
+              title={t("gantt.outline_level_desc", { level })}
+            >
+              {level}
+            </button>
+          ))}
+          <button
+            className={scaleClassName(false)}
+            onClick={() => onShowLevel(Infinity)}
+            title={t("gantt.outline_all_desc")}
+          >
+            {t("gantt.outline_all")}
+          </button>
+        </div>
+      )}
 
       <button
         className="project-planner-gantt-toolbar__button"

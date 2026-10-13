@@ -67,6 +67,22 @@ Your own row order is untouched underneath: dragging is switched off while the
 mode is on, and turning it off puts the arrangement — and the nesting — back
 exactly as it was.
 
+### Collapsing
+
+A parent's chevron folds its children away. **Alt-click** it to fold or open
+the whole branch — the parent and every parent inside it — in one go.
+
+**Levels 1 2 3 … All** in the toolbar fold the chart to a depth: **1** shows
+only the top-level tasks, **2** adds their children, **All** opens everything.
+It is a one-off fold, not a mode, so rows you open by hand afterwards stay
+open. The buttons only appear when some task has children.
+
+A collapsed row still shows what it hides. Under its summary rail each task
+inside is drawn as a faint strip — parallel work stacks into a darker band, and
+a gap between phases shows as a gap — and each one-day task (a gate, a
+go-live) as a diamond, so it does not vanish at a coarse scale. A task that
+needs attention is drawn in yellow. Hover any of them for its name and dates.
+
 ## Adding and linking tasks
 
 | Control                    | What it does                                                |

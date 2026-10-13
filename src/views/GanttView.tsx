@@ -59,6 +59,9 @@ import {
   parentTaskIds,
   resolveParentIds,
   toggleCollapsed,
+  toggleBranchCollapsed,
+  collapsedIdsForLevel,
+  hierarchyDepth,
 } from "src/lib/task-hierarchy";
 import { promptForParent } from "src/components/gantt-parent-modal";
 import { plainTaskText } from "src/lib/task-text";
@@ -792,12 +795,38 @@ export default function GanttView({
   );
 
   const handleToggleCollapse = useCallback(
-    (taskId: string) => {
+    (taskId: string, branch: boolean) => {
       void plugin.setGanttCollapsedTaskIds(
-        toggleCollapsed(settings.ganttCollapsedTaskIds, taskId)
+        branch
+          ? toggleBranchCollapsed(
+              settings.ganttCollapsedTaskIds,
+              visibleParentById,
+              taskId
+            )
+          : toggleCollapsed(settings.ganttCollapsedTaskIds, taskId)
       );
     },
-    [plugin, settings.ganttCollapsedTaskIds]
+    [plugin, settings.ganttCollapsedTaskIds, visibleParentById]
+  );
+
+  // How many levels the outline buttons offer; a flat plan offers none
+  const outlineDepth = useMemo(
+    () => hierarchyDepth(visibleParentById),
+    [visibleParentById]
+  );
+
+  // A one-off fold, not a mode: rows opened by hand afterwards stay open
+  const handleShowLevel = useCallback(
+    (level: number) => {
+      void plugin.setGanttCollapsedTaskIds(
+        collapsedIdsForLevel(
+          settings.ganttCollapsedTaskIds,
+          visibleParentById,
+          level
+        )
+      );
+    },
+    [plugin, settings.ganttCollapsedTaskIds, visibleParentById]
   );
 
   /**
@@ -1595,6 +1624,8 @@ export default function GanttView({
       <GanttToolbar
         scale={scale}
         onScaleChange={handleScaleChange}
+        outlineDepth={outlineDepth}
+        onShowLevel={handleShowLevel}
         onScrollToToday={scrollToToday}
         onReload={() => loadTasks({ notify: true })}
         onApplyInferred={() => void handleApplyInferred()}
